@@ -2,7 +2,6 @@ require('dotenv').config();
 const dayjs = require('dayjs');
 const axios = require('axios');
 const { replaceWords, roundToNthDecimal, createCustomLogger } = require('../utils/tools');
-const MagentoService = require('../services/MagentoService');
 
 // Config Shopify
 const SHOPIFY_STORE = process.env.SHOPIFY_SHOP_NAME;
@@ -52,7 +51,5 @@ async function findVariantByBarcode(barcode) {
 
 
 module.exports = { 
-  updateStockPriceAllList,
-  updateProductByBarcode,
-  startUpdatePriceList
+  findVariantByBarcode
 };
