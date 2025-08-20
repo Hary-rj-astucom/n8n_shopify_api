@@ -2,10 +2,14 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const watchguard = require('./middleware/watchGuard');
 const shopifyRoutes = require('./routes/shopifyRoutes');
 
 const app = express();
 const port = process.env.PORT;
+
+// Apply this to all routes
+app.use(verifySecretKey);
 
 // Middleware
 app.use(cors());

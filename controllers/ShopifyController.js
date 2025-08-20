@@ -3,7 +3,7 @@ const ShopifyApiService = require('../services/ShopifyApiService');
 const getOrderByOrderNumber = async (req, res) => {
   try {
 
-    let result = getOrderByOrderNumber(req.body.orderNumber);
+    let result = await ShopifyApiService.getOrderByOrderNumber(req.body.orderNumber);
     res.status(200).send(result);
 
   } catch (error) {
