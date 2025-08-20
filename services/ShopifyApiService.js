@@ -1,55 +1,32 @@
 require('dotenv').config();
-const dayjs = require('dayjs');
-const axios = require('axios');
-const { replaceWords, roundToNthDecimal, createCustomLogger } = require('../utils/tools');
+const Shopify = require('shopify-api-node');
 
 // Config Shopify
-const SHOPIFY_STORE = process.env.SHOPIFY_SHOP_NAME;
-const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
+const shopify = new Shopify({
+  shopName: process.env.SHOPIFY_SHOP_NAME,     // e.g. my-store
+  accessToken: process.env.SHOPIFY_ACCESS_TOKEN
+});
 
-//----------------------------------------------//
-//        start Update price + stock            //
-//----------------------------------------------//
+async function getOrderByOrderNumber(orderNumber) {
+  try {
+    // Search orders using order_number
+    const orders = await shopify.order.list({
+      status: 'any', // include open, closed, cancelled
+      limit: 1,
+      order_number: orderNumber // ⚠️ Shopify REST API does NOT allow direct filter by order_number
+    });
 
-// Trouver la variante par barcode
-async function findVariantByBarcode(barcode) {
-  const query = `
-    {
-      productVariants(first: 1, query: "barcode:${barcode}") {
-        edges {
-          node {
-            id
-            price
-            inventoryItem {
-              id
-            }
-          }
-        }
-      }
+    if (orders.length === 0) {
+      console.log(`No order found with order_number: ${orderNumber}`);
+      return null;
     }
-  `;
 
-  const res = await axios.post(
-    `https://${SHOPIFY_STORE}/admin/api/2024-01/graphql.json`,
-    { query },
-    {
-      headers: {
-        'X-Shopify-Access-Token': ACCESS_TOKEN,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  return res.data.data.productVariants.edges[0]?.node;
+    return orders[0];
+  } catch (error) {
+    console.error('Error fetching order:', error);
+  }
 }
 
-//--------------------------------------------//
-//        fin Update price + stock            //
-//--------------------------------------------//
-
-
-
-
 module.exports = { 
-  findVariantByBarcode
+  getOrderByOrderNumber
 };

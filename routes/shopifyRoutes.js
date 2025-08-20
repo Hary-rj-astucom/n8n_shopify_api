@@ -4,6 +4,6 @@ const shopifyController = require('../controllers/ShopifyController');
 const router = express.Router();
 
 //Shopify format
-router.post('/test-one', shopifyController.testupdateshopify);
+router.post('/getOrderByOrderNumber', shopifyController.getOrderByOrderNumber);
 
 module.exports = router;

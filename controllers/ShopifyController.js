@@ -1,17 +1,17 @@
 const ShopifyApiService = require('../services/ShopifyApiService');
 
-const testupdateshopify = async (req, res) => {
+const getOrderByOrderNumber = async (req, res) => {
   try {
 
-    let result = "true";
-    res.status(200).send('Updated');
+    let result = getOrderByOrderNumber(req.body.orderNumber);
+    res.status(200).send(result);
 
   } catch (error) {
-    console.error('Error update shopify:', error);
-    res.status(500).send('Error update shopify');
+    console.error('Error consultation shopify:', error);
+    res.status(500).send('Error consultation shopify');
   }
 }
 
 module.exports = { 
-    testupdateshopify
+    getOrderByOrderNumber
 };
