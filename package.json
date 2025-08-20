@@ -1,0 +1,30 @@
+{
+  "name": "export_magento_database",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.9.0",
+    "axios-retry": "^4.5.0",
+    "basic-ftp": "^5.0.5",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "fs": "^0.0.1-security",
+    "json2csv": "^6.0.0-alpha.2",
+    "mysql2": "^3.12.0",
+    "path": "^0.12.7",
+    "shopify-api-node": "^3.15.0",
+    "timezone": "^1.0.23",
+    "utc": "^0.1.0",
+    "winston": "^3.17.0",
+    "xlsx": "^0.18.5"
+  }
+}
