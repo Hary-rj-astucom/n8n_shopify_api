@@ -9,7 +9,7 @@ const app = express();
 const port = process.env.PORT;
 
 // Apply this to all routes
-app.use(verifySecretKey);
+app.use(watchguard);
 
 // Middleware
 app.use(cors());
