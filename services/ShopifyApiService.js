@@ -13,7 +13,7 @@ async function getOrderByOrderNumber(orderNumber) {
     const orders = await shopify.order.list({
       status: 'any', // include open, closed, cancelled
       limit: 1,
-      order_number: orderNumber // ⚠️ Shopify REST API does NOT allow direct filter by order_number
+      name: `#${orderNumber}`
     });
 
     if (orders.length === 0) {
