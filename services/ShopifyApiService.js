@@ -21,7 +21,13 @@ async function getOrderByOrderNumber(orderNumber) {
       return null;
     }
 
-    return orders[0];
+    // get transaction list
+    const transactions = await shopify.transaction.list(orders[0].id);
+    let order = orders[0];
+    order.transactions = transactions;
+
+    return order;
+
   } catch (error) {
     console.error('Error fetching order:', error);
   }
