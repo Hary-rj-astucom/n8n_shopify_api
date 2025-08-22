@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const watchguard = require('./middleware/watchGuard');
 const shopifyRoutes = require('./routes/shopifyRoutes');
+const colissimoRoutes = require('./routes/colissimoRoutes');
 
 const app = express();
 const port = process.env.PORT;
@@ -17,6 +18,7 @@ app.use(express.json());
 
 // Routes
 
+app.use('/colissimo', colissimoRoutes);
 app.use('/shopify', shopifyRoutes);
 
 // Start the server
