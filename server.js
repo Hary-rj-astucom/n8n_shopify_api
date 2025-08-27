@@ -5,6 +5,7 @@ const cors = require('cors');
 const watchguard = require('./middleware/watchGuard');
 const shopifyRoutes = require('./routes/shopifyRoutes');
 const magentoRoutes = require('./routes/magentoRoutes');
+const prestashopRoutes = require('./routes/prestashopRoutes');
 const colissimoRoutes = require('./routes/colissimoRoutes');
 
 const app = express();
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use('/colissimo', colissimoRoutes);
 app.use('/shopify', shopifyRoutes);
 app.use('/magento', magentoRoutes);
+app.use('/prestashop', prestashopRoutes);
 
 // Start the server
 app.listen(port, () => {
