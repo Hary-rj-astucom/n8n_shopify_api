@@ -1,43 +1,91 @@
 require('dotenv').config();
 const axios = require('axios');
 
-const prestashopApi  = axios.create({
-  baseURL: `${ process.env.PRESTASHOP_URL }/api`,
-  auth: {
-    username: process.env.PRESTASHOP_API_KEY,
-    password: '' // doit rester vide pour PrestaShop
-  },
-  headers: { 'Output-Format': 'JSON' }
-});
+// Configuration de l'API PrestaShop
+const apiKey = "EYY3MPK7IK2M59SANQYCLDU7E1F2XFXA";
+const shopUrl = "https://www.digiparf.com"; // Remplacez par votre URL
+const apiUrl = `${shopUrl}/api/`;
 
-/**
- * Récupère une commande et ses transactions via le numéro visible par le client
- * @param {string} referenceNum - Numéro de commande visible par le client
- */
-async function getOrderByReference(referenceNum) {
+// Fonction générique pour appeler l'API PrestaShop
+async function callPrestaShopAPI(url) {
   try {
-    // 1. Récupération de la commande avec le filtre sur reference
-    const orderResponse = await prestashopApi.get(`/orders?filter[reference]=${referenceNum}`);
-    const orders = orderResponse.data.orders || [];
+    const response = await axios.get(url, {
+      auth: {
+        username: apiKey,
+        password: "",
+      },
+      timeout: 30000,
+      httpsAgent: new (await import("https")).Agent({ rejectUnauthorized: false }),
+    });
 
-    if (orders.length === 0) {
-      return null; // pas de commande trouvée
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(`Erreur HTTP: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+    } else {
+      throw new Error(`Erreur Axios: ${error.message}`);
+    }
+  }
+}
+
+// Récupérer une commande spécifique
+async function getOrderById(order_id) {
+  const url = `${apiUrl}orders/${order_id}?output_format=JSON`;
+  const data = await callPrestaShopAPI(url);
+  return data.order ?? null;
+}
+
+// Récupérer un client par ID
+async function getCustomerById(customerId) {
+  const url = `${apiUrl}customers/${customerId}?output_format=JSON`;
+  const data = await callPrestaShopAPI(url);
+  return data.customer ?? null;
+}
+
+// Récupérer un statut de commande
+async function getOrderStateById(stateId) {
+  const url = `${apiUrl}order_states/${stateId}?output_format=JSON`;
+  const data = await callPrestaShopAPI(url);
+  return data.order_state ?? null;
+}
+
+// Récupérer les produits d’une commande
+async function getOrderDetails(order_id) {
+  const url = `${apiUrl}order_details?filter[id_order]=${order_id}&output_format=JSON`;
+  const data = await callPrestaShopAPI(url);
+  return data.order_details ?? [];
+}
+
+//avoir les donnees avec les references
+async function getOrderByReference(order_id){
+  try {
+    const order = await getOrderById(order_id);
+    if (!order) throw new Error("Commande non trouvée ou erreur lors de la récupération");
+
+    let customer = null;
+    if (order.id_customer) {
+      customer = await getCustomerById(order.id_customer);
+      console.log(customer ? "✓ Informations client récupérées !" : "⚠️ Impossible de récupérer les infos client");
     }
 
-    const order = orders[0];
+    let orderState = null;
+    if (order.current_state) {
+      orderState = await getOrderStateById(order.current_state);
+      console.log(orderState ? "✓ Statut récupéré !" : "⚠️ Impossible de récupérer le statut");
+    }
 
-    // 2. Récupération des transactions pour cette commande
-    const transactionResponse = await prestashopApi.get(`/order_payments?filter[id_order]=${order.id}`);
-    const transactions = transactionResponse.data.order_payments || [];
+    const orderDetails = await getOrderDetails(order_id);
+    console.log(orderDetails.length > 0 ? `✓ ${orderDetails.length} produit(s) récupéré(s)` : "⚠️ Aucun produit trouvé");
 
     return {
       order,
-      transactions
-    };
-
-  } catch (error) {
-    console.error('Erreur lors de la récupération de la commande :', error.message);
-    return error;
+      customer,
+      orderState,
+      orderDetails
+    }
+    
+  } catch (err) {
+    console.error("❌ Erreur:", err.message);
   }
 }
 
