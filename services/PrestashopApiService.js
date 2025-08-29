@@ -2,8 +2,12 @@ require('dotenv').config();
 const axios = require('axios');
 
 // Configuration de l'API PrestaShop
-const apiKey = "EYY3MPK7IK2M59SANQYCLDU7E1F2XFXA";
-const shopUrl = "https://www.digiparf.com"; // Remplacez par votre URL
+// const apiKey = "EYY3MPK7IK2M59SANQYCLDU7E1F2XFXA";
+// const shopUrl = "https://www.digiparf.com"; // Remplacez par votre URL
+
+const apiKey = process.env.PRESTASHOP_API_KEY;
+const shopUrl = process.env.PRESTASHOP_URL;
+
 const apiUrl = `${shopUrl}/api/`;
 
 // Fonction générique pour appeler l'API PrestaShop
