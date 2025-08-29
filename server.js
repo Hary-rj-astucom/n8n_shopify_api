@@ -7,6 +7,7 @@ const shopifyRoutes = require('./routes/shopifyRoutes');
 const magentoRoutes = require('./routes/magentoRoutes');
 const prestashopRoutes = require('./routes/prestashopRoutes');
 const colissimoRoutes = require('./routes/colissimoRoutes');
+const modialrelayRoutes = require('./routes/modialrelayRoutes');
 
 const app = express();
 const port = process.env.PORT;
@@ -21,6 +22,7 @@ app.use(express.json());
 // Routes
 
 app.use('/colissimo', colissimoRoutes);
+app.use('/modialrelay', modialrelayRoutes);
 app.use('/shopify', shopifyRoutes);
 app.use('/magento', magentoRoutes);
 app.use('/prestashop', prestashopRoutes);
