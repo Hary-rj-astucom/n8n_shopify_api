@@ -3,7 +3,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 const soap = require('soap');
 
-const WSDL_URL = 'https://api.mondialrelay.com/web_services.asmx?WSDL';
+const WSDL_URL = 'https://connect-api.mondialrelay.com/web_services.asmx?WSDL';
 
 async function trackParcel(trackingNumber) {
 
