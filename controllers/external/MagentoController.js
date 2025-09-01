@@ -1,4 +1,4 @@
-const MagentoApiService = require('../services/MagentoApiService');
+const MagentoApiService = require('../../services/MagentoApiService');
 
 const getOrderWithTransactionsByNumber = async (req, res) => {
   try {

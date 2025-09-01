@@ -1,4 +1,4 @@
-const PrestashopApiService = require('../services/PrestashopApiService');
+const PrestashopApiService = require('../../services/PrestashopApiService');
 
 const getOrderWithTransactionsByNumber = async (req, res) => {
   try {

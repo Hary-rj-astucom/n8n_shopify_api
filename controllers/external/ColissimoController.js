@@ -1,4 +1,4 @@
-const ColissimoApiService = require('../services/ColissimoApiService');
+const ColissimoApiService = require('../../services/ColissimoApiService');
 
 const trackOrder = async (req, res) => {
   try {

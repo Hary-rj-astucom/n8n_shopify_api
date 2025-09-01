@@ -1,5 +1,5 @@
 const express = require('express');
-const shopifyController = require('../controllers/ShopifyController');
+const shopifyController = require('../../controllers/external/ShopifyController');
 
 const router = express.Router();
 

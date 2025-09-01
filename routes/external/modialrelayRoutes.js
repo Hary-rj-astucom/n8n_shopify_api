@@ -1,5 +1,5 @@
 const express = require('express');
-const mondialRelayController = require('../controllers/MondialRelayController');
+const mondialRelayController = require('../../controllers/external/MondialRelayController');
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
 const express = require('express');
-const prestashopController = require('../controllers/PrestashopController');
+const prestashopController = require('../../controllers/external/PrestashopController');
 
 const router = express.Router();
 

@@ -1,4 +1,4 @@
-const MondialRelayApiService = require('../services/MondialRelayApiService');
+const MondialRelayApiService = require('../../services/MondialRelayApiService');
 
 const trackPackageByNum = async (req, res) => {
   try {

@@ -1,5 +1,5 @@
 const express = require('express');
-const magentoController = require('../controllers/MagentoController');
+const magentoController = require('../../controllers/external/MagentoController');
 
 const router = express.Router();
 

@@ -1,4 +1,4 @@
-const ShopifyApiService = require('../services/ShopifyApiService');
+const ShopifyApiService = require('../../services/ShopifyApiService');
 
 const getOrderByOrderNumber = async (req, res) => {
   try {

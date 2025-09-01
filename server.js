@@ -1,13 +1,19 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const express = require('express');
-const cors = require('cors');
-const watchguard = require('./middleware/watchGuard');
-const shopifyRoutes = require('./routes/shopifyRoutes');
-const magentoRoutes = require('./routes/magentoRoutes');
-const prestashopRoutes = require('./routes/prestashopRoutes');
-const colissimoRoutes = require('./routes/colissimoRoutes');
-const modialrelayRoutes = require('./routes/modialrelayRoutes');
+import express from 'express';
+import cors from 'cors';
+
+// external ressource
+import watchguard from './middleware/watchGuard.js';
+import shopifyRoutes from './routes/external/shopifyRoutes.js';
+import magentoRoutes from './routes/external/magentoRoutes.js';
+import prestashopRoutes from './routes/external/prestashopRoutes.js';
+import colissimoRoutes from './routes/external/colissimoRoutes.js';
+import modialrelayRoutes from './routes/external/modialrelayRoutes.js';
+
+// internal ressource
+import userRoutes from "./routes/backoffice/userRoutes.js";
 
 const app = express();
 const port = process.env.PORT;
@@ -20,12 +26,14 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-
 app.use('/colissimo', colissimoRoutes);
 app.use('/modialrelay', modialrelayRoutes);
 app.use('/shopify', shopifyRoutes);
 app.use('/magento', magentoRoutes);
 app.use('/prestashop', prestashopRoutes);
+
+// Api
+app.use('/user', userRoutes);
 
 // Start the server
 app.listen(port, () => {
