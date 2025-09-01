@@ -5,13 +5,15 @@ const cors = require('cors');
 
 // module import
 const watchguard = require('./middleware/watchGuard');
+const authenticateToken = require("./middleware/authenticateToken.js");
+
 const shopifyRoutes = require('./routes/external/shopifyRoutes');
 const magentoRoutes = require('./routes/external/magentoRoutes');
 const prestashopRoutes = require('./routes/external/prestashopRoutes');
 const colissimoRoutes = require('./routes/external/colissimoRoutes');
 const modialrelayRoutes = require('./routes/external/modialrelayRoutes');
 
-
+const authRoutes = require('./routes/backoffice/authRoutes');
 const userRoutes = require('./routes/backoffice/userRoutes');
 const projectRoutes = require('./routes/backoffice/projectRoutes');
 
@@ -33,8 +35,9 @@ app.use('/magento', magentoRoutes);
 app.use('/prestashop', prestashopRoutes);
 
 // Api
-app.use('/user', userRoutes);
-app.use('/project', projectRoutes);
+app.use('/auth', authRoutes);
+app.use('/user', authenticateToken, userRoutes);
+app.use('/project', authenticateToken, projectRoutes);
 
 // Start the server
 app.listen(port, () => {
