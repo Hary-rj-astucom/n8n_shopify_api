@@ -1,5 +1,5 @@
 {
-  "name": "export_magento_database",
+  "name": "N8N_node_server",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
