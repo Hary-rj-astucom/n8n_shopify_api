@@ -13,6 +13,7 @@ const modialrelayRoutes = require('./routes/external/modialrelayRoutes');
 
 
 const userRoutes = require('./routes/backoffice/userRoutes');
+const projectRoutes = require('./routes/backoffice/projectRoutes');
 
 const app = express();
 const port = process.env.PORT;
@@ -33,6 +34,7 @@ app.use('/prestashop', prestashopRoutes);
 
 // Api
 app.use('/user', userRoutes);
+app.use('/project', projectRoutes);
 
 // Start the server
 app.listen(port, () => {
