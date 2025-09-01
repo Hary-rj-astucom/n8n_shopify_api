@@ -3,13 +3,17 @@ const axios = require('axios');
 const crypto = require('crypto');
 const soap = require('soap');
 
-const WSDL_URL = 'https://connect-api.mondialrelay.com/web_services.asmx?WSDL';
+const WSDL_URL = 'https://api.mondialrelay.com/web_services.asmx?WSDL';
 
 async function trackParcel(trackingNumber) {
 
-  const enseigne = process.env.MONDIAL_RELAY_BRAND_ID;
+  const enseigne = process.env.MONDIAL_RELAY_BRAND_ID; 
   const secretKey = process.env.MONDIAL_RELAY_SECRET_KEY_API;
   const lang = 'FR';
+
+  // const enseigne = "BDTEST13";
+  // const secretKey = "PrivateK";
+  // trackingNumber = "12345678";
 
   const security = crypto
     .createHash('md5')
