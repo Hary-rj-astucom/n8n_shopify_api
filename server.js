@@ -12,6 +12,7 @@ const magentoRoutes = require('./routes/external/magentoRoutes');
 const prestashopRoutes = require('./routes/external/prestashopRoutes');
 const colissimoRoutes = require('./routes/external/colissimoRoutes');
 const modialrelayRoutes = require('./routes/external/modialrelayRoutes');
+const outlookRoutes = require('./routes/external/outlookRoutes');
 
 const authRoutes = require('./routes/backoffice/authRoutes');
 const userRoutes = require('./routes/backoffice/userRoutes');
@@ -33,6 +34,7 @@ app.use('/modialrelay', modialrelayRoutes);
 app.use('/shopify', shopifyRoutes);
 app.use('/magento', magentoRoutes);
 app.use('/prestashop', prestashopRoutes);
+app.use('/outlook', outlookRoutes);
 
 // Api
 app.use('/auth', authRoutes);
