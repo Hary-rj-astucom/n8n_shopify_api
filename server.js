@@ -1,19 +1,18 @@
-import dotenv from 'dotenv';
-dotenv.config();
+require('dotenv').config();
 
-import express from 'express';
-import cors from 'cors';
+const express = require('express');
+const cors = require('cors');
 
-// external ressource
-import watchguard from './middleware/watchGuard.js';
-import shopifyRoutes from './routes/external/shopifyRoutes.js';
-import magentoRoutes from './routes/external/magentoRoutes.js';
-import prestashopRoutes from './routes/external/prestashopRoutes.js';
-import colissimoRoutes from './routes/external/colissimoRoutes.js';
-import modialrelayRoutes from './routes/external/modialrelayRoutes.js';
+// module import
+const watchguard = require('./middleware/watchGuard');
+const shopifyRoutes = require('./routes/external/shopifyRoutes');
+const magentoRoutes = require('./routes/external/magentoRoutes');
+const prestashopRoutes = require('./routes/external/prestashopRoutes');
+const colissimoRoutes = require('./routes/external/colissimoRoutes');
+const modialrelayRoutes = require('./routes/external/modialrelayRoutes');
 
-// internal ressource
-import userRoutes from "./routes/backoffice/userRoutes.js";
+
+const userRoutes = require('./routes/backoffice/userRoutes');
 
 const app = express();
 const port = process.env.PORT;

@@ -1,12 +1,12 @@
-import express from "express";
-import { createUser, getUsers, getUser, updateUser, deleteUser } from "../../controllers/backoffice/UserController.js";
+const express = require("express");
+const UserController = require("../../controllers/backoffice/UserController.js");
 
 const router = express.Router();
 
-router.post("/", createUser);
-router.get("/", getUsers);
-router.get("/:id", getUser);
-router.put("/:id", updateUser);
-router.delete("/:id", deleteUser);
+router.post("/", UserController.createUser);
+router.get("/", UserController.getUsers);
+router.get("/:id", UserController.getUser);
+router.put("/:id", UserController.updateUser);
+router.delete("/:id", UserController.deleteUser);
 
-export default router;
+module.exports = router;
