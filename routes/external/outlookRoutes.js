@@ -3,7 +3,7 @@ const outlookController = require('../../controllers/external/OutlookController'
 
 const router = express.Router();
 
-//Shopify format
 router.post('/getConversation', outlookController.getConversationThreads);
+router.post('/replayMessage', outlookController.getReplayMessage);
 
 module.exports = router;

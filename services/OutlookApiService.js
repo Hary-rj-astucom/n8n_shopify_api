@@ -3,10 +3,10 @@ const axios = require('axios');
 const qs = require('qs');
 
 async function getAccessToken() {
-  const tokenUrl = `https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`;
+  const tokenUrl = `https://login.microsoftonline.com/${process.env.OUTLOOK_TENANT_ID}/oauth2/v2.0/token`;
   const data = {
-    client_id: process.env.CLIENT_ID,
-    client_secret: process.env.CLIENT_SECRET,
+    client_id: process.env.OUTLOOK_CLIENT_ID,
+    client_secret: process.env.OUTLOOK_CLIENT_SECRET,
     scope: 'https://graph.microsoft.com/.default',
     grant_type: 'client_credentials'
   };
@@ -20,24 +20,29 @@ async function getAccessToken() {
 async function getConversationThreads(conversationId) {
   const token = await getAccessToken();
    const response = await axios.get(
-    `https://graph.microsoft.com/v1.0/me/messages$select=conversationId,subject,from,body,receivedDateTime,id,hasAttachments,toRecipients,ccRecipients,bccRecipients,replyTo&$filter=conversationId eq '${conversationId}'`,
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages?$filter=conversationId eq '${conversationId}'&$top=50`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
-  return response.data.value;
+  return response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime));
 }
 
 async function replyToMessage(messageId, replyText) {
   const token = await getAccessToken();
+  // 1. Create the reply draft
   await axios.post(
-    `${process.env.GRAPH_URL}/me/messages/${messageId}/reply`,
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${messageId}/reply`,
     { comment: replyText },
     { headers: { Authorization: `Bearer ${token}` } }
   );
+
+  // 2. Send the draft
   await axios.post(
-    `${process.env.GRAPH_URL}/me/messages/${messageId}/send`,
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${messageId}/send`,
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
+
+  console.log('Reply sent successfully!');
 }
 
 module.exports = { 
