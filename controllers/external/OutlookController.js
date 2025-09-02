@@ -15,7 +15,7 @@ const getConversationThreads = async (req, res) => {
 const getReplayMessage = async (req, res) => {
   try {
 
-    let result = await OutlookApiService.replyToMessage(req.body.message_id, req.body.replyText);
+    let result = await OutlookApiService.replyToMessage(req.body.message_id, req.body.replyText, req.body.destinataire, req.body.original_subject, req.body.conversation_id);
     res.status(200).send(result);
 
   } catch (error) {
@@ -27,7 +27,23 @@ const getReplayMessage = async (req, res) => {
   }
 }
 
+const testPolicy = async (req, res) => {
+  try {
+
+    let result = await OutlookApiService.testPolicy();
+    res.status(200).send(result);
+
+  } catch (error) {
+
+    console.dir(error);
+
+    //console.error('Error consultation outlook:', error);
+    res.status(500).send('Error consultation outlook');
+  }
+}
+
 module.exports = { 
     getConversationThreads,
-    getReplayMessage
+    getReplayMessage,
+    testPolicy
 };
