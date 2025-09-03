@@ -5,7 +5,7 @@ const magento = axios.create({
   baseURL: `${process.env.MAGENTO_URL}/rest/V1`,
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer 1s1hger8gk2dgflchxzlh72utct30d5q` // Utiliser un token admin ou integration
+    'Authorization': `Bearer ${process.env.MAGENTO_ACCESS_TOKEN}` // Utiliser un token admin ou integration
   }
 });
 
