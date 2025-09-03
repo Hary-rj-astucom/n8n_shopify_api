@@ -5,7 +5,7 @@ const magento = axios.create({
   baseURL: `${process.env.MAGENTO_URL}/rest/V1`,
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${process.env.MAGENTO_ACCESS_TOKEN}` // Utiliser un token admin ou integration
+    'Authorization': `Bearer 1s1hger8gk2dgflchxzlh72utct30d5q` // Utiliser un token admin ou integration
   }
 });
 
@@ -25,6 +25,8 @@ async function getOrderWithTransactionsByNumber(orderNumber) {
 
     const order = orderResponse.data.items[0];
     const orderId = order.entity_id;
+
+    console.dir(order);
 
     // 2. Récupérer les transactions financières
     const transactionResponse = await magento.get(`/orders/${orderId}/transactions`);
