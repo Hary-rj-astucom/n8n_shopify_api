@@ -7,7 +7,7 @@ const getConversationThreads = async (req, res) => {
     res.status(200).send(result);
 
   } catch (error) {
-    console.error('Error consultation outlook:', error);
+    console.error('Error consultation outlook:', error?.response);
     res.status(500).send('Error consultation outlook');
   }
 }
@@ -15,7 +15,7 @@ const getConversationThreads = async (req, res) => {
 const getReplayMessage = async (req, res) => {
   try {
 
-    let result = await OutlookApiService.replyToMessage(req.body.message_id, req.body.replyText, req.body.destinataire, req.body.original_subject, req.body.conversation_id);
+    let result = await OutlookApiService.replyToMessage(req.body.message_id, req.body.conversation_id, req.body.replyText, req.body.destinataire);
     res.status(200).send(result);
 
   } catch (error) {

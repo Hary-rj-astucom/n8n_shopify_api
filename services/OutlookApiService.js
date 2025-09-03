@@ -26,7 +26,7 @@ async function getConversationThreads(conversationId) {
   return response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime));
 }
 
-async function replyToMessage(messageId, replyText, destinataire, original_subject, conversation_id) {
+async function replyToMessage(messageId, conversation_id, replyText, destinataire) {
   const token = await getAccessToken();
 
   /* methode 1 */
@@ -46,9 +46,9 @@ async function replyToMessage(messageId, replyText, destinataire, original_subje
     { headers: { Authorization: `Bearer ${token}`, 'Content-Type': `application/json` } }
   );
 
-  // 2. get le broillon
+  // 2. get le broillon (`${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/mailFolders/Drafts/messages?$filter=conversationId eq '${conversation_id}' and startswith(subject,'Re:')&$orderby=createdDateTime desc&$top=1`)
   const response_daft = await axios.get(
-    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/mailFolders/Drafts/messages?$orderby=createdDateTime desc&$top=1`,
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/mailFolders/Drafts/messages?$filter=conversationId eq '${conversation_id}' and startswith(subject,'Re:')&$top=1`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
   const draft_id = response_daft.data.value[0].id;
@@ -75,28 +75,6 @@ async function replyToMessage(messageId, replyText, destinataire, original_subje
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
-
-  /* methode 2  (le mail n'apparait pas dans la conversation) */
-  // let result = await axios.post(
-  //   `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/sendMail`,
-  //   {
-  //     "message": {
-  //       "subject": `Re: ${original_subject}`,
-  //       "body": {
-  //         "contentType": "Text",
-  //         "content": `${replyText}`
-  //       },
-  //       "toRecipients": [
-  //         { "emailAddress": { "address": "destinataire" } }
-  //       ],
-  //       "conversationId": conversation_id
-  //     },
-  //     "saveToSentItems": true
-  //   },
-  //   { headers: { Authorization: `Bearer ${token}`, 'Content-Type': `application/json` } }
-  // );
-
-  // console.dir(result);
 
   console.log('Reply sent successfully!');
 }
