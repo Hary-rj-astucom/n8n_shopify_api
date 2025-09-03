@@ -24,16 +24,9 @@ async function getOrderWithTransactionsByNumber(orderNumber) {
     }
 
     const order = orderResponse.data.items[0];
-    const orderId = order.entity_id;
-
-    console.dir(order);
-
-    // 2. Récupérer les transactions financières
-    const transactionResponse = await magento.get(`/orders/${orderId}/transactions`);
 
     return {
-      order,
-      transactions: transactionResponse.data
+      order
     };
   } catch (error) {
     console.error('Erreur_Magento:', error.response?.data || error.message);
