@@ -9,4 +9,6 @@ router.post("/", ticketController.createTicket);
 router.put("/:id", ticketController.updateTicketDetails);
 router.delete("/:id", ticketController.deleteTicket);
 
+router.post("/replymail", ticketController.respondMail);
+
 module.exports = router;

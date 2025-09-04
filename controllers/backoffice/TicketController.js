@@ -183,6 +183,45 @@ const getTicketsDetails = async (req, res) => {
   }
 }
 
+const respondMail = async (req, res) => {
+  try{
+
+    const project_id = req.body.project_id;
+    const messageId = req.body.message_id;
+    const conversation_id = req.body.conversation_id;
+    const replyText = req.body.replyText;
+    const destinataire = req.body.destinataire;
+
+    switch (project_id) {
+      case 1:
+        // COSMASHOP
+        console.log("envoie messagerie COSMASHOP");
+        result_conv = await OutlookCosmashopApiService.replyToMessage(messageId, conversation_id, replyText, destinataire);
+        break;
+      case 2:
+        // COSMA-PARFUMERIE
+        console.log("envoie messagerie COSMA-PARFUMERIE");
+        result_conv = await OutlookCosmaparfumerieApiService.replyToMessage(messageId, conversation_id, replyText, destinataire);
+        break;
+      case 3:
+        // DIGIPARF
+        console.log("envoie messagerie DIGIPARF");
+        result_conv = await OutlookDigiparfApiService.replyToMessage(messageId, conversation_id, replyText, destinataire);
+        break;
+      default:
+        result_conv = [];
+    }
+
+    return res.json({message: "message envoye"});
+
+  } catch (error) {
+    console.error(error?.response?.data);
+    return res.status(200).json(error?.response?.data);
+
+    //return res.status(400).json({ error: error.message });
+  }
+}
+
 const createTicket = async (req, res) => {
   try {
     const project = await Project.findByPk(req.body.project_id);
@@ -218,5 +257,6 @@ module.exports = {
   getTicketsDetails,
   updateTicketDetails,
   deleteTicket,
-  createTicket
+  createTicket,
+  respondMail
 };
