@@ -1,4 +1,5 @@
 const sequelize = require("../../config/database.js");
+const OutlookApiService = require('../../services/OutlookApiService');
 const Ticket = require("../../models/Ticket.js");
 const Project = require("../../models/Project.js");
 
@@ -140,10 +141,14 @@ const getTicketsDetails = async (req, res) => {
       replacements: params,
       type: sequelize.QueryTypes.SELECT
     });
+    
+    // get mail conversation
+    const result_conv = await OutlookApiService.getConversationThreads(result[0].conversation_email_id, result[0].reception_mail);
 
     return res.json({
       details: result,
-      comment: result_comment
+      comment: result_comment,
+      conversation: result_conv
     });
 
   } catch (error) {

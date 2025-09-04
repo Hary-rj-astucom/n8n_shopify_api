@@ -17,10 +17,10 @@ async function getAccessToken() {
   return response.data.access_token;
 }
 
-async function getConversationThreads(conversationId) {
+async function getConversationThreads(conversationId, user_email = process.env.OUTLOOK_USER_APP) {
   const token = await getAccessToken();
    const response = await axios.get(
-    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages?$filter=conversationId eq '${conversationId}'&$top=100`,
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${user_email}/messages?$filter=conversationId eq '${conversationId}'&$top=100`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
   return response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime));
