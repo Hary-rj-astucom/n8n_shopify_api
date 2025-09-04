@@ -121,7 +121,7 @@ CREATE TABLE ticket (
     label_id INT NOT NULL,
     project_id INT NOT NULL,
     created_at DATETIME NOT NULL DEFAULT NOW(),
-    status ENUM ('to_do', 'in progess', 'done'),
+    status ENUM ('en attente', 'en cours', 'cloture'),
     state INT NOT NULL DEFAULT 1
 );
 

@@ -1,4 +1,4 @@
-const Project = require("../../models/Project.js");
+const sequelize = require("../../config/database.js");
 
 const getTickets = async (req, res) => {
   try {
@@ -14,28 +14,30 @@ const getTickets = async (req, res) => {
     if (req.query.search) {
       const search = `%${req.query.search}%`;
       subQuery += ` AND (
-        commande.id LIKE ? OR 
-        magasin.name LIKE ? OR 
-        commande.libelle LIKE ? OR 
-        fournisseur.name LIKE ? OR 
-        commande.montant_total LIKE ? OR 
-        commande.status LIKE ? OR 
-        commande.etat LIKE ?
+        num_ticket LIKE ? OR 
+        subject_ticket LIKE ? OR 
+        original_client_mail LIKE ? OR 
+        nom_client LIKE ? OR 
+        num_commande LIKE ? OR 
+        label_id LIKE ? OR 
+        project_id LIKE ? OR 
+        status LIKE ? OR 
       )`;
 
-      paramsTotal.push(search, search, search, search, search, search, search);
-      params.push(search, search, search, search, search, search, search);
+      paramsTotal.push(search, search, search, search, search, search, search, search);
+      params.push(search, search, search, search, search, search, search, search);
     }
 
     // 🔍 Multi-criteria filters
     const multiFields = [
-      "commande.id",
-      "magasin.name",
-      "commande.libelle",
-      "fournisseur.name",
-      "commande.montant_total",
-      "commande.status",
-      "commande.etat"
+      "num_ticket",
+      "subject_ticket",
+      "original_client_mail",
+      "nom_client",
+      "num_commande",
+      "label_id",
+      "project_id",
+      "status"
     ];
 
     for (const field of multiFields) {
@@ -51,9 +53,7 @@ const getTickets = async (req, res) => {
     // 🧮 Total count
     const totalQuery = `
       SELECT COUNT(*) as nb 
-      FROM commande 
-      JOIN fournisseur ON fournisseur.id = commande.fournisseur_id
-      JOIN magasin ON magasin.id = commande.magasin_livraison_id
+      FROM ticket 
       WHERE 1=1 ${subQuery}
     `;
     const [resultTotal] = await sequelize.query(totalQuery, {
@@ -73,17 +73,22 @@ const getTickets = async (req, res) => {
     // 📄 Paginated data
     const dataQuery = `
       SELECT 
-        commande.id as commande_id,
-        magasin.name as magasin_livraison,
-        commande.libelle,
-        fournisseur.name as fournisseur,
-        commande.montant_total,
-        commande.status,
-        commande.etat,
-        commande.created_at
-      FROM commande
-      JOIN fournisseur ON fournisseur.id = commande.fournisseur_id
-      JOIN magasin ON magasin.id = commande.magasin_livraison_id
+        ticket.id,
+        num_ticket,
+        subject_ticket,
+        conversation_email_id,
+        to_do, 
+        original_client_mail, 
+        nom_client,
+        num_commande, 
+        label_id,
+        project_id,
+        status,
+        label.name as label,
+        project.name as project_name
+      FROM ticket
+      JOIN label ON label.id = ticket.label_id 
+      JOIN project ON project.id = ticket.project_id
       WHERE 1=1 ${subQuery}
       LIMIT ? OFFSET ?
     `;
@@ -109,5 +114,5 @@ const getTickets = async (req, res) => {
 };
 
 module.exports = {
-  getProjects
+  getTickets
 };

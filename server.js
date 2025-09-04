@@ -17,6 +17,7 @@ const outlookRoutes = require('./routes/external/outlookRoutes');
 const authRoutes = require('./routes/backoffice/authRoutes');
 const userRoutes = require('./routes/backoffice/userRoutes');
 const projectRoutes = require('./routes/backoffice/projectRoutes');
+const ticketRoutes = require('./routes/backoffice/ticketRoutes');
 
 const app = express();
 const port = process.env.PORT;
@@ -40,6 +41,7 @@ app.use('/outlook', outlookRoutes);
 app.use('/auth', authRoutes);
 app.use('/user', authenticateToken, userRoutes);
 app.use('/project', authenticateToken, projectRoutes);
+app.use('/ticket', authenticateToken, ticketRoutes);
 
 // Start the server
 app.listen(port, () => {
