@@ -76,8 +76,6 @@ const getTickets = async (req, res) => {
         ticket.id,
         num_ticket,
         subject_ticket,
-        conversation_email_id,
-        to_do, 
         original_client_mail, 
         nom_client,
         num_commande, 
@@ -113,6 +111,46 @@ const getTickets = async (req, res) => {
   }
 };
 
+const getTicketsDetails = async (req, res) => {
+  try{
+
+    let params = [];
+    params.push(req.params.id);
+
+    // get detail ticket
+    const dataQuery = `
+      SELECT *
+      FROM ticket
+      WHERE id = ?
+    `;
+    const result = await sequelize.query(dataQuery, {
+      replacements: params,
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    // get comment 
+    const dataQueryComment = `
+      SELECT *
+      FROM ticket_historical_comment
+      WHERE ticket_id = ? ORDER BY id DESC
+    `;
+    const result_comment = await sequelize.query(dataQueryComment, {
+      replacements: params,
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    return res.json({
+      details: result,
+      comment: result_comment
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: error.message });
+  }
+}
+
 module.exports = {
-  getTickets
+  getTickets,
+  getTicketsDetails
 };
