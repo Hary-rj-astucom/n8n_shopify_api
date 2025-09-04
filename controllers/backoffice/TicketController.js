@@ -1,4 +1,6 @@
 const sequelize = require("../../config/database.js");
+const Ticket = require("../../models/Ticket.js");
+const Project = require("../../models/Project.js");
 
 const getTickets = async (req, res) => {
   try {
@@ -87,8 +89,8 @@ const getTickets = async (req, res) => {
       FROM ticket
       JOIN label ON label.id = ticket.label_id 
       JOIN project ON project.id = ticket.project_id
-      WHERE 1=1 ${subQuery}
-      LIMIT ? OFFSET ?
+      WHERE ticket.state=1 ${subQuery} ORDER BY ticket.id ASC
+      LIMIT ? OFFSET ? 
     `;
     params.push(perPage, offset);
 
@@ -107,7 +109,7 @@ const getTickets = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -146,11 +148,44 @@ const getTicketsDetails = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
+  }
+}
+
+const createTicket = async (req, res) => {
+  try {
+    const project = await Project.findByPk(req.body.project_id);
+    const lastId = await Ticket.max('id');
+    req.body.num_ticket = project.code + "-" + (lastId + 1);
+    const ticket = await Ticket.create(req.body);
+    res.status(201).json(ticket);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+const updateTicketDetails = async (req, res) => {
+  try {
+    const [updated] = await Ticket.update(req.body, { where: { id: req.params.id } });
+    updated ? res.json({ message: "Ticket updated" }) : res.status(404).json({ error: "Ticket not found" });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+}
+
+const deleteTicket = async (req, res) => {
+  try {
+    const [updated] = await Ticket.update({ state: 2 }, { where: { id: req.params.id } });
+    updated ? res.json({ message: "Ticket deleted" }) : res.status(404).json({ error: "Ticket deleted" });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 }
 
 module.exports = {
   getTickets,
-  getTicketsDetails
+  getTicketsDetails,
+  updateTicketDetails,
+  deleteTicket,
+  createTicket
 };
