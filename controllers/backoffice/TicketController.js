@@ -1,5 +1,10 @@
 const sequelize = require("../../config/database.js");
 const OutlookApiService = require('../../services/OutlookApiService');
+
+const OutlookCosmashopApiService = require('../../services/OutlookCosmashopApiService');
+const OutlookCosmaparfumerieApiService = require('../../services/OutlookCosmaparfumerieApiService');
+const OutlookDigiparfApiService = require('../../services/OutlookDigiparfApiService');
+
 const Ticket = require("../../models/Ticket.js");
 const Project = require("../../models/Project.js");
 
@@ -143,7 +148,28 @@ const getTicketsDetails = async (req, res) => {
     });
     
     // get mail conversation
-    const result_conv = await OutlookApiService.getConversationThreads(result[0].conversation_email_id, result[0].reception_mail);
+    const project_id = result[0].project_id;
+    let result_conv;
+
+    switch (project_id) {
+      case 1:
+        // COSMASHOP
+        console.log("consultation messagerie COSMASHOP");
+        result_conv = await OutlookCosmashopApiService.getConversationThreads(result[0].conversation_email_id);
+        break;
+      case 2:
+        // COSMA-PARFUMERIE
+         console.log("consultation messagerie COSMA-PARFUMERIE");
+        result_conv = await OutlookCosmaparfumerieApiService.getConversationThreads(result[0].conversation_email_id);
+        break;
+      case 3:
+        // DIGIPARF
+         console.log("consultation messagerie DIGIPARF");
+        result_conv = await OutlookDigiparfApiService.getConversationThreads(result[0].conversation_email_id);
+        break;
+      default:
+        result_conv = [];
+    }
 
     return res.json({
       details: result,
