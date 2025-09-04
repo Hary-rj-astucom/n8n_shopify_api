@@ -115,7 +115,7 @@ CREATE TABLE ticket (
     subject_ticket VARCHAR(45) NOT NULL,
     conversation_email_id TEXT NOT NULL,
     to_do TEXT NOT NULL,
-    original_client_mail VARCHAR(45),
+    original_client_mail_id VARCHAR(45),
     label_id INT NOT NULL,
     project_id INT NOT NULL,
     created_at DATETIME NOT NULL DEFAULT NOW(),
@@ -125,6 +125,7 @@ CREATE TABLE ticket (
 
 CREATE TABLE ticket_historical_comment (
     id INT PRIMARY KEY auto_increment,
+    comment TEXT NOT NULL,
     ticket_id INT NOT NULL,
     user_id INT NOT NULL,
     created_at DATETIME NOT NULL DEFAULT NOW(),

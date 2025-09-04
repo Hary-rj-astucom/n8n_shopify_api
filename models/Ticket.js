@@ -1,0 +1,21 @@
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database.js");
+
+const Ticket = sequelize.define("Ticket", {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  num_ticket: { type: DataTypes.STRING(45), allowNull: false },
+  subject_ticket: { type: DataTypes.STRING(45), allowNull: false },
+  conversation_email_id: { type: DataTypes.TEXT, allowNull: false },
+  to_do: { type: DataTypes.TEXT, allowNull: false },
+  original_client_mail_id: { type: DataTypes.TEXT, allowNull: false },
+  label_id: { type: DataTypes.INTEGER, allowNull: false },
+  project_id: { type: DataTypes.INTEGER, allowNull: false },
+  created_at: { type: DataTypes.DATE, allowNull: false },
+  status: { type: DataTypes.STRING(20), allowNull: false },
+  state: { type: DataTypes.INTEGER, allowNull: false},
+}, {
+  tableName: "ticket",
+  timestamps: false
+});
+
+module.exports = Ticket;
