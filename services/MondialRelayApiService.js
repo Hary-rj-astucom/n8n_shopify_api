@@ -1,60 +1,32 @@
 require('dotenv').config();
 const axios = require('axios');
-const crypto = require('crypto');
-const soap = require('soap');
 
-const WSDL_URL = 'https://api.mondialrelay.com/web_services.asmx?WSDL';
+// URL de l'API Mondial Relay
+const url = 'https://connect-api.mondialrelay.com/api/tracking';
 
-async function trackParcel(trackingNumber) {
-
-  const enseigne = process.env.MONDIAL_RELAY_BRAND_ID; 
-  const secretKey = process.env.MONDIAL_RELAY_SECRET_KEY_API;
-  const lang = 'FR';
-
-  // const enseigne = "BDTEST13";
-  // const secretKey = "PrivateK";
-  // trackingNumber = "12345678";
-
-  const security = crypto
-    .createHash('md5')
-    .update(enseigne + trackingNumber + lang + secretKey)
-    .digest('hex')
-    .toUpperCase();
-
-  const xmlBody = `<?xml version="1.0" encoding="utf-8"?>
-  <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-                xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-    <soap:Body>
-      <WSI2_TracingColisDetaille xmlns="http://www.mondialrelay.fr/webservice/">
-        <Enseigne>${enseigne}</Enseigne>
-        <NumColis>${trackingNumber}</NumColis>
-        <Langue>${lang}</Langue>
-        <Security>${security}</Security>
-      </WSI2_TracingColisDetaille>
-    </soap:Body>
-  </soap:Envelope>`;
-
+async function trackShipment(shipin_number = 96408887) {
   try {
-    const response = await axios.post(
-      'https://api.mondialrelay.com/web_services.asmx',
-      xmlBody,
-      {
-        headers: {
-          'Content-Type': 'text/xml; charset=utf-8',
-          'SOAPAction':
-            'http://www.mondialrelay.fr/webservice/WSI2_TracingColisDetaille',
-          'User-Agent': 'Mozilla/5.0',
-        },
-      }
-    );
+    const xmlData = `<?xml version="1.0" encoding="utf-8"?> <TrackingRequest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.example.org/Request"> <Context> <Login>${process.env.MONDIAL_RELAY_LOGIN_API}</Login> <Password>${process.env.MONDIAL_RELAY_SECRET_KEY_API}</Password> <CustomerId>${process.env.MONDIAL_RELAY_BRAND_ID}</CustomerId> <Culture>fr-FR</Culture> <VersionAPI>1.0</VersionAPI> </Context> <TrackingList> <ShipmentNumber>96408887</ShipmentNumber> </TrackingList> </TrackingRequest>`;
 
+    const response = await axios.post(url, xmlData, {
+      headers: {
+        'Accept': 'application/xml',
+        'Content-Type': 'text/xml',
+      },
+    });
+
+    console.log('Réponse du serveur :');
     console.log(response.data);
+
   } catch (error) {
-    console.error('Erreur tracking:', error.response?.data || error.message);
+    console.error('Erreur lors de la requête :', error.message);
+    if (error.response) {
+      console.error('Status:', error.response.status);
+      console.error('Body:', error.response.data);
+    }
   }
 }
 
 module.exports = { 
-  trackParcel
+  trackShipment
 };
