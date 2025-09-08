@@ -2,9 +2,9 @@ require('dotenv').config();
 const soap = require("soap");
 
 class TntApiService {
-  constructor(username, password, wsdlUrl = "http://www.tnt.fr/service/?wsdl") {
-    this.username = username;
-    this.password = password;
+  constructor(wsdlUrl = "http://www.tnt.fr/service/?wsdl") {
+    this.username = process.env.TNT_USER_NAME;
+    this.password = process.env.TNT_PASSWORD;
     this.wsdlUrl = wsdlUrl;
     this.client = null;
   }
