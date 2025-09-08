@@ -12,6 +12,7 @@ const magentoRoutes = require('./routes/external/magentoRoutes');
 const prestashopRoutes = require('./routes/external/prestashopRoutes');
 const colissimoRoutes = require('./routes/external/colissimoRoutes');
 const modialrelayRoutes = require('./routes/external/modialrelayRoutes');
+const landmarkRoutes = require('./routes/external/landmarkRoutes');
 const tntRoutes = require('./routes/external/tntRoutes');
 const outlookRoutes = require('./routes/external/outlookRoutes');
 
@@ -31,10 +32,13 @@ app.use(watchguard);
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// Transporteur 
 app.use('/colissimo', colissimoRoutes);
 app.use('/modialrelay', modialrelayRoutes);
 app.use('/tnt', tntRoutes);
+app.use('/landmark', landmarkRoutes);
+
+// boutique et ressource
 app.use('/shopify', shopifyRoutes);
 app.use('/magento', magentoRoutes);
 app.use('/prestashop', prestashopRoutes);

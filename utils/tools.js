@@ -50,4 +50,8 @@ function createCustomLogger(filename = 'app.log') {
     return logger;
 }
 
-module.exports = { stripHtmlTags, quoteSql, roundToNthDecimal, createCustomLogger };
+function isObject(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+module.exports = { stripHtmlTags, quoteSql, roundToNthDecimal, createCustomLogger, isObject };
