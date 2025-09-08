@@ -12,6 +12,7 @@ const magentoRoutes = require('./routes/external/magentoRoutes');
 const prestashopRoutes = require('./routes/external/prestashopRoutes');
 const colissimoRoutes = require('./routes/external/colissimoRoutes');
 const modialrelayRoutes = require('./routes/external/modialrelayRoutes');
+const tntRoutes = require('./routes/external/tntRoutes');
 const outlookRoutes = require('./routes/external/outlookRoutes');
 
 const authRoutes = require('./routes/backoffice/authRoutes');
@@ -33,6 +34,7 @@ app.use(express.json());
 // Routes
 app.use('/colissimo', colissimoRoutes);
 app.use('/modialrelay', modialrelayRoutes);
+app.use('/tnt', tntRoutes);
 app.use('/shopify', shopifyRoutes);
 app.use('/magento', magentoRoutes);
 app.use('/prestashop', prestashopRoutes);
