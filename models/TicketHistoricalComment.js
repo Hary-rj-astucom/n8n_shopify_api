@@ -6,8 +6,8 @@ const TicketHistoricalComment = sequelize.define("TicketHistoricalComment", {
   comment: { type: DataTypes.TEXT, allowNull: false },
   ticket_id: { type: DataTypes.INTEGER, allowNull: false },
   user_id: { type: DataTypes.INTEGER, allowNull: false },
-  created_at: { type: DataTypes.DATE, allowNull: false },
-  state: { type: DataTypes.INTEGER, allowNull: false},
+  created_at: { type: DataTypes.DATE, allowNull: true },
+  state: { type: DataTypes.INTEGER, allowNull: true},
 }, {
   tableName: "ticket_historical_comment",
   timestamps: false

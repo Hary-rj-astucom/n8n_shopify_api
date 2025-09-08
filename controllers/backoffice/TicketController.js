@@ -6,6 +6,7 @@ const OutlookCosmaparfumerieApiService = require('../../services/OutlookCosmapar
 const OutlookDigiparfApiService = require('../../services/OutlookDigiparfApiService');
 
 const Ticket = require("../../models/Ticket.js");
+const TicketHistoricalComment = require("../../models/TicketHistoricalComment.js");
 const Project = require("../../models/Project.js");
 
 const getTickets = async (req, res) => {
@@ -252,11 +253,21 @@ const deleteTicket = async (req, res) => {
   }
 }
 
+const addTicketComment = async (req, res) => {
+  try {
+    const ticketcomment = await TicketHistoricalComment.create(req.body);
+    res.status(201).json(ticketcomment);
+  } catch(err){
+    res.status(400).json({ error: err.message });
+  }
+}
+
 module.exports = {
   getTickets,
   getTicketsDetails,
   updateTicketDetails,
   deleteTicket,
   createTicket,
-  respondMail
+  respondMail,
+  addTicketComment
 };
