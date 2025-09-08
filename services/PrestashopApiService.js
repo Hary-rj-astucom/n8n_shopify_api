@@ -60,9 +60,24 @@ async function getOrderDetails(order_id) {
   return data.order_details ?? [];
 }
 
-//avoir les donnees avec les references
-async function getOrderByReference(order_id){
+// Recuperation de l'order selon la reference du client
+async function getOrderByReferenceNum(reference) {
+  const url = `${apiUrl}orders?filter[reference]=${reference}&output_format=JSON`;
+  const data = await callPrestaShopAPI(url);
+  if(data.length == 0){
+    return null;
+  }else{
+    return data.orders[0].id ?? null;
+  }
+}
+
+//avoir les donnees avec les references [UCMRBZIYS]
+async function getOrderByReference(reference){
   try {
+
+    const order_id = await getOrderByReferenceNum(reference);
+    if (!order_id) throw new Error("Commande non trouvée ou erreur lors de la récupération");
+
     const order = await getOrderById(order_id);
     if (!order) throw new Error("Commande non trouvée ou erreur lors de la récupération");
 
@@ -90,6 +105,7 @@ async function getOrderByReference(order_id){
     
   } catch (err) {
     console.error("❌ Erreur:", err.message);
+    throw err;
   }
 }
 

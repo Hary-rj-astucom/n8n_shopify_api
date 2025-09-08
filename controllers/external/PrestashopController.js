@@ -8,7 +8,7 @@ const getOrderWithTransactionsByNumber = async (req, res) => {
 
   } catch (error) {
     console.log('Error consultation prestashop:', error);
-    res.status(500).send('Error consultation prestashop : ' + error.response?.data?.message);
+    res.status(400).send('Error consultation prestashop : ' + error?.message);
   }
 }
 
