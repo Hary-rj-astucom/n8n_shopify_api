@@ -15,6 +15,7 @@ const modialrelayRoutes = require('./routes/external/modialrelayRoutes');
 const landmarkRoutes = require('./routes/external/landmarkRoutes');
 const tntRoutes = require('./routes/external/tntRoutes');
 const outlookRoutes = require('./routes/external/outlookRoutes');
+const openaiRoutes = require('./routes/external/openaiRoutes');
 
 const authRoutes = require('./routes/backoffice/authRoutes');
 const userRoutes = require('./routes/backoffice/userRoutes');
@@ -43,6 +44,9 @@ app.use('/shopify', shopifyRoutes);
 app.use('/magento', magentoRoutes);
 app.use('/prestashop', prestashopRoutes);
 app.use('/outlook', outlookRoutes);
+
+// IA ressource
+app.use('/openai', openaiRoutes);
 
 // Api
 app.use('/auth', authRoutes);
