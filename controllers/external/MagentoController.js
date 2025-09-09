@@ -8,7 +8,7 @@ const getOrderWithTransactionsByNumber = async (req, res) => {
 
   } catch (error) {
     console.log('Error consultation magento:', error);
-    res.status(400).send('Error consultation magento : ' + error.response?.data?.message);
+    res.status(200).send('Error consultation magento : ' + error.response?.data?.message);
   }
 }
 

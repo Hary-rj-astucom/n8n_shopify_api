@@ -11,7 +11,7 @@ const trackpackage = async (req, res) => {
 
   } catch (error) {
     console.error('Error consultation landmark:', error.message);
-    res.status(500).send('Error consultation landmark : ' + error.message);
+    res.status(200).send('Error consultation landmark : ' + error.message);
   }
 }
 

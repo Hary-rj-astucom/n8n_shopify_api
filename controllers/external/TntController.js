@@ -11,7 +11,7 @@ const trackpackage = async (req, res) => {
 
   } catch (error) {
     console.error('Error consultation shopify:', error);
-    res.status(500).send('Error consultation shopify');
+    res.status(200).send('Error consultation shopify');
   }
 }
 

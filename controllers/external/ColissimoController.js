@@ -8,7 +8,7 @@ const trackOrder = async (req, res) => {
 
   } catch (error) {
     console.error('Error consultation colissimo:', error);
-    res.status(500).send('Error consultation colissimo');
+    res.status(200).send('Error consultation colissimo');
   }
 }
 

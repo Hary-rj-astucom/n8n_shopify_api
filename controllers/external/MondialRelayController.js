@@ -8,7 +8,7 @@ const trackPackageByNum = async (req, res) => {
 
   } catch (error) {
     console.log('Error consultation mondial relay:', error);
-    res.status(500).send('Error consultation mondial relay : ' + error.response?.data?.message);
+    res.status(200).send('Error consultation mondial relay : ' + error.response?.data?.message);
   }
 }
 
