@@ -2,7 +2,7 @@ require('dotenv').config();
 const axios = require('axios');
 
 // URL de l'API Mondial Relay
-const url = 'https://connect-api.mondialrelay.com/api/tracking';
+const url = 'https://connect-api.mondialrelay.com/api/Shipment';
 
 async function trackShipment(shipin_number = 96408887) {
   try {
