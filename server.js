@@ -53,7 +53,7 @@ app.use('/auth', authRoutes);
 app.use('/user', authenticateToken, userRoutes);
 app.use('/project', authenticateToken, projectRoutes);
 app.use('/ticket', authenticateToken, ticketRoutes);
-app.use('/ticket2', authenticateToken, ticketRoutes2);
+app.use('/ticket2', ticketRoutes2);
 
 // Start the server
 app.listen(port, () => {
