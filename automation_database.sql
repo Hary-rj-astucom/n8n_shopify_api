@@ -112,7 +112,7 @@ INSERT INTO user (id, name, email, password, role) VALUES (1, 'RAJAONAH Hary Ny 
 CREATE TABLE ticket (
     id INT PRIMARY KEY auto_increment,
     num_ticket VARCHAR(45) NOT NULL,
-    subject_ticket VARCHAR(45) NOT NULL,
+    subject_ticket VARCHAR(255) NOT NULL,
     conversation_email_id TEXT NOT NULL,
     to_do TEXT NOT NULL,
     original_client_mail VARCHAR(45) NOT NULL,
