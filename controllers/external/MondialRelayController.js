@@ -3,7 +3,7 @@ const MondialRelayApiService = require('../../services/MondialRelayApiService');
 const trackPackageByNum = async (req, res) => {
   try {
 
-    let result = await MondialRelayApiService.trackShipment(req.body.expedition_number);
+    let result = await MondialRelayApiService.tracingColisDetaille(req.body.expedition_number);
     res.status(200).send(result);
 
   } catch (error) {

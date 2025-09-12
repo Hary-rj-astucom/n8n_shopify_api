@@ -1,32 +1,38 @@
 require('dotenv').config();
 const axios = require('axios');
+const { parseStringPromise } = require("xml2js");
 
-// URL de l'API Mondial Relay
-const url = 'https://connect-api.mondialrelay.com/api/Shipment';
+async function tracingColisDetaille(expedition) {
+  // Construction du corps XML SOAP
+  const xml = `<?xml version="1.0" encoding="ISO-8859-1"?>
+<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+  <soap12:Body>
+    <WSI2_TracingColisDetaille xmlns="${process.env.MONDIAL_RELAY_URL}">
+      <Enseigne>${process.env.MONDIAL_RELAY_BRAND_ID}</Enseigne>
+      <Expedition>${expedition}</Expedition>
+      <Langue>FR</Langue>
+      <Security>${process.env.MONDIAL_RELAY_SECURITY}</Security>
+    </WSI2_TracingColisDetaille>
+  </soap12:Body>
+</soap12:Envelope>`;
 
-async function trackShipment(shipin_number = 96408887) {
   try {
-    const xmlData = `<?xml version="1.0" encoding="utf-8"?> <TrackingRequest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.example.org/Request"> <Context> <Login>${process.env.MONDIAL_RELAY_LOGIN_API}</Login> <Password>${process.env.MONDIAL_RELAY_SECRET_KEY_API}</Password> <CustomerId>${process.env.MONDIAL_RELAY_BRAND_ID}</CustomerId> <Culture>fr-FR</Culture> <VersionAPI>1.0</VersionAPI> </Context> <TrackingList> <ShipmentNumber>${shipin_number}</ShipmentNumber> </TrackingList> </TrackingRequest>`;
-
-    const response = await axios.post(url, xmlData, {
+    const response = await axios.post(process.env.MONDIAL_RELAY_URL_SERVICE, xml, {
       headers: {
-        'Accept': 'application/xml',
-        'Content-Type': 'text/xml',
+        "Content-Type": "application/soap+xml; charset=utf-8",
       },
     });
 
-    console.log('Réponse du serveur :');
-    console.log(response.data);
+    // Transformer XML en JSON
+    const jsonResult = await parseStringPromise(response.data, { explicitArray: false });
+    return JSON.stringify(jsonResult, null, 2);
 
   } catch (error) {
-    console.error('Erreur lors de la requête :', error.message);
-    if (error.response) {
-      console.error('Status:', error.response.status);
-      console.error('Body:', error.response.data);
-    }
+    console.error("Erreur lors de l'appel Mondial Relay:", error.message);
+    throw error;
   }
 }
 
 module.exports = { 
-  trackShipment
+  tracingColisDetaille
 };
