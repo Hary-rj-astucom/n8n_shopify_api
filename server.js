@@ -16,6 +16,7 @@ const landmarkRoutes = require('./routes/external/landmarkRoutes');
 const tntRoutes = require('./routes/external/tntRoutes');
 const outlookRoutes = require('./routes/external/outlookRoutes');
 const openaiRoutes = require('./routes/external/openaiRoutes');
+const shippingboRoutes = require('./routes/external/shippingboRoutes');
 
 const authRoutes = require('./routes/backoffice/authRoutes');
 const userRoutes = require('./routes/backoffice/userRoutes');
@@ -38,6 +39,7 @@ app.use('/colissimo', colissimoRoutes);
 app.use('/modialrelay', modialrelayRoutes);
 app.use('/tnt', tntRoutes);
 app.use('/landmark', landmarkRoutes);
+app.use('/shippingbo', shippingboRoutes);
 
 // boutique et ressource
 app.use('/shopify', shopifyRoutes);

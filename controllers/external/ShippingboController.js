@@ -1,0 +1,43 @@
+require('dotenv').config();
+const ShippingboApiService = require('../../services/ShippingboApiService');
+
+const showOrder = async (req, res) => {
+  try {
+    const shippingbo = new ShippingboApiService();
+
+    // Génère l’URL d’authentification (va dans le navigateur)
+    console.log("👉 Connecte-toi ici :", shippingbo.getAuthUrl());
+
+    // attendre que shipping fait le callback
+    await sleep(2000);
+
+    // Exemple : chercher une commande par référence
+    const order = await shippingbo.getOrderByReference("ORDER-12345");
+    console.log("Commande :", order);
+
+  } catch (error) {
+    console.log('Error consultation shippingbo:', error);
+    res.status(200).send('Error consultation shippingbo : ' + error.response?.data?.message);
+  }
+}
+
+const callback = async (req, res) => {
+  try {
+
+    const shippingbo = new ShippingboApiService();
+
+    const { code } = req.query;
+
+    //generation du token etc
+    await shippingbo.callback(code);
+
+  } catch (error) {
+    console.log('Error consultation shippingbo:', error);
+    res.status(200).send('Error consultation shippingbo : ' + error.response?.data?.message);
+  }
+}
+
+module.exports = { 
+  showOrder,
+  callback
+};
