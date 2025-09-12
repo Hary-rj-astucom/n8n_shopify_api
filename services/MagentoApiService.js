@@ -23,6 +23,7 @@ async function getOrderWithTransactionsByNumber(orderNumber) {
       throw new Error(`Commande ${orderNumber} introuvable`);
     }
     const order = orderResponse.data.items[0];
+
     return {
       order
     };
