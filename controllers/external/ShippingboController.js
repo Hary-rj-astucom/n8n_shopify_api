@@ -12,12 +12,12 @@ const showOrder = async (req, res) => {
     await sleep(2000);
 
     // Exemple : chercher une commande par référence
-    const order = await shippingbo.getOrderByReference("ORDER-12345");
+    const order = await shippingbo.getOrderByReference(req.body.suivi_num);
     console.log("Commande :", order);
 
   } catch (error) {
     console.log('Error consultation shippingbo:', error);
-    res.status(200).send('Error consultation shippingbo : ' + error.response?.data?.message);
+    res.status(200).send(error);
   }
 }
 
