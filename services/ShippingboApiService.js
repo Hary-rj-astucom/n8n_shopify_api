@@ -167,7 +167,7 @@ class ShippingboApiService {
    * Exemple : récupérer une commande par référence
    */
   async getOrderByReference(reference) {
-    return this.request(`/orders?reference=${encodeURIComponent(reference)}`);
+    return this.request(`/orders?filter[origin_ref]=${encodeURIComponent(reference)}`);
   }
 
   /**

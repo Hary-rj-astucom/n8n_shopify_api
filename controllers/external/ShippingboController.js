@@ -7,10 +7,25 @@ const showOrder = async (req, res) => {
 
     // Génère l’URL d’authentification (va dans le navigateur)
     // console.log("👉 Connecte-toi ici :", shippingbo.getAuthUrl());
+    
+    const order = await shippingbo.getOrderById(req.body.order_id);
+
+    res.status(200).send(order);
+
+  } catch (error) {
+    console.log('Error consultation shippingbo:', error);
+    res.status(200).send(error);
+  }
+}
+
+const showOrderByOriginRef = async (req, res) => {
+  try {
+    const shippingbo = new ShippingboApiService();
 
     // Exemple : chercher une commande par référence
-    const order = await shippingbo.getOrderByReference(req.body.suivi_num);
-    console.log("Commande :", order);
+    const order = await shippingbo.getOrderByReference(req.body.origin_ref);
+
+    res.status(200).send(order);
 
   } catch (error) {
     console.log('Error consultation shippingbo:', error);
@@ -37,5 +52,6 @@ const callback = async (req, res) => {
 
 module.exports = { 
   showOrder,
+  showOrderByOriginRef,
   callback
 };
