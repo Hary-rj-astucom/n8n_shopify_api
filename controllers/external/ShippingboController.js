@@ -30,7 +30,7 @@ const callback = async (req, res) => {
 
   } catch (error) {
     console.log('Error consultation shippingbo:', error);
-    res.status(400).send('Error consultation shippingbo : ' + error.response?.data?.message);
+    res.status(400).send('Error consultation shippingbo : ' + error.response?.data?.error_description);
   }
 }
 
