@@ -144,6 +144,8 @@ class ShippingboApiService {
       throw new Error("⚠️ Pas de token. Appelez getAccessToken() d'abord.");
     }
 
+    console.log(`${this.apiUrl}${endpoint}`);
+
     try {
       const response = await axios({
         method,
@@ -167,7 +169,12 @@ class ShippingboApiService {
    * Exemple : récupérer une commande par référence
    */
   async getOrderByReference(reference) {
-    return this.request(`/orders?filter[origin_ref]=${encodeURIComponent(reference)}`);
+    const result = await this.request(`/orders?search[origin_ref__eq][]=${encodeURIComponent(reference)}`);
+    if(result.orders.length > 0){
+      return this.request(`/orders/${result.orders[0].id}`);
+    }else{
+      return [];
+    }
   }
 
   /**
