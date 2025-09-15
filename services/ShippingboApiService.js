@@ -5,7 +5,7 @@ class ShippingboApiService {
 
     this.clientId = "-vzedQkPQ7Gl0_88Os83duVEQFQLV57xn0QpYiRQirQ";
     this.clientSecret = "SbXZHSl_IvtBIASKpR_ayGVexhm7qYSFMd-zQdHZxQs";
-    this.redirectUri = "/shippingbo/callback";
+    this.redirectUri = "https://dev-ia.astucom.com/n8n_cosmia/shippingbo/callback";
 
     this.authUrl = "https://oauth.shippingbo.com/oauth/authorize";
     this.tokenUrl = "https://oauth.shippingbo.com/oauth/token";
@@ -33,7 +33,12 @@ class ShippingboApiService {
 
     try {
       const tokenData = await this.getAccessToken(code);
-      console.dir("token access generate : ", tokenData);
+
+      console.log(this.accessToken);
+      console.log(this.refreshToken);
+
+      return tokenData;
+      
     } catch (error) {
       throw error;
     }

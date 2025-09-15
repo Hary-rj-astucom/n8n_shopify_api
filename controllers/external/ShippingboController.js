@@ -26,7 +26,8 @@ const callback = async (req, res) => {
     const { code } = req.query;
 
     //generation du token etc
-    await shippingbo.callback(code);
+    const result = await shippingbo.callback(code);
+    res.status(200).send(result); 
 
   } catch (error) {
     console.log('Error consultation shippingbo:', error);
