@@ -35,27 +35,27 @@ app.use(cors());
 app.use(express.json());
 
 // Transporteur 
-app.use('/colissimo', colissimoRoutes);
-app.use('/modialrelay', modialrelayRoutes);
-app.use('/tnt', tntRoutes);
-app.use('/landmark', landmarkRoutes);
-app.use('/shippingbo', shippingboRoutes);
+app.use('/n8n_cosmia/colissimo', colissimoRoutes);
+app.use('/n8n_cosmia/modialrelay', modialrelayRoutes);
+app.use('/n8n_cosmia/tnt', tntRoutes);
+app.use('/n8n_cosmia/landmark', landmarkRoutes);
+app.use('/n8n_cosmia/shippingbo', shippingboRoutes);
 
 // boutique et ressource
-app.use('/shopify', shopifyRoutes);
-app.use('/magento', magentoRoutes);
-app.use('/prestashop', prestashopRoutes);
-app.use('/outlook', outlookRoutes);
+app.use('/n8n_cosmia/shopify', shopifyRoutes);
+app.use('/n8n_cosmia/magento', magentoRoutes);
+app.use('/n8n_cosmia/prestashop', prestashopRoutes);
+app.use('/n8n_cosmia/outlook', outlookRoutes);
 
 // IA ressource
-app.use('/openai', openaiRoutes);
+app.use('/n8n_cosmia/openai', openaiRoutes);
 
 // Api
-app.use('/auth', authRoutes);
-app.use('/user', authenticateToken, userRoutes);
-app.use('/project', authenticateToken, projectRoutes);
-app.use('/ticket', authenticateToken, ticketRoutes);
-app.use('/ticket2', ticketRoutes2);
+app.use('/n8n_cosmia/auth', authRoutes);
+app.use('/n8n_cosmia/user', authenticateToken, userRoutes);
+app.use('/n8n_cosmia/project', authenticateToken, projectRoutes);
+app.use('/n8n_cosmia/ticket', authenticateToken, ticketRoutes);
+app.use('/n8n_cosmia/ticket2', ticketRoutes2);
 
 // Start the server
 app.listen(port, () => {

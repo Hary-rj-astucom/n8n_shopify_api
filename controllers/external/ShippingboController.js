@@ -8,9 +8,6 @@ const showOrder = async (req, res) => {
     // Génère l’URL d’authentification (va dans le navigateur)
     console.log("👉 Connecte-toi ici :", shippingbo.getAuthUrl());
 
-    // attendre que shipping fait le callback
-    await sleep(2000);
-
     // Exemple : chercher une commande par référence
     const order = await shippingbo.getOrderByReference(req.body.suivi_num);
     console.log("Commande :", order);
