@@ -1,7 +1,7 @@
 const axios = require("axios");
 
 class ShippingboApiService {
-  constructor({ clientId, clientSecret, redirectUri }) {
+  constructor() {
 
     this.clientId = "-vzedQkPQ7Gl0_88Os83duVEQFQLV57xn0QpYiRQirQ";
     this.clientSecret = "SbXZHSl_IvtBIASKpR_ayGVexhm7qYSFMd-zQdHZxQs";
@@ -144,8 +144,10 @@ class ShippingboApiService {
   handleError(error) {
     if (error.response) {
       console.error("❌ API error:", error.response.data);
+      throw error;
     } else {
       console.error("❌ Request error:", error.message);
+      throw error;
     }
   }
 }
