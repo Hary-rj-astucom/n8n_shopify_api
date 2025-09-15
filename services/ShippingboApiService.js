@@ -149,7 +149,7 @@ class ShippingboApiService {
         method,
         url: `${this.apiUrl}${endpoint}`,
         headers: {
-          Authorization: `${this.accessToken}`,
+          Authorization: `Bearer ${this.accessToken}`,
           Accept: "application/json",
           'X-API-APP-ID': this.x_api_app_id,
           'X-API-VERSION': this.x_api_version
