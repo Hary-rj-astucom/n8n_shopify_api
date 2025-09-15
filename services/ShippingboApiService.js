@@ -11,7 +11,7 @@ class ShippingboApiService {
 
     this.authUrl = "https://oauth.shippingbo.com/oauth/authorize";
     this.tokenUrl = "https://oauth.shippingbo.com/oauth/token";
-    this.apiUrl = "https://api.shippingbo.com/v1";
+    this.apiUrl = "https://app.shippingbo.com";
 
     this.accessToken = null;
     this.refreshToken = null;
@@ -94,7 +94,7 @@ class ShippingboApiService {
     const jsonString = await fs.readFile(filePath, 'utf8');
     let data = JSON.parse(jsonString);
 
-    if (!data.refresh_tokenn) {
+    if (!data.refresh_token) {
       throw new Error("⚠️ Aucun refresh_token disponible");
     }
 
@@ -116,8 +116,8 @@ class ShippingboApiService {
       this.refreshToken = response.data.refresh_token;
 
       // update the data in the JSON
-      data[access_token] = response.data.access_token;
-      data[refresh_token] = response.data.refresh_token;
+      data.access_token = response.data.access_token;
+      data.refresh_token = response.data.refresh_token;
       await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
 
       return response.data;
@@ -131,8 +131,8 @@ class ShippingboApiService {
    */
   async request(endpoint, method = "GET", data = null) {
 
-    await refreshAccessToken();
-    
+    await this.refreshAccessToken();
+
     if (!this.accessToken) {
       throw new Error("⚠️ Pas de token. Appelez getAccessToken() d'abord.");
     }
