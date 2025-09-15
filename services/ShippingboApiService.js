@@ -28,15 +28,14 @@ class ShippingboApiService {
   async callback (code){
 
     if (!code) {
-      return res.status(400).send("❌ Aucun code reçu dans la redirection.");
+      throw new Error("❌ Aucun code reçu dans la redirection.")
     }
 
     try {
       const tokenData = await this.getAccessToken(code);
       console.dir("token access generate : ", tokenData);
-
     } catch (error) {
-      res.status(500).send("❌ Erreur lors du callback OAuth");
+      throw error;
     }
   }
 
