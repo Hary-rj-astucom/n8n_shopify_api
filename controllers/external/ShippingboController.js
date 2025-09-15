@@ -6,7 +6,7 @@ const showOrder = async (req, res) => {
     const shippingbo = new ShippingboApiService();
 
     // Génère l’URL d’authentification (va dans le navigateur)
-    console.log("👉 Connecte-toi ici :", shippingbo.getAuthUrl());
+    // console.log("👉 Connecte-toi ici :", shippingbo.getAuthUrl());
 
     // Exemple : chercher une commande par référence
     const order = await shippingbo.getOrderByReference(req.body.suivi_num);

@@ -130,11 +130,12 @@ class ShippingboApiService {
    * Méthode générique pour appeler l’API Shippingbo
    */
   async request(endpoint, method = "GET", data = null) {
+
+    await refreshAccessToken();
+    
     if (!this.accessToken) {
       throw new Error("⚠️ Pas de token. Appelez getAccessToken() d'abord.");
     }
-
-    await refreshAccessToken();
 
     try {
       const response = await axios({
