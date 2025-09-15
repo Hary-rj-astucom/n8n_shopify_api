@@ -32,6 +32,9 @@ class ShippingboApiService {
     }
 
     try {
+
+      console.log(code);      
+      
       const tokenData = await this.getAccessToken(code);
 
       console.log(this.accessToken);
