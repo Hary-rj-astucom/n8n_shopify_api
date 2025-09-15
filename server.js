@@ -34,28 +34,31 @@ app.use(watchguard);
 app.use(cors());
 app.use(express.json());
 
+// prefixe
+const prefix = "";
+
 // Transporteur 
-app.use('/colissimo', colissimoRoutes);
-app.use('/modialrelay', modialrelayRoutes);
-app.use('/tnt', tntRoutes);
-app.use('/landmark', landmarkRoutes);
-app.use('/shippingbo', shippingboRoutes);
+app.use(prefix + '/colissimo', colissimoRoutes);
+app.use(prefix + '/modialrelay', modialrelayRoutes);
+app.use(prefix + '/tnt', tntRoutes);
+app.use(prefix + '/landmark', landmarkRoutes);
+app.use(prefix + '/shippingbo', shippingboRoutes);
 
 // boutique et ressource
-app.use('/shopify', shopifyRoutes);
-app.use('/magento', magentoRoutes);
-app.use('/prestashop', prestashopRoutes);
-app.use('/outlook', outlookRoutes);
+app.use(prefix + '/shopify', shopifyRoutes);
+app.use(prefix + '/magento', magentoRoutes);
+app.use(prefix + '/prestashop', prestashopRoutes);
+app.use(prefix + '/outlook', outlookRoutes);
 
 // IA ressource
-app.use('/openai', openaiRoutes);
+app.use(prefix + '/openai', openaiRoutes);
 
 // Api
-app.use('/auth', authRoutes);
-app.use('/user', authenticateToken, userRoutes);
-app.use('/project', authenticateToken, projectRoutes);
-app.use('/ticket', authenticateToken, ticketRoutes);
-app.use('/ticket2', ticketRoutes2);
+app.use(prefix + '/auth', authRoutes);
+app.use(prefix + '/user', authenticateToken, userRoutes);
+app.use(prefix + '/project', authenticateToken, projectRoutes);
+app.use(prefix + '/ticket', authenticateToken, ticketRoutes);
+app.use(prefix + '/ticket2', ticketRoutes2);
 
 // Start the server
 app.listen(port, () => {

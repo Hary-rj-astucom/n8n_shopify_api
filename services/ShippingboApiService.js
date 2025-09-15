@@ -37,7 +37,7 @@ class ShippingboApiService {
       
       const tokenData = await this.getAccessToken(code);
 
-      console.log("accessToken :", this.accessToken);
+      console.log("accessToken : ", this.accessToken);
       console.log("refreshToken: ", this.refreshToken);
 
       return tokenData;
