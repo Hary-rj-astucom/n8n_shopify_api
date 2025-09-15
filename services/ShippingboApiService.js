@@ -13,6 +13,9 @@ class ShippingboApiService {
     this.tokenUrl = "https://oauth.shippingbo.com/oauth/token";
     this.apiUrl = "https://app.shippingbo.com";
 
+    this.x_api_app_id = "628";
+    this.x_api_version = 1;
+
     this.accessToken = null;
     this.refreshToken = null;
   }
@@ -73,8 +76,8 @@ class ShippingboApiService {
 
       // write the data in the JSON 
       const filePath = path.join(__dirname, 'json_mock/shippingbo_token.json');
-      data[access_token] = response.data.access_token;
-      data[refresh_token] = response.data.refresh_token;
+      data.access_token = response.data.access_token;
+      data.refresh_token = response.data.refresh_token;
       await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
 
       return response.data;
@@ -93,6 +96,8 @@ class ShippingboApiService {
     // get data in the JSON
     const jsonString = await fs.readFile(filePath, 'utf8');
     let data = JSON.parse(jsonString);
+
+    console.log("old_token :", data);
 
     if (!data.refresh_token) {
       throw new Error("⚠️ Aucun refresh_token disponible");
@@ -114,6 +119,8 @@ class ShippingboApiService {
 
       this.accessToken = response.data.access_token;
       this.refreshToken = response.data.refresh_token;
+
+      console.log("new_token :", response.data);
 
       // update the data in the JSON
       data.access_token = response.data.access_token;
@@ -142,8 +149,10 @@ class ShippingboApiService {
         method,
         url: `${this.apiUrl}${endpoint}`,
         headers: {
-          Authorization: `Bearer ${this.accessToken}`,
+          Authorization: `${this.accessToken}`,
           Accept: "application/json",
+          'X-API-APP-ID': this.x_api_app_id,
+          'X-API-VERSION': this.x_api_version
         },
         data,
       });
