@@ -1,4 +1,6 @@
 const axios = require("axios");
+const fs = require('fs').promises;
+const path = require('path');
 
 class ShippingboApiService {
   constructor() {
@@ -69,6 +71,12 @@ class ShippingboApiService {
       this.accessToken = response.data.access_token;
       this.refreshToken = response.data.refresh_token;
 
+      // write the data in the JSON 
+      const filePath = path.join(__dirname, 'json_mock/shippingbo_token.json');
+      data[access_token] = response.data.access_token;
+      data[refresh_token] = response.data.refresh_token;
+      await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
+
       return response.data;
     } catch (error) {
       this.handleError(error);
@@ -79,7 +87,14 @@ class ShippingboApiService {
    * Étape 3 : Rafraîchir le token si expiré
    */
   async refreshAccessToken() {
-    if (!this.refreshToken) {
+
+    const filePath = path.join(__dirname, 'json_mock/shippingbo_token.json');
+
+    // get data in the JSON
+    const jsonString = await fs.readFile(filePath, 'utf8');
+    let data = JSON.parse(jsonString);
+
+    if (!data.refresh_tokenn) {
       throw new Error("⚠️ Aucun refresh_token disponible");
     }
 
@@ -90,7 +105,7 @@ class ShippingboApiService {
           grant_type: "refresh_token",
           client_id: this.clientId,
           client_secret: this.clientSecret,
-          refresh_token: this.refreshToken,
+          refresh_token: data.refresh_token,
         },
         {
           headers: { "Content-Type": "application/json" },
@@ -99,6 +114,11 @@ class ShippingboApiService {
 
       this.accessToken = response.data.access_token;
       this.refreshToken = response.data.refresh_token;
+
+      // update the data in the JSON
+      data[access_token] = response.data.access_token;
+      data[refresh_token] = response.data.refresh_token;
+      await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
 
       return response.data;
     } catch (error) {
@@ -113,6 +133,8 @@ class ShippingboApiService {
     if (!this.accessToken) {
       throw new Error("⚠️ Pas de token. Appelez getAccessToken() d'abord.");
     }
+
+    await refreshAccessToken();
 
     try {
       const response = await axios({
