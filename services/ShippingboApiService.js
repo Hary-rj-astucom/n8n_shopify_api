@@ -1,3 +1,4 @@
+require('dotenv').config();
 const axios = require("axios");
 const fs = require('fs').promises;
 const path = require('path');
@@ -5,16 +6,16 @@ const path = require('path');
 class ShippingboApiService {
   constructor() {
 
-    this.clientId = "-vzedQkPQ7Gl0_88Os83duVEQFQLV57xn0QpYiRQirQ";
-    this.clientSecret = "SbXZHSl_IvtBIASKpR_ayGVexhm7qYSFMd-zQdHZxQs";
-    this.redirectUri = "https://dev-ia.astucom.com/n8n_cosmia/shippingbo/callback";
+    this.clientId = process.env.SHIPPINGBO_CLIENTID;
+    this.clientSecret = process.env.SHIPPINGBO_CLIENT_SECRET;
+    this.redirectUri = process.env.SHIPPINGBO_REDIRECT_URI;
 
-    this.authUrl = "https://oauth.shippingbo.com/oauth/authorize";
-    this.tokenUrl = "https://oauth.shippingbo.com/oauth/token";
-    this.apiUrl = "https://app.shippingbo.com";
+    this.authUrl = process.env.SHIPPINGBO_AUTH_URL;
+    this.tokenUrl = process.env.SHIPPINGBO_TOKEN_URL;
+    this.apiUrl = process.env.SHIPPINGBO_API_URL;
 
-    this.x_api_app_id = "628";
-    this.x_api_version = 1;
+    this.x_api_app_id = process.env.SHIPPINGBO_X_API_APP_ID;
+    this.x_api_version = process.env.SHIPPINGBO_X_API_VERSION;
 
     this.accessToken = null;
     this.refreshToken = null;
