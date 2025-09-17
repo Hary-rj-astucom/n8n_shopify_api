@@ -268,9 +268,9 @@ const getTicketsbyConvId = async (req, res) => {
     const tickets = await Ticket.findAll({ where: { conversation_email_id: req.body.conversation_id } });
     if(tickets.length > 0){
       const [updated] = await Ticket.update({ need_attention: 1 }, { where: { conversation_email_id: req.body.conversation_id } });
-      res.json(1)
+      res.json({found:1});
     }else{
-      res.json(0);
+      res.json({found:0});
     }
   } catch (err) {
     console.dir(err);
