@@ -265,18 +265,25 @@ const addTicketComment = async (req, res) => {
 // verify ticket a mark attention by conversationId
 const getTicketsbyConvId = async (req, res) => {
   try {
-    const tickets = await Ticket.findAll({ where: { conversation_email_id: req.body.conversation_id } });
-    if(tickets.length > 0){
-      const [updated] = await Ticket.update({ need_attention: 1 }, { where: { conversation_email_id: req.body.conversation_id } });
-      res.json({found:1});
-    }else{
-      res.json({found:0});
+    const count = await Ticket.count({
+      where: { conversation_email_id: req.body.conversation_id }
+    });
+
+    if (count > 0) {
+      const [updated] = await Ticket.update(
+        { need_attention: 1 },
+        { where: { conversation_email_id: req.body.conversation_id } }
+      );
+
+      res.json({ found: 1, updated });
+    } else {
+      res.json({ found: 0 });
     }
   } catch (err) {
-    console.dir(err);
+    console.error(err);
     res.status(500).json({ error: err.message });
-  }  
-}
+  }
+};
 
 module.exports = {
   getTickets,

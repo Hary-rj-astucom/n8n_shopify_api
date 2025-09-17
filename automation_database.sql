@@ -123,7 +123,7 @@ CREATE TABLE ticket (
     project_id INT NOT NULL,
     created_at DATETIME NOT NULL DEFAULT NOW(),
     status ENUM ('en attente', 'en cours', 'cloture') DEFAULT 'en attente',
-    need_attention TINYINT NOT NULL DEFAULT 1 ; 
+    need_attention TINYINT NOT NULL DEFAULT 0 ; 
     state INT NOT NULL DEFAULT 1
 );
 
