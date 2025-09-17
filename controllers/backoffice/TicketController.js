@@ -262,6 +262,22 @@ const addTicketComment = async (req, res) => {
   }
 }
 
+// verify ticket a mark attention by conversationId
+const getTicketsbyConvId = async (req, res) => {
+  try {
+    const tickets = await Ticket.findAll({ where: { conversation_email_id: req.body.conversation_id } });
+    if(tickets.length > 0){
+      const [updated] = await Ticket.update({ need_attention: 1 }, { where: { conversation_email_id: req.body.conversation_id } });
+      res.json(1)
+    }else{
+      res.json(0);
+    }
+  } catch (err) {
+    console.dir(err);
+    res.status(500).json({ error: err.message });
+  }  
+}
+
 module.exports = {
   getTickets,
   getTicketsDetails,
@@ -269,5 +285,6 @@ module.exports = {
   deleteTicket,
   createTicket,
   respondMail,
-  addTicketComment
+  addTicketComment,
+  getTicketsbyConvId
 };

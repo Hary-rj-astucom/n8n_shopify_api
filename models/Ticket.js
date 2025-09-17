@@ -15,6 +15,7 @@ const Ticket = sequelize.define("Ticket", {
   project_id: { type: DataTypes.INTEGER, allowNull: false },
   created_at: { type: DataTypes.DATE, allowNull: true },
   status: { type: DataTypes.STRING(20), allowNull: true },
+  need_attention: { type: DataTypes.INTEGER, allowNull: true },
   state: { type: DataTypes.INTEGER, allowNull: true},
 }, {
   tableName: "ticket",
