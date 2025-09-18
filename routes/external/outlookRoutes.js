@@ -6,6 +6,4 @@ const router = express.Router();
 router.post('/getConversation', outlookController.getConversationThreads);
 router.post('/replayMessage', outlookController.getReplayMessage);
 
-router.post('/testMail', outlookController.testPolicy);
-
 module.exports = router;
