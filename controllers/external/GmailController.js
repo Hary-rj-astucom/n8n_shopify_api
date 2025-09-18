@@ -14,6 +14,9 @@ const auth = async (req, res) => {
 
 const callback = async (req, res) => {
   try {
+
+    console.log(req.path);
+
     const { code } = req.query;
 
     //generation du token etc
