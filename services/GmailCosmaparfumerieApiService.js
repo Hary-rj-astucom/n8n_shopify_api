@@ -59,7 +59,7 @@ async function getConversation(threadId) {
       }
     );
 
-    res.json(thread.data);
+    return thread.data;
 
   } catch (err) {
     console.error(err);
@@ -100,7 +100,7 @@ async function replyConversation(threadId, message){
       }
     });
 
-    res.json({ success: true, result });
+    return { success: true, result };
 
   } catch (err) {
     console.error(err);
