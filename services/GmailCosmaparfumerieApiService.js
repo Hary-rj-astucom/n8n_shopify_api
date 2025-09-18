@@ -125,11 +125,11 @@ function formatGmailResponse(data) {
                     const plainPart = msg.payload.parts.find(p => p.mimeType === 'text/plain');
                     const part = htmlPart || plainPart;
                     if (part && part.body && part.body.data) {
-                      messageBody = Buffer.from(part.body.data, 'base64').toString('utf-8');
+                      decoded = Buffer.from(part.body.data, 'base64').toString('utf-8');
                       messageBody = cleanHtml(decoded);
                     }
                 } else if (msg.payload.body && msg.payload.body.data) {
-                  messageBody = Buffer.from(msg.payload.body.data, 'base64').toString('utf-8');
+                  decoded = Buffer.from(msg.payload.body.data, 'base64').toString('utf-8');
                   messageBody = cleanHtml(decoded);
                 }
             }
