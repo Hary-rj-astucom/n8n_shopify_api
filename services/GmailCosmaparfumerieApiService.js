@@ -109,6 +109,7 @@ async function replyConversation(threadId, message){
 }
 
 // ------------------- format data -------------------------- //
+
 function formatGmailResponse(data) {
     if (!data || !data.messages) return null;
 
@@ -124,10 +125,12 @@ function formatGmailResponse(data) {
                     const plainPart = msg.payload.parts.find(p => p.mimeType === 'text/plain');
                     const part = htmlPart || plainPart;
                     if (part && part.body && part.body.data) {
-                        messageBody = Buffer.from(part.body.data, 'base64').toString('utf-8');
+                      messageBody = Buffer.from(part.body.data, 'base64').toString('utf-8');
+                      messageBody = cleanHtml(decoded);
                     }
                 } else if (msg.payload.body && msg.payload.body.data) {
-                    messageBody = Buffer.from(msg.payload.body.data, 'base64').toString('utf-8');
+                  messageBody = Buffer.from(msg.payload.body.data, 'base64').toString('utf-8');
+                  messageBody = cleanHtml(decoded);
                 }
             }
 
@@ -147,6 +150,32 @@ function formatGmailResponse(data) {
             };
         })
     };
+}
+
+function cleanHtml(html) {
+    if (!html) return '';
+
+    // Remplacer les balises de paragraphe et <br> par des sauts de ligne
+    let text = html.replace(/<br\s*\/?>/gi, '\n');
+    text = text.replace(/<\/p>/gi, '\n');
+    text = text.replace(/<\/div>/gi, '\n');
+
+    // Supprimer toutes les autres balises
+    text = text.replace(/<[^>]+>/g, '');
+
+    // Décode les entités HTML basiques
+    text = text.replace(/&nbsp;/gi, ' ')
+               .replace(/&amp;/gi, '&')
+               .replace(/&lt;/gi, '<')
+               .replace(/&gt;/gi, '>')
+               .replace(/&quot;/gi, '"')
+               .replace(/&apos;/gi, "'")
+               .replace(/&ntilde;/gi, 'ñ');
+
+    // Supprime les espaces et lignes vides multiples
+    text = text.replace(/\n\s*\n/g, '\n\n').trim();
+
+    return text;
 }
 
 module.exports = { 
