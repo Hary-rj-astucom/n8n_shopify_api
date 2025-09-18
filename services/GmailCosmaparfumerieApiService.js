@@ -59,7 +59,7 @@ async function getConversation(threadId) {
       }
     );
 
-    return thread.data;
+    return formatGmailResponse(thread.data);
 
   } catch (err) {
     console.error(err);
@@ -106,6 +106,47 @@ async function replyConversation(threadId, message){
     console.error(err);
     throw new Error("Error sending reply");
   }
+}
+
+// ------------------- format data -------------------------- //
+function formatGmailResponse(data) {
+    if (!data || !data.messages) return null;
+
+    return {
+        conversation_id: data.id,
+        messages: data.messages.map(msg => {
+            // Récupérer le corps principal
+            let messageBody = '';
+            if (msg.payload) {
+                // Si multipart, prendre la première partie text/html ou text/plain
+                if (msg.payload.parts && msg.payload.parts.length > 0) {
+                    const htmlPart = msg.payload.parts.find(p => p.mimeType === 'text/html');
+                    const plainPart = msg.payload.parts.find(p => p.mimeType === 'text/plain');
+                    const part = htmlPart || plainPart;
+                    if (part && part.body && part.body.data) {
+                        messageBody = Buffer.from(part.body.data, 'base64').toString('utf-8');
+                    }
+                } else if (msg.payload.body && msg.payload.body.data) {
+                    messageBody = Buffer.from(msg.payload.body.data, 'base64').toString('utf-8');
+                }
+            }
+
+            // Récupérer les headers utiles
+            const headers = msg.payload ? msg.payload.headers || [] : [];
+            const getHeader = name => {
+                const h = headers.find(h => h.name.toLowerCase() === name.toLowerCase());
+                return h ? h.value : '';
+            };
+
+            return {
+                message_id: msg.id,
+                from: getHeader('From'),
+                to: getHeader('To'),
+                subject: getHeader('Subject'),
+                message: messageBody
+            };
+        })
+    };
 }
 
 module.exports = { 
