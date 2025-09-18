@@ -101,7 +101,7 @@ async function replyConversation(threadId, replyText){
       }
     });
     
-    return { success: true, result };
+    return { success: true, res };
 
   } catch (err) {
     console.error(err);
