@@ -2,8 +2,8 @@ const sequelize = require("../../config/database.js");
 const OutlookApiService = require('../../services/OutlookApiService');
 
 const OutlookCosmashopApiService = require('../../services/OutlookCosmashopApiService');
-const OutlookCosmaparfumerieApiService = require('../../services/OutlookCosmaparfumerieApiService');
 const OutlookDigiparfApiService = require('../../services/OutlookDigiparfApiService');
+const GmailCosmaparfumerieApiService = require('../../services/GmailCosmaparfumerieApiService');
 
 const Ticket = require("../../models/Ticket.js");
 const TicketHistoricalComment = require("../../models/TicketHistoricalComment.js");
@@ -160,8 +160,8 @@ const getTicketsDetails = async (req, res) => {
         break;
       case 2:
         // COSMA-PARFUMERIE
-         console.log("consultation messagerie COSMA-PARFUMERIE");
-        result_conv = await OutlookCosmaparfumerieApiService.getConversationThreads(result[0].conversation_email_id);
+        console.log("consultation messagerie COSMA-PARFUMERIE");
+        result_conv = await GmailCosmaparfumerieApiService.getConversation(result[0].conversation_email_id);
         break;
       case 3:
         // DIGIPARF
@@ -202,7 +202,7 @@ const respondMail = async (req, res) => {
       case 2:
         // COSMA-PARFUMERIE
         console.log("envoie messagerie COSMA-PARFUMERIE");
-        result_conv = await OutlookCosmaparfumerieApiService.replyToMessage(messageId, conversation_id, replyText, destinataire);
+        //result_conv = await OutlookCosmaparfumerieApiService.replyToMessage(messageId, conversation_id, replyText, destinataire);
         break;
       case 3:
         // DIGIPARF

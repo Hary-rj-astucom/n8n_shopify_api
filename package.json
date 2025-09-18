@@ -23,6 +23,7 @@
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "fs": "^0.0.1-security",
+    "googleapis": "^160.0.0",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
     "magento2-rest-client": "^0.0.2",
