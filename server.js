@@ -17,6 +17,7 @@ const tntRoutes = require('./routes/external/tntRoutes');
 const outlookRoutes = require('./routes/external/outlookRoutes');
 const openaiRoutes = require('./routes/external/openaiRoutes');
 const shippingboRoutes = require('./routes/external/shippingboRoutes');
+const gmailRoutes = require('./routes/external/gmailRoutes');
 
 const authRoutes = require('./routes/backoffice/authRoutes');
 const userRoutes = require('./routes/backoffice/userRoutes');
@@ -49,6 +50,7 @@ app.use(prefix + '/shopify', shopifyRoutes);
 app.use(prefix + '/magento', magentoRoutes);
 app.use(prefix + '/prestashop', prestashopRoutes);
 app.use(prefix + '/outlook', outlookRoutes);
+app.use(prefix + '/gmail', gmailRoutes);
 
 // IA ressource
 app.use(prefix + '/openai', openaiRoutes);

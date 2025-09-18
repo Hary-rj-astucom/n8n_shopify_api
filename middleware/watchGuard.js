@@ -2,7 +2,7 @@ function watchGuard(req, res, next) {
   const clientKey = req.headers['x-secret-key']; 
   const serverKey = process.env.SECRET_KEY; 
 
-  const excludedPaths = ['/n8n_cosmia/shippingbo/callback']; 
+  const excludedPaths = ['/n8n_cosmia/shippingbo/callback', '/n8n_cosmia/gmail/callback', '/n8n_cosmia/gmail/auth']; 
 
   if (excludedPaths.includes(req.path)) {
     return next(); // skip the check
