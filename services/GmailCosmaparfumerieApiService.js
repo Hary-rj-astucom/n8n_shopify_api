@@ -67,7 +67,7 @@ async function getConversation(threadId) {
   }
 }
 
-async function replyConversation(threadId, replyText){
+async function replyConversation(threadId, replyText, destinataire){
   try {
     const auth = await authorize();
     const gmail = google.gmail({ version: 'v1', auth });
@@ -87,10 +87,10 @@ async function replyConversation(threadId, replyText){
     const headers = lastMessage.payload.headers;
     const msgIdHeader = lastMessage.id;
     const subject = headers.find(h => h.name === 'Subject').value;
-    const from = headers.find(h => h.name === 'From').value;
+    const to = destinataire;
 
     // 3. Construire la réponse
-    const rawMessage = makeEmail(from, subject, replyText, msgIdHeader);
+    const rawMessage = makeEmail(to, subject, replyText, msgIdHeader);
 
     // 4. Envoyer dans la même conversation
     const res = await gmail.users.messages.send({

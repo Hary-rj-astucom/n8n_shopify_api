@@ -202,7 +202,7 @@ const respondMail = async (req, res) => {
       case 2:
         // COSMA-PARFUMERIE
         console.log("envoie messagerie COSMA-PARFUMERIE");
-        result_conv = await GmailCosmaparfumerieApiService.replyConversation(conversation_id, replyText);
+        result_conv = await GmailCosmaparfumerieApiService.replyConversation(conversation_id, replyText, destinataire);
         break;
       case 3:
         // DIGIPARF
