@@ -187,7 +187,7 @@ function cleanHtml(html) {
 function makeEmail(to, subject, body, messageId) {
   const mail = [
     `To: ${to}`,
-    `Subject: Re: ${subject}`,
+    `Subject: ${subject}`,
     `In-Reply-To: ${messageId}`,
     `References: ${messageId}`,
     "Content-Type: text/plain; charset=\"UTF-8\"",
