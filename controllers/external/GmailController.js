@@ -3,11 +3,11 @@ const GmailCosmaparfumerieApiService = require('../../services/GmailCosmaparfume
 const auth = async (req, res) => {
   try {
 
-    let result = await GmailCosmaparfumerieApiService.auth();
-    res.status(200).send(result);
+    let url = await GmailCosmaparfumerieApiService.auth();
+    res.redirect(url);
 
   } catch (error) {
-    console.error('Error consultation gmail:', error?.response);
+    console.error('Error consultation gmail:', error);
     res.status(500).send('Error consultation gmail');
   }
 }

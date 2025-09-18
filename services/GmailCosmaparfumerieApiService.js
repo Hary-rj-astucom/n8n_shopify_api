@@ -18,11 +18,11 @@ async function auth(){
     access_type: 'offline',
     scope: ['https://www.googleapis.com/auth/gmail.modify'],
   });
-  res.redirect(url);
+  return url;
 }
 
 async function callback(code){
-  if (!code) return res.status(400).send('No code provided');
+  if (!code) throw new Error("Code node provided");
 
   try {
 
@@ -30,11 +30,11 @@ async function callback(code){
     oAuth2Client.setCredentials(tokens);
 
     fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens));
-    res.send('Authentication successful! Token saved.');
+    return 'Authentication successful! Token saved.';
 
   } catch (err) {
     console.error(err);
-    res.status(500).send('Authentication failed');
+    throw new Error("Authentication failed");
   }
 }
 
@@ -63,7 +63,7 @@ async function getConversation(threadId) {
 
   } catch (err) {
     console.error(err);
-    res.status(500).send('Error fetching conversation');
+    throw new Error("Error fetching conversation");
   }
 }
 
@@ -104,7 +104,7 @@ async function replyConversation(threadId, message){
 
   } catch (err) {
     console.error(err);
-    res.status(500).send('Error sending reply');
+    throw new Error("Error sending reply");
   }
 }
 
