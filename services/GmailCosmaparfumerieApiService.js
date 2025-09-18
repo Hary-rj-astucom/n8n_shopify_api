@@ -69,7 +69,7 @@ async function getConversation(threadId) {
 
 async function replyConversation(threadId, message){
   try {
-    const auth = await authenticate();
+    const auth = await authorize();
     const gmail = google.gmail({ version: 'v1', auth });
 
     // 1. Récupérer toute la conversation
