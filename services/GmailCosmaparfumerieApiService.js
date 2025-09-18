@@ -69,37 +69,36 @@ async function getConversation(threadId) {
 
 async function replyConversation(threadId, message){
   try {
-    const auth = authorize();
+    const auth = await authenticate();
     const gmail = google.gmail({ version: 'v1', auth });
 
-    // Get thread to find last message recipient
-    const thread = await gmail.users.threads.get({ userId: 'me', id: threadId });
-    const lastMsg = thread.data.messages[thread.data.messages.length - 1];
-    const headers = lastMsg.payload.headers;
-    const to = headers.find(h => h.name === 'From').value;
-
-    // Create raw email
-    const emailLines = [
-      `From: me`,
-      `To: ${to}`,
-      `Subject: Re: ${headers.find(h => h.name === 'Subject').value}`,
-      `In-Reply-To: ${lastMsg.id}`,
-      `References: ${lastMsg.id}`,
-      '',
-      message
-    ];
-    const email = emailLines.join('\n');
-
-    const encodedMessage = base64url(email);
-
-    const result = await gmail.users.messages.send({
+    // 1. Récupérer toute la conversation
+    const thread = await gmail.users.threads.get({
       userId: 'me',
-      requestBody: {
-        raw: encodedMessage,
-        threadId: threadId
-      }
+      id: threadId
     });
 
+    const messages = thread.data.messages;
+    const lastMessage = messages[messages.length - 1]; // Dernier message du thread
+
+    // 2. Extraire les headers utiles
+    const headers = lastMessage.payload.headers;
+    const msgIdHeader = headers.find(h => h.name === 'Message-ID').value;
+    const subject = headers.find(h => h.name === 'Subject').value;
+    const from = headers.find(h => h.name === 'From').value;
+
+    // 3. Construire la réponse
+    const rawMessage = makeEmail(from, subject, replyText, msgIdHeader);
+
+    // 4. Envoyer dans la même conversation
+    const res = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw: rawMessage,
+        threadId // garder la conversation
+      }
+    });
+    
     return { success: true, result };
 
   } catch (err) {
@@ -181,6 +180,21 @@ function cleanHtml(html) {
     text = text.replace(/\n\s*\n/g, '\n\n').trim();
 
     return text;
+}
+
+function makeEmail(to, subject, body, messageId) {
+  const mail = [
+    `To: ${to}`,
+    `Subject: Re: ${subject}`,
+    `In-Reply-To: ${messageId}`,
+    `References: ${messageId}`,
+    "Content-Type: text/plain; charset=\"UTF-8\"",
+    "MIME-Version: 1.0",
+    "",
+    body
+  ].join("\n");
+
+  return Buffer.from(mail).toString("base64").replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 module.exports = { 
