@@ -84,6 +84,7 @@ function formatConversation(messages) {
     if (!Array.isArray(messages) || messages.length === 0) return null;
 
     return {
+        source_app: "Outlook",
         conversation_id: messages[0].conversationId, // ou autre logique
         messages: messages.map(msg => {
             let content = msg.body && msg.body.content ? msg.body.content : '';
@@ -100,7 +101,8 @@ function formatConversation(messages) {
                     .map(r => `${r.emailAddress.name || ''} <${r.emailAddress.address}>`.trim())
                     .join(', '),
                 subject: msg.subject || '',
-                message: content
+                message: content,
+                date: msg.receivedDateTime || msg.sentDateTime || null
             };
         })
     };

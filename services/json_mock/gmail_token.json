@@ -1,10 +1,1 @@
-{
-    "web": {
-        "client_id": "802601190444-if4prn8mg95sprqs0vp1pha9689mam90.apps.googleusercontent.com",
-        "project_id": "cosmagmailapi",
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_secret": "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"
-    }
-}
+{"access_token":"ya29.a0AQQ_BDRrYFF9qmDhvuzGiOiHD66CAUh8JgVvVMYGj4MKTTW0XXC4Qy3Tapm6EQPGjhcLXBGHS2Yo7PUhTBgPTXHCv5I4Cx1Kla3hI7ZRyqI-maideE_sFQ7xFbFjGI0BXDz1nJXk4e5PsLTitxLB9n6WFSAVjNZGIlok4R1du3YAhTUcm_AsrhDMXH7QJTDmd9uha-saCgYKAaYSARQSFQHGX2MiJcbX9HOt3g5phZ_rmCtPBQ0206","scope":"https://www.googleapis.com/auth/gmail.modify","token_type":"Bearer","expiry_date":1758197563955}

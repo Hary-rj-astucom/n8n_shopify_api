@@ -114,6 +114,7 @@ function formatGmailResponse(data) {
     if (!data || !data.messages) return null;
 
     return {
+        source_app: "Gmail", 
         conversation_id: data.id,
         messages: data.messages.map(msg => {
             // Récupérer le corps principal
@@ -146,7 +147,8 @@ function formatGmailResponse(data) {
                 from: getHeader('From'),
                 to: getHeader('To'),
                 subject: getHeader('Subject'),
-                message: messageBody
+                message: messageBody,
+                date: getHeader('Date') || null
             };
         })
     };
