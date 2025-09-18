@@ -85,7 +85,7 @@ async function replyConversation(threadId, replyText){
 
     // 2. Extraire les headers utiles
     const headers = lastMessage.payload.headers;
-    const msgIdHeader = headers.find(h => h.name === 'Message-ID').value;
+    const msgIdHeader = lastMessage.id;
     const subject = headers.find(h => h.name === 'Subject').value;
     const from = headers.find(h => h.name === 'From').value;
 
