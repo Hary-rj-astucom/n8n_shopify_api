@@ -155,6 +155,9 @@ function formatGmailResponse(data) {
 function cleanHtml(html) {
     if (!html) return '';
 
+    // Supprime le CSS dans <style>...</style>
+    html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+
     // Remplacer les balises de paragraphe et <br> par des sauts de ligne
     let text = html.replace(/<br\s*\/?>/gi, '\n');
     text = text.replace(/<\/p>/gi, '\n');
