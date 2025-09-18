@@ -2,7 +2,7 @@ require('dotenv').config();
 const fs = require('fs');
 const { google } = require('googleapis');
 
-const TOKEN_PATH = 'json_mock/gmail_token.json';
+const TOKEN_PATH = path.join(__dirname, 'json_mock/gmail_token.json');
 
 async function authorize() {
   const client_secret = "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"; 
