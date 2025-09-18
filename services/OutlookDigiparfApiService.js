@@ -23,7 +23,7 @@ async function getConversationThreads(conversationId) {
     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages?$filter=conversationId eq '${conversationId}'&$top=100`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
-  return response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime));
+  return formatConversation( response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime)) );
 }
 
 async function replyToMessage(messageId, conversation_id, replyText, destinataire) {
@@ -79,33 +79,67 @@ async function replyToMessage(messageId, conversation_id, replyText, destinatair
   console.log('Reply sent successfully!');
 }
 
-async function testPolicy(){
-  const token = await getAccessToken();
-  await axios.post(
-    `https://graph.microsoft.com/v1.0/users/mphrygien@astucom.com/sendMail`,
-    { 
-      "message": {
-        "subject": "Test",
-        "body": {
-          "contentType": "Text",
-          "content": "Ceci est un test"
-        },
-        "toRecipients": [
-          {
-            "emailAddress": {
-              "address": "hrajaonah@astucom.com"
+// -------------------- format message --------------------------- //
+function formatConversation(messages) {
+    if (!Array.isArray(messages) || messages.length === 0) return null;
+
+    return {
+        source_app: "Outlook",
+        conversation_id: messages[0].conversationId, // ou autre logique
+        messages: messages.map(msg => {
+            let content = msg.body && msg.body.content ? msg.body.content : '';
+            if (msg.body && msg.body.contentType === 'html') {
+                content = cleanHtml(content);
             }
-          }
-        ]
-      },
-      "saveToSentItems": "true" 
-    },
-    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': `application/json` } }
-  );
+
+            return {
+                message_id: msg.id,
+                from: msg.from?.emailAddress
+                    ? `${msg.from.emailAddress.name || ''} <${msg.from.emailAddress.address}>`.trim()
+                    : '',
+                to: (msg.toRecipients || [])
+                    .map(r => `${r.emailAddress.name || ''} <${r.emailAddress.address}>`.trim())
+                    .join(', '),
+                subject: msg.subject || '',
+                message: content,
+                date: msg.receivedDateTime || msg.sentDateTime || null
+            };
+        })
+    };
 }
+
+function cleanHtml(html) {
+    if (!html) return '';
+
+    // Supprime CSS <style>...</style>
+    html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+
+    // Remplace certaines balises par des sauts de ligne
+    html = html.replace(/<br\s*\/?>/gi, '\n');
+    html = html.replace(/<\/p>/gi, '\n');
+    html = html.replace(/<\/div>/gi, '\n');
+    html = html.replace(/<\/h[1-6]>/gi, '\n');
+
+    // Supprime toutes les autres balises
+    html = html.replace(/<[^>]+>/g, '');
+
+    // Décodage des entités HTML
+    html = html.replace(/&nbsp;/gi, ' ')
+               .replace(/&amp;/gi, '&')
+               .replace(/&lt;/gi, '<')
+               .replace(/&gt;/gi, '>')
+               .replace(/&quot;/gi, '"')
+               .replace(/&apos;/gi, "'");
+
+    // Normalisation des espaces et retours à la ligne
+    html = html.replace(/\r/g, '');
+    html = html.replace(/\n\s*\n/g, '\n\n').trim();
+
+    return html;
+}
+
 
 module.exports = { 
   getConversationThreads,
-  replyToMessage,
-  testPolicy
+  replyToMessage
 };
