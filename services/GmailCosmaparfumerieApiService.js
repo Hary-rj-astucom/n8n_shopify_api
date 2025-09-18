@@ -67,7 +67,7 @@ async function getConversation(threadId) {
   }
 }
 
-async function replyConversation(threadId, message){
+async function replyConversation(threadId, replyText){
   try {
     const auth = await authorize();
     const gmail = google.gmail({ version: 'v1', auth });
@@ -80,6 +80,8 @@ async function replyConversation(threadId, message){
 
     const messages = thread.data.messages;
     const lastMessage = messages[messages.length - 1]; // Dernier message du thread
+
+    console.log(lastMessage);
 
     // 2. Extraire les headers utiles
     const headers = lastMessage.payload.headers;
