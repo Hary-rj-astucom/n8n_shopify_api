@@ -16,6 +16,7 @@ const oAuth2Client = new google.auth.OAuth2(
 async function auth(){
   const url = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
+    prompt: 'consent',   // 👈 force Google to return refresh_token
     scope: ['https://www.googleapis.com/auth/gmail.modify'],
   });
   return url;
@@ -28,6 +29,9 @@ async function callback(code){
 
     const { tokens } = await oAuth2Client.getToken(code);
     oAuth2Client.setCredentials(tokens);
+
+    // 👉 Make sure refresh_token is present
+    console.log("Tokens:", tokens);
 
     fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens));
     return 'Authentication successful! Token saved.';
@@ -44,6 +48,15 @@ async function authorize() {
   if (!fs.existsSync(TOKEN_PATH)) throw new Error('Token not found. Go to /auth first.');
   const token = JSON.parse(fs.readFileSync(TOKEN_PATH));
   oAuth2Client.setCredentials(token);
+
+  // Listen for refreshed tokens
+  oAuth2Client.on('tokens', (newTokens) => {
+    if (newTokens.refresh_token) {
+      // Save the new refresh_token as well
+      fs.writeFileSync(TOKEN_PATH, JSON.stringify({ ...token, ...newTokens }, null, 2));
+    }
+  });
+
   return oAuth2Client;
 }
 
