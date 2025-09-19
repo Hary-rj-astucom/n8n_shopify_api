@@ -65,7 +65,7 @@ async function replyToMessage(originalMessageId, replyText, destinataire) {
 
   // 1. Récupérer le message original
   const original = await axios.get(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/messages/${originalMessageId}`,
+    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${originalMessageId}`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
