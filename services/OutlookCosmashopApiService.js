@@ -29,11 +29,11 @@ async function getMessageAttachments(messageId) {
   return response.data.value.map(att => {
     if (att['@odata.type'] === "#microsoft.graph.fileAttachment") {
       return {
-        id: att.id,
-        name: att.name,
-        contentType: att.contentType,
+        //id: att.id,
+        filename: att.name,
+        mimeType: att.contentType,
         size: att.size,
-        contentBytes: att.contentBytes // base64 string you can use directly
+        data: `data:${att.contentType};base64,${att.contentBytes}` // base64 string you can use directly
       };
     }
     if (att['@odata.type'] === "#microsoft.graph.itemAttachment") {
