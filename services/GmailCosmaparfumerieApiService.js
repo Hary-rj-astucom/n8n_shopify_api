@@ -88,47 +88,12 @@ async function getConversation(threadId) {
       }
     );
 
-    return await formatGmailResponse(thread.data);
+    return formatGmailResponse(thread.data);
 
   } catch (err) {
     console.error(err);
     throw new Error("Error fetching conversation");
   }
-}
-
-async function getMessageAttachments(messageId) {
-  const res = await gmail.users.messages.get({
-    userId: 'me',
-    id: messageId
-  });
-
-  const attachments = [];
-
-  const traverseParts = async (parts) => {
-    if (!parts) return;
-    for (const part of parts) {
-      if (part.filename && part.filename.length > 0 && part.body.attachmentId) {
-        const attachRes = await gmail.users.messages.attachments.get({
-          userId: 'me',
-          messageId,
-          id: part.body.attachmentId
-        });
-
-        const data = attachRes.data.data; // base64url encoded
-        const base64 = data.replace(/-/g, '+').replace(/_/g, '/'); // convert base64url to base64
-        attachments.push({
-          filename: part.filename,
-          mimeType: part.mimeType,
-          data: `data:${part.mimeType};base64,${base64}`
-        });
-      } else if (part.parts) {
-        await traverseParts(part.parts);
-      }
-    }
-  };
-
-  await traverseParts(res.data.payload.parts);
-  return attachments;
 }
 
 async function replyConversation(threadId, replyText, destinataire){
@@ -175,13 +140,13 @@ async function replyConversation(threadId, replyText, destinataire){
 
 // ------------------- format data -------------------------- //
 
-async function formatGmailResponse(data) {
+function formatGmailResponse(data) {
     if (!data || !data.messages) return null;
 
     return {
         source_app: "Gmail", 
         conversation_id: data.id,
-        messages: data.messages.map(async (msg) => {
+        messages: data.messages.map(msg => {
             // Récupérer le corps principal
             let messageBody = '';
             if (msg.payload) {
@@ -206,7 +171,6 @@ async function formatGmailResponse(data) {
                 const h = headers.find(h => h.name.toLowerCase() === name.toLowerCase());
                 return h ? h.value : '';
             };
-            const attachments = await getMessageAttachments(msg.id);
 
             return {
                 message_id: msg.id,
@@ -214,8 +178,7 @@ async function formatGmailResponse(data) {
                 to: getHeader('To'),
                 subject: getHeader('Subject'),
                 message: messageBody,
-                date: getHeader('Date') || null,
-                attachments: attachments
+                date: getHeader('Date') || null
             };
         })
     };
