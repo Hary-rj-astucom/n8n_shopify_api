@@ -31,7 +31,7 @@ async function replyToMessage(messageId, replyText) {
 
   // 1. Créer la réponse en brouillon
   const draftResponse = await axios.post(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${messageId}/createReply`,
+    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}/createReply`,
     {}, // pas besoin de recipients ici, l’API copie ceux du mail d’origine
     { headers: { Authorization: `Bearer ${token}` } }
   );
@@ -40,7 +40,7 @@ async function replyToMessage(messageId, replyText) {
 
   // 2. Mettre à jour le contenu du mail
   await axios.patch(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draft_id}`,
+    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draft_id}`,
     {
       body: {
         contentType: "HTML",
@@ -52,7 +52,7 @@ async function replyToMessage(messageId, replyText) {
 
   // 3. Envoyer
   await axios.post(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draft_id}/send`,
+    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draft_id}/send`,
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
