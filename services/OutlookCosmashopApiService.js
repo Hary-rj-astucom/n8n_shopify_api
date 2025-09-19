@@ -63,43 +63,32 @@ async function getConversationThreads(conversationId) {
 async function replyToMessage(originalMessageId, replyText, destinataire) {
   const token = await getAccessToken();
 
-  // 1. Récupérer le message original
+  // Récupérer le message original
   const original = await axios.get(
     `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${originalMessageId}`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
-  // 2. Construire le mail "reply" en gardant le conversationId et les headers
+  // Construire le mail reply
   const mail = {
     subject: original.data.subject.startsWith("Re:") ? original.data.subject : "Re: " + original.data.subject,
-    body: {
-      contentType: "HTML",
-      content: replyText
-    },
-    toRecipients: [
-      { emailAddress: { address: destinataire } }
-    ],
-    conversationId: original.data.conversationId,
+    body: { contentType: "HTML", content: replyText },
+    toRecipients: [{ emailAddress: { address: destinataire } }],
     internetMessageHeaders: [
-      {
-        name: "In-Reply-To",
-        value: original.data.internetMessageId
-      },
-      {
-        name: "References",
-        value: original.data.internetMessageId
-      }
-    ]
+      { name: "In-Reply-To", value: original.data.internetMessageId },
+      { name: "References", value: original.data.internetMessageId }
+    ]//,
+    //conversationId: original.data.conversationId
   };
 
-  // 3. Envoyer le mail
+  // Envoyer le mail
   await axios.post(
     `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/sendMail`,
     { message: mail, saveToSentItems: true },
     { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
   );
 
-  console.log("Reply sent successfully with conversationId!");
+  console.log("Reply sent successfully!");
 }
 
 // -------------------- format message --------------------------- //
