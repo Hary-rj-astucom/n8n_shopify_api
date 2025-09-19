@@ -52,6 +52,7 @@ async function authorize() {
   // Listen for refreshed tokens
   oAuth2Client.on('tokens', (newTokens) => {
     if (newTokens.refresh_token) {
+      console.log("Token refreshed !");
       // Save the new refresh_token as well
       fs.writeFileSync(TOKEN_PATH, JSON.stringify({ ...token, ...newTokens }, null, 2));
     }
