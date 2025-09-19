@@ -188,7 +188,7 @@ const respondMail = async (req, res) => {
   try{
 
     const project_id = req.body.project_id;
-    const messageId = req.body.frist_message_id;
+    const messageId = req.body.first_message_id;
     const conversation_id = req.body.conversation_id;
     const replyText = req.body.replyText;
     const destinataire = req.body.destinataire;
