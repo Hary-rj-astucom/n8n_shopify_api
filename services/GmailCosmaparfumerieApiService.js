@@ -218,7 +218,7 @@ async function formatGmailResponse(data) {
         subject: getHeader('Subject'),
         message: messageBody,
         date: getHeader('Date') || null,
-        attachments // 👈 included here
+        attachments 
       };
     })
   );
