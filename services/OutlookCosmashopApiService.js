@@ -18,8 +18,8 @@ async function getAccessToken() {
 }
 
 // ----------------- get attachments ----------------------------- //
-async function getMessageAttachments(messageId) {
-  const token = await getAccessToken();
+async function getMessageAttachments(token, messageId) {
+  //const token = await getAccessToken();
 
   const response = await axios.get(
     `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${messageId}/attachments`,
@@ -55,7 +55,7 @@ async function getConversationThreads(conversationId) {
     `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages?$filter=conversationId eq '${conversationId}'&$top=100`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
-  return formatConversation( response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime)) );
+  return formatConversation( token, response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime)) );
 }
 
 async function replyToMessage(messageId, replyText) {
@@ -93,7 +93,7 @@ async function replyToMessage(messageId, replyText) {
 }
 
 // -------------------- format message --------------------------- //
-async function formatConversation(messages) {
+async function formatConversation(token, messages) {
   if (!Array.isArray(messages) || messages.length === 0) return null;
 
   const formattedMessages = [];
@@ -104,7 +104,7 @@ async function formatConversation(messages) {
     }
 
     // Fetch attachments for this message
-    const attachments = await getMessageAttachments(msg.id);
+    const attachments = await getMessageAttachments(token, msg.id);
 
     formattedMessages.push({
       message_id: msg.id,
