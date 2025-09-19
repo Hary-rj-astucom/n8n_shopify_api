@@ -38,12 +38,12 @@ async function getMessageAttachments(messageId) {
     }
     if (att['@odata.type'] === "#microsoft.graph.itemAttachment") {
       return {
-        id: att.id,
-        name: att.name,
-        type: "itemAttachment"
+        //id: att.id,
+        filename: att.name,
+        mimeType: "itemAttachment"
       };
     }
-    return { id: att.id, name: att.name, type: "unknown" };
+    return { filename: att.name, mimeType: "unknown" };
   });
 }
 
