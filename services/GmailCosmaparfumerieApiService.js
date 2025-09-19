@@ -12,6 +12,21 @@ const oAuth2Client = new google.auth.OAuth2(
   client_id, client_secret, redirect_uris[0]
 );
 
+// Register the listener ONCE at app startup
+oAuth2Client.on('tokens', (tokens) => {
+  console.log("Received new tokens:", tokens);
+
+  // If refresh_token is returned (usually only once), save it
+  if (tokens.refresh_token) {
+    fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens, null, 2));
+  } else if (tokens.access_token) {
+    // update only access_token while keeping existing refresh_token
+    const current = JSON.parse(fs.readFileSync(TOKEN_PATH));
+    const updated = { ...current, access_token: tokens.access_token };
+    fs.writeFileSync(TOKEN_PATH, JSON.stringify(updated, null, 2));
+  }
+});
+
 // ---------------- get le token ----------------------- //
 async function auth(){
   const url = oAuth2Client.generateAuthUrl({
@@ -49,14 +64,14 @@ async function authorize() {
   const token = JSON.parse(fs.readFileSync(TOKEN_PATH));
   oAuth2Client.setCredentials(token);
 
-  // Listen for refreshed tokens
-  oAuth2Client.on('tokens', (newTokens) => {
-    if (newTokens.refresh_token) {
-      console.log("Token refreshed !");
-      // Save the new refresh_token as well
-      fs.writeFileSync(TOKEN_PATH, JSON.stringify({ ...token, ...newTokens }, null, 2));
-    }
-  });
+  // // Listen for refreshed tokens
+  // oAuth2Client.on('tokens', (newTokens) => {
+  //   if (newTokens.refresh_token) {
+  //     console.log("Token refreshed !");
+  //     // Save the new refresh_token as well
+  //     fs.writeFileSync(TOKEN_PATH, JSON.stringify({ ...token, ...newTokens }, null, 2));
+  //   }
+  // });
 
   return oAuth2Client;
 }
