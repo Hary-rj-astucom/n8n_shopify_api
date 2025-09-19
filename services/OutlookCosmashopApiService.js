@@ -17,6 +17,38 @@ async function getAccessToken() {
   return response.data.access_token;
 }
 
+// ----------------- get attachments ----------------------------- //
+async function getMessageAttachments(messageId) {
+  const token = await getAccessToken();
+
+  const response = await axios.get(
+    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${messageId}/attachments`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  return response.data.value.map(att => {
+    if (att['@odata.type'] === "#microsoft.graph.fileAttachment") {
+      return {
+        id: att.id,
+        name: att.name,
+        contentType: att.contentType,
+        size: att.size,
+        contentBytes: att.contentBytes // base64 string you can use directly
+      };
+    }
+    if (att['@odata.type'] === "#microsoft.graph.itemAttachment") {
+      return {
+        id: att.id,
+        name: att.name,
+        type: "itemAttachment"
+      };
+    }
+    return { id: att.id, name: att.name, type: "unknown" };
+  });
+}
+
+// --------------------------------------------------------------- //
+
 async function getConversationThreads(conversationId) {
   const token = await getAccessToken();
    const response = await axios.get(
@@ -61,32 +93,39 @@ async function replyToMessage(messageId, replyText) {
 }
 
 // -------------------- format message --------------------------- //
-function formatConversation(messages) {
-    if (!Array.isArray(messages) || messages.length === 0) return null;
+async function formatConversation(messages) {
+  if (!Array.isArray(messages) || messages.length === 0) return null;
 
-    return {
-        source_app: "Outlook",
-        conversation_id: messages[0].conversationId, // ou autre logique
-        messages: messages.map(msg => {
-            let content = msg.body && msg.body.content ? msg.body.content : '';
-            if (msg.body && msg.body.contentType === 'html') {
-                content = cleanHtml(content);
-            }
+  const formattedMessages = [];
+  for (const msg of messages) {
+    let content = msg.body && msg.body.content ? msg.body.content : '';
+    if (msg.body && msg.body.contentType === 'html') {
+      content = cleanHtml(content);
+    }
 
-            return {
-                message_id: msg.id,
-                from: msg.from?.emailAddress
-                    ? `${msg.from.emailAddress.name || ''} <${msg.from.emailAddress.address}>`.trim()
-                    : '',
-                to: (msg.toRecipients || [])
-                    .map(r => `${r.emailAddress.name || ''} <${r.emailAddress.address}>`.trim())
-                    .join(', '),
-                subject: msg.subject || '',
-                message: content,
-                date: msg.receivedDateTime || msg.sentDateTime || null
-            };
-        })
-    };
+    // Fetch attachments for this message
+    const attachments = await getMessageAttachments(msg.id);
+
+    formattedMessages.push({
+      message_id: msg.id,
+      from: msg.from?.emailAddress
+        ? `${msg.from.emailAddress.name || ''} <${msg.from.emailAddress.address}>`.trim()
+        : '',
+      to: (msg.toRecipients || [])
+        .map(r => `${r.emailAddress.name || ''} <${r.emailAddress.address}>`.trim())
+        .join(', '),
+      subject: msg.subject || '',
+      message: content,
+      date: msg.receivedDateTime || msg.sentDateTime || null,
+      attachments // <= added here
+    });
+  }
+
+  return {
+    source_app: "Outlook",
+    conversation_id: messages[0].conversationId,
+    messages: formattedMessages
+  };
 }
 
 function cleanHtml(html) {
