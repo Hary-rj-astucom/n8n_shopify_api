@@ -26,57 +26,38 @@ async function getConversationThreads(conversationId) {
   return formatConversation( response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime)) );
 }
 
-async function replyToMessage(messageId, conversation_id, replyText, destinataire) {
+async function replyToMessage(messageId, replyText) {
   const token = await getAccessToken();
 
-  /* methode 1 */
-  // 1. Create the reply draft
-  await axios.post(
-    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}/reply`,
-    { 
-      "comment": replyText,
-      "toRecipients": [
-        {
-          "emailAddress": {
-            "address": destinataire
-          }
-        }
-      ]
-    },
-    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': `application/json` } }
-  );
-
-  // 2. get le broillon (`${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/mailFolders/Drafts/messages?$filter=conversationId eq '${conversation_id}' and startswith(subject,'Re:')&$orderby=createdDateTime desc&$top=1`)
-  const response_daft = await axios.get(
-    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/mailFolders/Drafts/messages?$filter=conversationId eq '${conversation_id}' and startswith(subject,'Re:')&$top=1`,
+  // 1. Créer la réponse en brouillon
+  const draftResponse = await axios.post(
+    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${messageId}/createReply`,
+    {}, // pas besoin de recipients ici, l’API copie ceux du mail d’origine
     { headers: { Authorization: `Bearer ${token}` } }
   );
-  const draft_id = response_daft.data.value[0].id;
-  //console.dir(draft_id);
 
-  // 3. remettre le recipients
+  const draft_id = draftResponse.data.id;
+
+  // 2. Mettre à jour le contenu du mail
   await axios.patch(
-    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draft_id}`,
-    { 
-      "toRecipients": [
-        {
-          "emailAddress": {
-            "address": destinataire
-          }
-        }
-      ]
+    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draft_id}`,
+    {
+      body: {
+        contentType: "HTML",
+        content: replyText
+      }
     },
     { headers: { Authorization: `Bearer ${token}`, 'Content-Type': `application/json` } }
   );
 
-  // 4. Send the draft
+  // 3. Envoyer
   await axios.post(
-    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draft_id}/send`,
+    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draft_id}/send`,
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
-  console.log('Reply sent successfully!');
+  console.log("Reply sent successfully!");
 }
 
 // -------------------- format message --------------------------- //
