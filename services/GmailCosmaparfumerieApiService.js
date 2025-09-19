@@ -57,6 +57,42 @@ async function callback(code){
   }
 }
 
+// ------------------------ get attachment ---------------------------- //
+async function getMessageAttachments(gmail, messageId, parts) {
+  const attachments = [];
+
+  async function traverse(parts) {
+    if (!parts) return;
+    for (const part of parts) {
+      if (part.filename && part.filename.length > 0 && part.body.attachmentId) {
+        const attachRes = await gmail.users.messages.attachments.get({
+          userId: 'me',
+          messageId,
+          id: part.body.attachmentId
+        });
+
+        // Gmail sends base64url, convert to base64
+        const base64 = attachRes.data.data.replace(/-/g, '+').replace(/_/g, '/');
+
+        attachments.push({
+          filename: part.filename,
+          mimeType: part.mimeType,
+          data: `data:${part.mimeType};base64,${base64}` // 👉 ready to preview on frontend
+        });
+      }
+
+      // recurse if nested
+      if (part.parts) {
+        await traverse(part.parts);
+      }
+    }
+  }
+
+  await traverse(parts);
+  return attachments;
+}
+
+
 // ----------------------------------------------------- // 
 
 async function authorize() {
@@ -140,49 +176,104 @@ async function replyConversation(threadId, replyText, destinataire){
 
 // ------------------- format data -------------------------- //
 
-function formatGmailResponse(data) {
-    if (!data || !data.messages) return null;
+// function formatGmailResponse(data) {
+//     if (!data || !data.messages) return null;
 
-    return {
-        source_app: "Gmail", 
-        conversation_id: data.id,
-        messages: data.messages.map(msg => {
-            // Récupérer le corps principal
-            let messageBody = '';
-            if (msg.payload) {
-                // Si multipart, prendre la première partie text/html ou text/plain
-                if (msg.payload.parts && msg.payload.parts.length > 0) {
-                    const htmlPart = msg.payload.parts.find(p => p.mimeType === 'text/html');
-                    const plainPart = msg.payload.parts.find(p => p.mimeType === 'text/plain');
-                    const part = htmlPart || plainPart;
-                    if (part && part.body && part.body.data) {
-                      decoded = Buffer.from(part.body.data, 'base64').toString('utf-8');
-                      messageBody = cleanHtml(decoded);
-                    }
-                } else if (msg.payload.body && msg.payload.body.data) {
-                  decoded = Buffer.from(msg.payload.body.data, 'base64').toString('utf-8');
-                  messageBody = cleanHtml(decoded);
-                }
-            }
+//     return {
+//         source_app: "Gmail", 
+//         conversation_id: data.id,
+//         messages: data.messages.map(msg => {
+//             // Récupérer le corps principal
+//             let messageBody = '';
+//             if (msg.payload) {
+//                 // Si multipart, prendre la première partie text/html ou text/plain
+//                 if (msg.payload.parts && msg.payload.parts.length > 0) {
+//                     const htmlPart = msg.payload.parts.find(p => p.mimeType === 'text/html');
+//                     const plainPart = msg.payload.parts.find(p => p.mimeType === 'text/plain');
+//                     const part = htmlPart || plainPart;
+//                     if (part && part.body && part.body.data) {
+//                       decoded = Buffer.from(part.body.data, 'base64').toString('utf-8');
+//                       messageBody = cleanHtml(decoded);
+//                     }
+//                 } else if (msg.payload.body && msg.payload.body.data) {
+//                   decoded = Buffer.from(msg.payload.body.data, 'base64').toString('utf-8');
+//                   messageBody = cleanHtml(decoded);
+//                 }
+//             }
 
-            // Récupérer les headers utiles
-            const headers = msg.payload ? msg.payload.headers || [] : [];
-            const getHeader = name => {
-                const h = headers.find(h => h.name.toLowerCase() === name.toLowerCase());
-                return h ? h.value : '';
-            };
+//             // Récupérer les headers utiles
+//             const headers = msg.payload ? msg.payload.headers || [] : [];
+//             const getHeader = name => {
+//                 const h = headers.find(h => h.name.toLowerCase() === name.toLowerCase());
+//                 return h ? h.value : '';
+//             };
 
-            return {
-                message_id: msg.id,
-                from: getHeader('From'),
-                to: getHeader('To'),
-                subject: getHeader('Subject'),
-                message: messageBody,
-                date: getHeader('Date') || null
-            };
-        })
-    };
+//             return {
+//                 message_id: msg.id,
+//                 from: getHeader('From'),
+//                 to: getHeader('To'),
+//                 subject: getHeader('Subject'),
+//                 message: messageBody,
+//                 date: getHeader('Date') || null
+//             };
+//         })
+//     };
+// }
+
+async function formatGmailResponse(data) {
+  if (!data || !data.messages) return null;
+
+  const auth = await authorize();
+  const gmail = google.gmail({ version: 'v1', auth });
+
+  const messages = await Promise.all(
+    data.messages.map(async (msg) => {
+      // -------- Extract body --------
+      let messageBody = '';
+      if (msg.payload) {
+        if (msg.payload.parts && msg.payload.parts.length > 0) {
+          const htmlPart = msg.payload.parts.find(p => p.mimeType === 'text/html');
+          const plainPart = msg.payload.parts.find(p => p.mimeType === 'text/plain');
+          const part = htmlPart || plainPart;
+          if (part?.body?.data) {
+            const decoded = Buffer.from(part.body.data, 'base64').toString('utf-8');
+            messageBody = cleanHtml(decoded);
+          }
+        } else if (msg.payload.body?.data) {
+          const decoded = Buffer.from(msg.payload.body.data, 'base64').toString('utf-8');
+          messageBody = cleanHtml(decoded);
+        }
+      }
+
+      // -------- Extract headers --------
+      const headers = msg.payload?.headers || [];
+      const getHeader = (name) => {
+        const h = headers.find(h => h.name.toLowerCase() === name.toLowerCase());
+        return h ? h.value : '';
+      };
+
+      // -------- Fetch attachments --------
+      const attachments = await getMessageAttachments(gmail, msg.id, msg.payload.parts);
+
+      return {
+        message_id: msg.id,
+        from: getHeader('From'),
+        to: getHeader('To'),
+        subject: getHeader('Subject'),
+        message: messageBody,
+        date: getHeader('Date') || null,
+        attachments // 👈 included here
+      };
+    })
+  );
+
+  return {
+    source_app: "Gmail",
+    conversation_id: data.id,
+    messages
+  };
 }
+
 
 function cleanHtml(html) {
     if (!html) return '';
