@@ -4,9 +4,9 @@ const { google } = require('googleapis');
 const path = require('path');
 
 const TOKEN_PATH = path.join(__dirname, 'json_mock/gmail_token.json');
-const client_secret = "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"; 
-const client_id = "802601190444-if4prn8mg95sprqs0vp1pha9689mam90.apps.googleusercontent.com";
-const redirect_uris = ["https://dev-ia.astucom.com/n8n_cosmia/gmail/callback"];
+const client_secret = process.env.GMAIL_CLIENT_SECRET; 
+const client_id = process.env.GMAIL_CLIENT_ID ;
+const redirect_uris = [process.env.GMAIL_REDIRECT_URI];
 
 const oAuth2Client = new google.auth.OAuth2(
   client_id, client_secret, redirect_uris[0]
