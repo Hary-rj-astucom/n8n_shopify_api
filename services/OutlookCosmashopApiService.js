@@ -93,7 +93,7 @@ async function replyToMessage(messageId, replyText, attachments = []) {
 
     // 2.5. Update draft message with body and attachments
     await axios.patch(
-      `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}`,
+      `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draft_id}`,
       {
         body: {
           contentType: "HTML",
