@@ -1,3 +1,4 @@
+const sequelize = require("../../config/database.js");
 const Project = require("../../models/Project.js");
 
 const getProjects = async (req, res) => {
