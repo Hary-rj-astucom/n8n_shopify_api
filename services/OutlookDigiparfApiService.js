@@ -26,38 +26,52 @@ async function getConversationThreads(conversationId) {
   return formatConversation( response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime)) );
 }
 
-async function replyToMessage(messageId, replyText) {
+async function replyToMessage(messageId, replyText, attachments = []) {
   const token = await getAccessToken();
 
-  // 1. Créer la réponse en brouillon
+  // 1. Create draft reply
   const draftResponse = await axios.post(
     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}/createReply`,
-    {}, // pas besoin de recipients ici, l’API copie ceux du mail d’origine
+    {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
-  const draft_id = draftResponse.data.id;
+  const draftId = draftResponse.data.id;
 
-  // 2. Mettre à jour le contenu du mail
+  // 2. Update body
   await axios.patch(
-    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draft_id}`,
+    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}`,
     {
       body: {
         contentType: "HTML",
         content: replyText
       }
     },
-    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': `application/json` } }
+    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
   );
 
-  // 3. Envoyer
+  // 3. Add attachments if any
+  for (const att of attachments) {
+    await axios.post(
+      `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}/attachments`,
+      {
+        "@odata.type": "#microsoft.graph.fileAttachment",
+        name: att.filename,
+        contentType: att.mimeType || "application/octet-stream",
+        contentBytes: att.contentBase64.replace(/^data:.*;base64,/, "") // remove data URI prefix
+      },
+      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // 4. Send the draft
   await axios.post(
-    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draft_id}/send`,
+    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}/send`,
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
-  console.log("Reply sent successfully!");
+  console.log("Reply with attachments sent successfully!");
 }
 
 // -------------------- format message --------------------------- //
