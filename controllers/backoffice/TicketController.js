@@ -202,7 +202,7 @@ const respondMail = async (req, res) => {
       case 1:
         // COSMASHOP
         console.log("envoie messagerie COSMASHOP");
-        result_conv = await OutlookCosmashopApiService.replyToMessage(messageId, replyText);
+        result_conv = await OutlookCosmashopApiService.replyToMessage(messageId, replyText, attachements);
         break;
       case 2:
         // COSMA-PARFUMERIE
@@ -212,7 +212,7 @@ const respondMail = async (req, res) => {
       case 3:
         // DIGIPARF
         console.log("envoie messagerie DIGIPARF");
-        result_conv = await OutlookDigiparfApiService.replyToMessage(messageId, replyText);
+        result_conv = await OutlookDigiparfApiService.replyToMessage(messageId, replyText, attachements);
         break;
       default:
         result_conv = [];

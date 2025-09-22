@@ -58,7 +58,7 @@ async function getConversationThreads(conversationId) {
   return formatConversation( token, response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime)) );
 }
 
-async function replyToMessage(messageId, replyText) {
+async function replyToMessage(messageId, replyText, attachments = []) {
   const token = await getAccessToken();
 
   // 1. Créer la réponse en brouillon
@@ -70,17 +70,40 @@ async function replyToMessage(messageId, replyText) {
 
   const draft_id = draftResponse.data.id;
 
-  // 2. Mettre à jour le contenu du mail
-  await axios.patch(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draft_id}`,
-    {
-      body: {
-        contentType: "HTML",
-        content: replyText
-      }
-    },
-    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': `application/json` } }
-  );
+  if(attachments.length == 0){
+    // 2. Mettre à jour le contenu du mail
+    await axios.patch(
+      `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draft_id}`,
+      {
+        body: {
+          contentType: "HTML",
+          content: replyText
+        }
+      },
+      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': `application/json` } }
+    );
+  }else{
+    // 2. Prepare attachments for Microsoft Graph
+    const graphAttachments = attachments.map(att => ({
+      "@odata.type": "#microsoft.graph.fileAttachment",
+      name: att.filename,
+      contentType: att.mimeType || "application/octet-stream",
+      contentBytes: att.contentBase64.replace(/\r?\n/g, "") // sanitize base64
+    }));
+
+    // 2.5. Update draft message with body and attachments
+    await axios.patch(
+      `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}`,
+      {
+        body: {
+          contentType: "HTML",
+          content: replyText
+        },
+        attachments: graphAttachments
+      },
+      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+    );
+  }
 
   // 3. Envoyer
   await axios.post(
