@@ -192,6 +192,7 @@ const respondMail = async (req, res) => {
     const conversation_id = req.body.conversation_id;
     const replyText = req.body.replyText;
     const destinataire = req.body.destinataire;
+    const attachements = req.body.attachements;
 
     switch (project_id) {
       case 1:
@@ -202,7 +203,7 @@ const respondMail = async (req, res) => {
       case 2:
         // COSMA-PARFUMERIE
         console.log("envoie messagerie COSMA-PARFUMERIE");
-        result_conv = await GmailCosmaparfumerieApiService.replyConversation(conversation_id, replyText, destinataire);
+        result_conv = await GmailCosmaparfumerieApiService.replyConversation(conversation_id, replyText, destinataire, attachements);
         break;
       case 3:
         // DIGIPARF

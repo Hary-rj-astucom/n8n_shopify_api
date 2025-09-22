@@ -132,7 +132,7 @@ async function getConversation(threadId) {
   }
 }
 
-async function replyConversation(threadId, replyText, destinataire){
+async function replyConversation(threadId, replyText, destinataire, attachments = []){
   try {
     const auth = await authorize();
     const gmail = google.gmail({ version: 'v1', auth });
@@ -155,7 +155,13 @@ async function replyConversation(threadId, replyText, destinataire){
     const to = destinataire;
 
     // 3. Construire la réponse
-    const rawMessage = makeEmail(to, subject, replyText, msgIdHeader);
+    let rawMessage = "";
+    
+    if(attachments.length == 0){
+      rawMessage = makeEmail(to, subject, replyText, msgIdHeader);
+    }else{
+      rawMessage = makeEmailWithMultipleAttachments(to, subject, replyText, msgIdHeader, attachments)
+    } 
 
     // 4. Envoyer dans la même conversation
     const res = await gmail.users.messages.send({
@@ -273,6 +279,60 @@ function makeEmail(to, subject, body, messageId) {
   ].join("\n");
 
   return Buffer.from(mail).toString("base64").replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/**
+ * to: string - recipient
+ * subject: string - email subject
+ * body: string - email body
+ * messageId: string - In-Reply-To / References
+ * attachments: array of objects [{ filename, contentBase64, mimeType }]
+ * exemple attachement 
+      * attachments = [
+        { filename: "file1.pdf", contentBase64: req.body.file1Base64, mimeType: "application/pdf" },
+        { filename: "file2.jpg", contentBase64: req.body.file2Base64, mimeType: "image/jpeg" }
+      ]
+ */
+function makeEmailWithMultipleAttachments(to, subject, body, messageId, attachments = []) {
+  const boundary = "----=_Part_" + Date.now();
+
+  const mailParts = [
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    `In-Reply-To: ${messageId}`,
+    `References: ${messageId}`,
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    "",
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    "Content-Transfer-Encoding: 7bit",
+    "",
+    body,
+    ""
+  ];
+
+  // Add each attachment
+  attachments.forEach(att => {
+    mailParts.push(
+      `--${boundary}`,
+      `Content-Type: ${att.mimeType || "application/octet-stream"}; name="${att.filename}"`,
+      "Content-Transfer-Encoding: base64",
+      `Content-Disposition: attachment; filename="${att.filename}"`,
+      "",
+      att.contentBase64.replace(/\r?\n/g, ""), // sanitize base64
+      ""
+    );
+  });
+
+  // End boundary
+  mailParts.push(`--${boundary}--`);
+
+  return Buffer.from(mailParts.join("\r\n"))
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 module.exports = { 
