@@ -61,59 +61,51 @@ async function getConversationThreads(conversationId) {
 async function replyToMessage(messageId, replyText, attachments = []) {
   const token = await getAccessToken();
 
-  // 1. Créer la réponse en brouillon
+  // 1. Create draft reply
   const draftResponse = await axios.post(
     `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${messageId}/createReply`,
-    {}, // pas besoin de recipients ici, l’API copie ceux du mail d’origine
+    {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
-  const draft_id = draftResponse.data.id;
+  const draftId = draftResponse.data.id;
 
-  if(attachments.length == 0){
-    // 2. Mettre à jour le contenu du mail
-    await axios.patch(
-      `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draft_id}`,
-      {
-        body: {
-          contentType: "HTML",
-          content: replyText
-        }
-      },
-      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': `application/json` } }
-    );
-  }else{
-    // 2. Prepare attachments for Microsoft Graph
-    const graphAttachments = attachments.map(att => ({
-      "@odata.type": "#microsoft.graph.fileAttachment",
-      name: att.filename,
-      contentType: att.mimeType || "application/octet-stream",
-      contentBytes: att.contentBase64.replace(/\r?\n/g, "") // sanitize base64
-    }));
+  // 2. Update body
+  await axios.patch(
+    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}`,
+    {
+      body: {
+        contentType: "HTML",
+        content: replyText
+      }
+    },
+    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+  );
 
-    // 2.5. Update draft message with body and attachments
-    await axios.patch(
-      `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draft_id}`,
+  // 3. Add attachments if any
+  for (const att of attachments) {
+    await axios.post(
+      `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}/attachments`,
       {
-        body: {
-          contentType: "HTML",
-          content: replyText
-        },
-        attachments: graphAttachments
+        "@odata.type": "#microsoft.graph.fileAttachment",
+        name: att.filename,
+        contentType: att.mimeType || "application/octet-stream",
+        contentBytes: att.contentBase64.replace(/^data:.*;base64,/, "") // remove data URI prefix
       },
       { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
     );
   }
 
-  // 3. Envoyer
+  // 4. Send the draft
   await axios.post(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draft_id}/send`,
+    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}/send`,
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
-  console.log("Reply sent successfully!");
+  console.log("Reply with attachments sent successfully!");
 }
+
 
 // -------------------- format message --------------------------- //
 async function formatConversation(token, messages) {
