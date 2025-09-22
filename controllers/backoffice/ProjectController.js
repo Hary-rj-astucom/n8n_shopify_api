@@ -3,7 +3,7 @@ const Project = require("../../models/Project.js");
 
 const getProjects = async (req, res) => {
   try {
-    let projects = await Project.findAll({ where: { state: 1 } });
+    let projects = await Project.findAll({ where: { state: 1 }, raw: true });
 
     for (let a = 0; a < projects.length; a++) {
       let [pending] = await sequelize.query(
@@ -47,6 +47,7 @@ const getProjects = async (req, res) => {
     }
 
     res.json(projects);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
