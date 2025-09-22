@@ -17,6 +17,38 @@ async function getAccessToken() {
   return response.data.access_token;
 }
 
+// ----------------- get attachments ----------------------------- //
+async function getMessageAttachments(token, messageId) {
+  //const token = await getAccessToken();
+
+  const response = await axios.get(
+    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${messageId}/attachments`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  return response.data.value.map(att => {
+    if (att['@odata.type'] === "#microsoft.graph.fileAttachment") {
+      return {
+        //id: att.id,
+        filename: att.name,
+        mimeType: att.contentType,
+        size: att.size,
+        data: `data:${att.contentType};base64,${att.contentBytes}` // base64 string you can use directly
+      };
+    }
+    if (att['@odata.type'] === "#microsoft.graph.itemAttachment") {
+      return {
+        //id: att.id,
+        filename: att.name,
+        mimeType: "itemAttachment"
+      };
+    }
+    return { filename: att.name, mimeType: "unknown" };
+  });
+}
+
+// --------------------------------------------------------------- //
+
 async function getConversationThreads(conversationId) {
   const token = await getAccessToken();
    const response = await axios.get(
@@ -74,63 +106,71 @@ async function replyToMessage(messageId, replyText, attachments = []) {
   console.log("Reply with attachments sent successfully!");
 }
 
+
 // -------------------- format message --------------------------- //
-function formatConversation(messages) {
-    if (!Array.isArray(messages) || messages.length === 0) return null;
+async function formatConversation(token, messages) {
+  if (!Array.isArray(messages) || messages.length === 0) return null;
 
-    return {
-        source_app: "Outlook",
-        conversation_id: messages[0].conversationId, // ou autre logique
-        messages: messages.map(msg => {
-            let content = msg.body && msg.body.content ? msg.body.content : '';
-            if (msg.body && msg.body.contentType === 'html') {
-                content = cleanHtml(content);
-            }
+  const formattedMessages = [];
+  for (const msg of messages) {
+    let content = msg.body && msg.body.content ? msg.body.content : '';
+    if (msg.body && msg.body.contentType === 'html') {
+      content = cleanHtml(content);
+    }
 
-            return {
-                message_id: msg.id,
-                from: msg.from?.emailAddress
-                    ? `${msg.from.emailAddress.name || ''} <${msg.from.emailAddress.address}>`.trim()
-                    : '',
-                to: (msg.toRecipients || [])
-                    .map(r => `${r.emailAddress.name || ''} <${r.emailAddress.address}>`.trim())
-                    .join(', '),
-                subject: msg.subject || '',
-                message: content,
-                date: msg.receivedDateTime || msg.sentDateTime || null
-            };
-        })
-    };
+    // Fetch attachments for this message
+    const attachments = await getMessageAttachments(token, msg.id);
+
+    formattedMessages.push({
+      message_id: msg.id,
+      from: msg.from?.emailAddress
+        ? `${msg.from.emailAddress.name || ''} <${msg.from.emailAddress.address}>`.trim()
+        : '',
+      to: (msg.toRecipients || [])
+        .map(r => `${r.emailAddress.name || ''} <${r.emailAddress.address}>`.trim())
+        .join(', '),
+      subject: msg.subject || '',
+      message: content,
+      date: msg.receivedDateTime || msg.sentDateTime || null,
+      attachments // <= added here
+    });
+  }
+
+  return {
+    source_app: "Outlook",
+    conversation_id: messages[0].conversationId,
+    messages: formattedMessages
+  };
 }
 
 function cleanHtml(html) {
-    if (!html) return '';
+  if (!html) return '';
 
-    // Supprime CSS <style>...</style>
-    html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+  // Supprime CSS <style>...</style>
+  html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
 
-    // Remplace certaines balises par des sauts de ligne
-    html = html.replace(/<br\s*\/?>/gi, '\n');
-    html = html.replace(/<\/p>/gi, '\n');
-    html = html.replace(/<\/div>/gi, '\n');
-    html = html.replace(/<\/h[1-6]>/gi, '\n');
+  // Remplace certaines balises par des sauts de ligne
+  html = html.replace(/<br\s*\/?>/gi, '\n');
+  html = html.replace(/<\/p>/gi, '\n');
+  html = html.replace(/<\/div>/gi, '\n');
+  html = html.replace(/<\/h[1-6]>/gi, '\n');
 
-    // Supprime toutes les autres balises
-    html = html.replace(/<[^>]+>/g, '');
+  // Supprime toutes les autres balises
+  html = html.replace(/<[^>]+>/g, '');
 
-    // Décodage des entités HTML
-    html = html.replace(/&nbsp;/gi, ' ')
-               .replace(/&amp;/gi, '&')
-               .replace(/&lt;/gi, '<')
-               .replace(/&gt;/gi, '>')
-               .replace(/&quot;/gi, '"')
-               .replace(/&apos;/gi, "'");
+  // Décodage des entités HTML
+  html = html.replace(/&nbsp;/gi, ' ')
+              .replace(/&amp;/gi, '&')
+              .replace(/&lt;/gi, '<')
+              .replace(/&gt;/gi, '>')
+              .replace(/&quot;/gi, '"')
+              .replace(/&apos;/gi, "'");
 
-    // Normalisation des espaces et retours à la ligne
-    html = html.replace(/\r/g, '');
-    html = html.replace(/\n\s*\n/g, '\n\n').trim();
+  // Normalisation des espaces et retours à la ligne
+  html = html.replace(/\r/g, '');
+  html = html.replace(/\n\s*\n/g, '\n\n').trim();
 
-    return html;
+  return html;
 }
 
 
