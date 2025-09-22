@@ -192,7 +192,11 @@ const respondMail = async (req, res) => {
     const conversation_id = req.body.conversation_id;
     const replyText = req.body.replyText;
     const destinataire = req.body.destinataire;
-    const attachements = req.body.attachements;
+
+    let attachements = [];
+    if(req.body.attachements){
+      attachements = req.body.attachements;
+    }
 
     switch (project_id) {
       case 1:
