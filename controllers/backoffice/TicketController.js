@@ -148,7 +148,7 @@ const getTicketsDetails = async (req, res) => {
       FROM ticket 
       JOIN label ON label.id = ticket.label_id 
       JOIN project ON project.id = ticket.project_id
-      WHERE id = ?
+      WHERE ticket.id = ?
     `;
     const result = await sequelize.query(dataQuery, {
       replacements: params,
