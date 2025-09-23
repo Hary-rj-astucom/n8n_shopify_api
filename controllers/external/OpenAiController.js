@@ -22,6 +22,23 @@ const translate = async (req, res) => {
   }
 }
 
+const detectLanguageISO = async (req, res) => {
+  try {
+    const openai = new OpenAiApiService();
+
+    const { text } = req.body;
+
+    const iso_lang = await openai.detectLanguageISO(text);
+
+    res.status(200).send({ langue: iso_lang });
+
+  } catch (error) {
+    console.error('Error consultation shopify:', error);
+    res.status(500).send('Error consultation shopify');
+  }
+}
+
 module.exports = { 
-  translate
+  translate,
+  detectLanguageISO
 };

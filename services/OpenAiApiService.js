@@ -78,6 +78,37 @@ class OpenAiService {
 
     return response.output_text ?? '';
   }
+
+  /**
+ * Détecte la langue d'un texte et renvoie le code ISO 639-1
+ * @param {string} text - Le texte à analyser
+ * @returns {Promise<string>} - Code ISO de la langue (ex: "fr", "en", "es")
+ */
+  async detectLanguageISO(text) {
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        messages: [
+          {
+            role: "system",
+            content: "Tu es un détecteur de langue. Réponds uniquement avec le code ISO 639-1 de la langue du texte fourni (ex: fr, en, es, de, it)."
+          },
+          {
+            role: "user",
+            content: text
+          }
+        ],
+        temperature: 0,
+      });
+
+      return response.choices[0].message.content.trim();
+
+    } catch (error) {
+      console.error("Erreur lors de la détection de langue:", error);
+      throw error;
+    }
+  }
+  
 }
 
 module.exports = OpenAiService;
