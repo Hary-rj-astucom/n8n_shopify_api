@@ -128,7 +128,23 @@ const getTicketsDetails = async (req, res) => {
 
     // get detail ticket
     const dataQuery = `
-      SELECT ticket.*, label.name as label_name, project.name as project_name 
+      SELECT ticket.id,
+        ticket.num_ticket,
+        ticket.subject_ticket,
+        ticket.conversation_email_id,
+        ticket.to_do,
+        ticket.original_client_mail,
+        ticket.reception_mail,
+        ticket.nom_client,
+        ticket.num_commande,
+        ticket.label_id,
+        ticket.project_id,
+        ticket.created_at,
+        ticket.status,
+        ticket.need_attention,
+        ticket.state, 
+        label.name as label_name, 
+        project.name as project_name 
       FROM ticket 
       JOIN label ON label.id = ticket.label_id 
       JOIN project ON project.id = ticket.project_id
