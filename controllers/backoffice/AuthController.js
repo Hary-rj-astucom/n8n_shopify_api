@@ -21,7 +21,8 @@ const login = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
-    res.json({ message: "Login successful", token });
+    res.json({ message: "Login successful", token, name: user.name, email: user.email, role: user.role });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
