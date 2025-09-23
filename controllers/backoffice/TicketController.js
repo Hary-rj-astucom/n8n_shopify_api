@@ -128,8 +128,10 @@ const getTicketsDetails = async (req, res) => {
 
     // get detail ticket
     const dataQuery = `
-      SELECT *
-      FROM ticket
+      SELECT ticket.*, label.name as label_name, project.name as project_name 
+      FROM ticket 
+      JOIN label ON label.id = ticket.label_id 
+      JOIN project ON project.id = ticket.project_id
       WHERE id = ?
     `;
     const result = await sequelize.query(dataQuery, {
