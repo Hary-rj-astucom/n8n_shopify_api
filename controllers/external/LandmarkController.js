@@ -7,7 +7,7 @@ const trackpackage = async (req, res) => {
 
     // Tester le suivi d’un colis
     const result = await landmark.track(req.body.bon_transport_landmark);
-    res.status(200).send(result);
+    res.status(200).send({data : result});
 
   } catch (error) {
     console.error('Error consultation landmark:', error.message);

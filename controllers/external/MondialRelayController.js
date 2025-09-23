@@ -4,7 +4,7 @@ const trackPackageByNum = async (req, res) => {
   try {
 
     let result = await MondialRelayApiService.tracingColisDetaille(req.body.expedition_number);
-    res.status(200).send(result);
+    res.status(200).send({data : result});
 
   } catch (error) {
     console.log('Error consultation mondial relay:', error);

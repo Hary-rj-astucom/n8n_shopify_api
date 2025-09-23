@@ -7,7 +7,7 @@ const trackpackage = async (req, res) => {
 
     // Tester le suivi d’un colis
     const result = await tnt.tracking(req.body.bon_transport);
-    res.status(200).send(result);
+    res.status(200).send({data : result});
 
   } catch (error) {
     console.error('Error consultation shopify:', error);
