@@ -268,8 +268,8 @@ function cleanHtml(html) {
 
 function makeEmail(to, subject, body, messageId) {
   const mail = [
-    `To: ${to}`,
-    `Subject: ${subject}`,
+    `To: ${to.trim().replace(/[\r\n]+/g, '')}`,
+    `Subject: ${subject.trim().replace(/[\r\n]+/g, '')}`,
     `In-Reply-To: ${messageId}`,
     `References: ${messageId}`,
     "Content-Type: text/plain; charset=\"UTF-8\"",
@@ -297,8 +297,8 @@ function makeEmailWithMultipleAttachments(to, subject, body, messageId, attachme
   const boundary = "----=_Part_" + Date.now();
 
   const mailParts = [
-    `To: ${to}`,
-    `Subject: ${subject}`,
+    `To: ${to.trim().replace(/[\r\n]+/g, '')}`,
+    `Subject: ${subject.trim().replace(/[\r\n]+/g, '')}`,
     `In-Reply-To: ${messageId}`,
     `References: ${messageId}`,
     "MIME-Version: 1.0",
