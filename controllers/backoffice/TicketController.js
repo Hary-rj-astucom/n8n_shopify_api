@@ -6,6 +6,7 @@ const OutlookDigiparfApiService = require('../../services/OutlookDigiparfApiServ
 const GmailCosmaparfumerieApiService = require('../../services/GmailCosmaparfumerieApiService');
 
 const Ticket = require("../../models/Ticket.js");
+const User = require("../../models/User.js");
 const TicketHistoricalComment = require("../../models/TicketHistoricalComment.js");
 const Project = require("../../models/Project.js");
 
@@ -252,7 +253,8 @@ const respondMail = async (req, res) => {
         result_conv = [];
     }
 
-    await TicketHistoricalComment.create({ comment: "[ACTION] " + req.user.name + " a repondu(e) au client", ticket_id: ticket_id, user_id: req.user.id });
+    const user = await User.findByPk(req.user.id);
+    await TicketHistoricalComment.create({ comment: "[ACTION] " + user.name + " a repondu(e) au client", ticket_id: ticket_id, user_id: req.user.id });
 
     return res.json({message: "message envoye"});
 
@@ -280,7 +282,8 @@ const updateTicketDetails = async (req, res) => {
   try {
     const [updated] = await Ticket.update(req.body, { where: { id: req.params.id } });
     if(updated){
-      await TicketHistoricalComment.create({ comment: "[ACTION] Ticket mis a jour par " + req.user.name, ticket_id: req.params.id, user_id: req.user.id });
+      const user = await User.findByPk(req.user.id);
+      await TicketHistoricalComment.create({ comment: "[ACTION] Ticket mis a jour par " + user.name, ticket_id: req.params.id, user_id: req.user.id });
       res.json({ message: "Ticket updated" })
     }else{
       res.status(404).json({ error: "Ticket not found" });
