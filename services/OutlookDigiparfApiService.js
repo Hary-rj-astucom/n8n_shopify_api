@@ -22,7 +22,7 @@ async function getMessageAttachments(token, messageId) {
   //const token = await getAccessToken();
 
   const response = await axios.get(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${messageId}/attachments`,
+    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}/attachments`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
@@ -55,7 +55,7 @@ async function getConversationThreads(conversationId) {
     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages?$filter=conversationId eq '${conversationId}'&$top=100`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
-  return formatConversation( response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime)) );
+  return formatConversation( token, response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime)) );
 }
 
 async function replyToMessage(messageId, replyText, attachments = []) {
@@ -144,33 +144,33 @@ async function formatConversation(token, messages) {
 }
 
 function cleanHtml(html) {
-  if (!html) return '';
+    if (!html) return '';
 
-  // Supprime CSS <style>...</style>
-  html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    // Supprime CSS <style>...</style>
+    html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
 
-  // Remplace certaines balises par des sauts de ligne
-  html = html.replace(/<br\s*\/?>/gi, '\n');
-  html = html.replace(/<\/p>/gi, '\n');
-  html = html.replace(/<\/div>/gi, '\n');
-  html = html.replace(/<\/h[1-6]>/gi, '\n');
+    // Remplace certaines balises par des sauts de ligne
+    html = html.replace(/<br\s*\/?>/gi, '\n');
+    html = html.replace(/<\/p>/gi, '\n');
+    html = html.replace(/<\/div>/gi, '\n');
+    html = html.replace(/<\/h[1-6]>/gi, '\n');
 
-  // Supprime toutes les autres balises
-  html = html.replace(/<[^>]+>/g, '');
+    // Supprime toutes les autres balises
+    html = html.replace(/<[^>]+>/g, '');
 
-  // Décodage des entités HTML
-  html = html.replace(/&nbsp;/gi, ' ')
-              .replace(/&amp;/gi, '&')
-              .replace(/&lt;/gi, '<')
-              .replace(/&gt;/gi, '>')
-              .replace(/&quot;/gi, '"')
-              .replace(/&apos;/gi, "'");
+    // Décodage des entités HTML
+    html = html.replace(/&nbsp;/gi, ' ')
+               .replace(/&amp;/gi, '&')
+               .replace(/&lt;/gi, '<')
+               .replace(/&gt;/gi, '>')
+               .replace(/&quot;/gi, '"')
+               .replace(/&apos;/gi, "'");
 
-  // Normalisation des espaces et retours à la ligne
-  html = html.replace(/\r/g, '');
-  html = html.replace(/\n\s*\n/g, '\n\n').trim();
+    // Normalisation des espaces et retours à la ligne
+    html = html.replace(/\r/g, '');
+    html = html.replace(/\n\s*\n/g, '\n\n').trim();
 
-  return html;
+    return html;
 }
 
 
