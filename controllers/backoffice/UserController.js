@@ -16,11 +16,10 @@ const createUser = async (req, res) => {
 
 const regeneratePassword = async (req, res) => {
   try {
-    const password = uniqid();
+    const password = uniqid().toUpperCase();
     const hashedPassword = await bcrypt.hash(password, 10);
     const [updated] = await User.update({password : hashedPassword}, { where: { id: req.params.id } });
-    updated ? res.json({ message: "Password updated" }) : res.status(404).json({ error: "User not found" });
-    res.status(201).json({generate_password : password});
+    updated ? res.status(201).json({message: "Password updated", generate_password : password}) : res.status(404).json({ error: "User not found" });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
