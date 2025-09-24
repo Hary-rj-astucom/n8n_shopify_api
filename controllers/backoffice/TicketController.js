@@ -205,11 +205,27 @@ const getTicketsDetails = async (req, res) => {
 const respondMail = async (req, res) => {
   try{
 
-    const project_id = req.body.project_id;
+    const ticket_id = req.body.ticket_id;
     const messageId = req.body.first_message_id;
-    const conversation_id = req.body.conversation_id;
     const replyText = req.body.replyText;
-    const destinataire = req.body.destinataire;
+
+    //get ticket and needed information
+    const dataQuery = `
+      SELECT ticket.id, ticket.num_ticket, ticket.subject_ticket, ticket.conversation_email_id, ticket.original_client_mail,
+        ticket.reception_mail, ticket.nom_client, ticket.num_commande, ticket.label_id, ticket.project_id, ticket.created_at,
+        ticket.status, ticket.need_attention, ticket.state, label.name as label_name, project.name as project_name 
+      FROM ticket 
+      JOIN label ON label.id = ticket.label_id 
+      JOIN project ON project.id = ticket.project_id
+      WHERE ticket.id = ?
+    `;
+    const result = await sequelize.query(dataQuery, {
+      replacements: [ticket_id],
+      type: sequelize.QueryTypes.SELECT
+    });
+    const project_id = result[0].project_id;
+    const destinataire = result[0].original_client_mail;
+    const conversation_id = result[0].conversation_email_id;
 
     let attachements = [];
     if(req.body.attachements){
@@ -236,6 +252,8 @@ const respondMail = async (req, res) => {
         result_conv = [];
     }
 
+    await TicketHistoricalComment.create({ comment: "[ACTION] " + req.user.name + " a repondu(e) au client", ticket_id: ticket_id, user_id: req.user.id });
+
     return res.json({message: "message envoye"});
 
   } catch (error) {
@@ -261,7 +279,12 @@ const createTicket = async (req, res) => {
 const updateTicketDetails = async (req, res) => {
   try {
     const [updated] = await Ticket.update(req.body, { where: { id: req.params.id } });
-    updated ? res.json({ message: "Ticket updated" }) : res.status(404).json({ error: "Ticket not found" });
+    if(updated){
+      await TicketHistoricalComment.create({ comment: "[ACTION] Ticket mis a jour par " + req.user.name, ticket_id: req.params.id, user_id: req.user.id });
+      res.json({ message: "Ticket updated" })
+    }else{
+      res.status(404).json({ error: "Ticket not found" });
+    }
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
