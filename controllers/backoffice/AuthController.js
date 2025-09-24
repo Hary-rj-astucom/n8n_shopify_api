@@ -28,4 +28,34 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { login };
+const changePassword = async (req, res) => {
+  try {
+
+    const { recent_password, new_password, confirm_new_password } = req.body;
+    
+    // find the user
+    const user = await User.findOne({ where: { id : req.user.id } });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Validate password
+    const isMatch = await bcrypt.compare(recent_password, user.password);
+    if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
+
+    // verification du nouveau mot de passe
+    if(new_password != confirm_new_password) return res.status(401).json({ error: "Please confirm your new password" });
+
+    // sauvegarde du nouveau mot de passe
+    const [updated] = await User.update({ password : await bcrypt.hash(new_password, 10) }, { where: { id: user.id } });
+
+    res.status(201).json({ message: "Password changed successfully" });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+module.exports = { 
+  login, 
+  changePassword 
+};

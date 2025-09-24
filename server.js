@@ -20,6 +20,7 @@ const shippingboRoutes = require('./routes/external/shippingboRoutes');
 const gmailRoutes = require('./routes/external/gmailRoutes');
 
 const authRoutes = require('./routes/backoffice/authRoutes');
+const auth2Routes = require('./routes/backoffice/auth2Routes');
 const userRoutes = require('./routes/backoffice/userRoutes');
 const projectRoutes = require('./routes/backoffice/projectRoutes');
 const ticketRoutes = require('./routes/backoffice/ticketRoutes');
@@ -57,6 +58,7 @@ app.use(prefix + '/openai', openaiRoutes);
 
 // Api
 app.use(prefix + '/auth', authRoutes);
+app.use(prefix + '/auth2', authenticateToken, auth2Routes);
 app.use(prefix + '/user', authenticateToken, userRoutes);
 app.use(prefix + '/project', authenticateToken, projectRoutes);
 app.use(prefix + '/ticket', authenticateToken, ticketRoutes);
