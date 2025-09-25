@@ -25,6 +25,7 @@ const userRoutes = require('./routes/backoffice/userRoutes');
 const projectRoutes = require('./routes/backoffice/projectRoutes');
 const ticketRoutes = require('./routes/backoffice/ticketRoutes');
 const ticketRoutes2 = require('./routes/backoffice/ticket2Routes');
+const dashRoutes = require('./routes/backoffice/dashRoutes');
 
 const app = express();
 const port = process.env.PORT;
@@ -66,6 +67,7 @@ app.use(prefix + '/auth2', authenticateToken, auth2Routes);
 app.use(prefix + '/user', authenticateToken, userRoutes);
 app.use(prefix + '/project', authenticateToken, projectRoutes);
 app.use(prefix + '/ticket', authenticateToken, ticketRoutes);
+app.use(prefix + '/dash', authenticateToken, dashRoutes);
 app.use(prefix + '/ticket2', ticketRoutes2);
 
 // Start the server
