@@ -7,7 +7,7 @@ const getTicketSummary = async (req, res) => {
     date_range = req.body.date_range; // -> 0 : 7 jours | 1 : 15 jours | 2 : 1 mois | 3 : 3 mois | 4 : 6 mois | 5 : 1 ans 
 
     where = " 1 = 1 ";
-    switch($ticket_status){
+    switch(ticket_status){
       case "all":
         where = " 1 = 1 ";
         break;
