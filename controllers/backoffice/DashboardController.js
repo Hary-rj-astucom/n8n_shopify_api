@@ -95,7 +95,7 @@ const getTicketSummary = async (req, res) => {
 
         break;
       case 3: // 3 mois
-        $sql=`SELECT 
+        sql=`SELECT 
                   COUNT(*) AS nombre,
                   DATE_FORMAT(created_at, '%Y-%m') AS period
               FROM ticket
@@ -118,7 +118,7 @@ const getTicketSummary = async (req, res) => {
 
         break;
       case 4: // 6 mois
-        $sql=`SELECT 
+        sql=`SELECT 
                   COUNT(*) AS nombre,
                   DATE_FORMAT(created_at, '%Y-%m') AS period
               FROM ticket
@@ -141,7 +141,7 @@ const getTicketSummary = async (req, res) => {
 
         break;
       case 5: // 1 ans
-        $sql=`SELECT 
+        sql=`SELECT 
                   COUNT(*) AS nombre,
                   DATE_FORMAT(created_at, '%Y-%m') AS period
               FROM ticket
