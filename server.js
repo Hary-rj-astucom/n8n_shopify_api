@@ -29,6 +29,10 @@ const ticketRoutes2 = require('./routes/backoffice/ticket2Routes');
 const app = express();
 const port = process.env.PORT;
 
+// playload limit
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
 // Apply this to all routes
 app.use(watchguard);
 
