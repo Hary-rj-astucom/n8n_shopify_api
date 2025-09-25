@@ -93,7 +93,8 @@ const getTickets = async (req, res) => {
         project_id,
         status,
         label.name as label,
-        project.name as project_name
+        project.name as project_name,
+        need_attention
       FROM ticket
       JOIN label ON label.id = ticket.label_id 
       JOIN project ON project.id = ticket.project_id
