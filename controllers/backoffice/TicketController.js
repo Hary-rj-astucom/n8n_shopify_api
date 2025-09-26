@@ -192,6 +192,11 @@ const getTicketsDetails = async (req, res) => {
         result_conv = [];
     }
 
+    // update need_attention to 0 
+    if(result[0].need_attention == 1){
+      await Ticket.update({ need_attention: 0}, { where: { id: req.params.id } })
+    }
+
     return res.json({
       details: result,
       comment: result_comment,
