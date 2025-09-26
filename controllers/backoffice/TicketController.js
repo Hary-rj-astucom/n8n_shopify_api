@@ -284,7 +284,7 @@ const updateTicketDetails = async (req, res) => {
     const [updated] = await Ticket.update(req.body, { where: { id: req.params.id } });
     if(updated){
       const user = await User.findByPk(req.user.id);
-      await TicketHistoricalComment.create({ comment: "[ACTION] Ticket mis a jour par " + user.name, ticket_id: req.params.id, user_id: req.user.id });
+      await TicketHistoricalComment.create({ comment: "[ACTION] Ticket mis a jour par " + user.name, ticket_id: req.params.id, user_id: req.user.id + ( (req.body.status) ? "[ "+ req.body.status +" ]" : "" ) });
       res.json({ message: "Ticket updated" })
     }else{
       res.status(404).json({ error: "Ticket not found" });
