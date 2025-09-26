@@ -98,7 +98,7 @@ const getTickets = async (req, res) => {
       FROM ticket
       JOIN label ON label.id = ticket.label_id 
       JOIN project ON project.id = ticket.project_id
-      WHERE ticket.state=1 ${subQuery} ORDER BY ticket.id ASC
+      WHERE ticket.state=1 ${subQuery} ORDER BY need_attention DESC, ticket.id ASC
       LIMIT ? OFFSET ? 
     `;
     params.push(perPage, offset);
