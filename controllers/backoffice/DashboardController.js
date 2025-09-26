@@ -40,7 +40,7 @@ const getTicketSummary = async (req, res) => {
                 )
                 AND ${where}
             GROUP BY DATE(created_at)
-            ORDER BY period DESC
+            ORDER BY period
             `;
         result = await sequelize.query(sql, {
           replacements: [],
@@ -63,7 +63,7 @@ const getTicketSummary = async (req, res) => {
                 )
                 AND ${where}
             GROUP BY DATE(created_at)
-            ORDER BY period DESC
+            ORDER BY period
             `;
         result = await sequelize.query(sql, {
           replacements: [],
@@ -86,7 +86,7 @@ const getTicketSummary = async (req, res) => {
                   )
                   AND ${where} 
               GROUP BY YEARWEEK(created_at, 1)
-              ORDER BY period DESC
+              ORDER BY period
               `;
         result = await sequelize.query(sql, {
           replacements: [],
@@ -109,7 +109,7 @@ const getTicketSummary = async (req, res) => {
                   )
                   AND ${where} 
               GROUP BY YEAR(created_at), MONTH(created_at)
-              ORDER BY period DESC
+              ORDER BY period
               `;
         result = await sequelize.query(sql, {
           replacements: [],
@@ -132,7 +132,7 @@ const getTicketSummary = async (req, res) => {
                   )
                   AND ${where} 
               GROUP BY YEAR(created_at), MONTH(created_at)
-              ORDER BY period DESC
+              ORDER BY period
               `;
         result = await sequelize.query(sql, {
           replacements: [],
@@ -155,7 +155,7 @@ const getTicketSummary = async (req, res) => {
                   )
                   AND ${where} 
               GROUP BY YEAR(created_at), MONTH(created_at)
-              ORDER BY period DESC
+              ORDER BY period
               `;
           result = await sequelize.query(sql, {
             replacements: [],
