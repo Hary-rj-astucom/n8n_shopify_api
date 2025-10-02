@@ -31,7 +31,7 @@ const getTickets = async (req, res) => {
         num_commande LIKE ? OR 
         label_id LIKE ? OR 
         project_id LIKE ? OR 
-        status LIKE ? OR 
+        status LIKE ? 
       )`;
 
       paramsTotal.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
