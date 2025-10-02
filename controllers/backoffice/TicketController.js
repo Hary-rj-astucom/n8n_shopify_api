@@ -34,8 +34,8 @@ const getTickets = async (req, res) => {
         status LIKE ? OR 
       )`;
 
-      paramsTotal.push(search, search, search, search, search, search, search, search);
-      params.push(search, search, search, search, search, search, search, search);
+      paramsTotal.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
     }
 
     // 🔍 Multi-criteria filters
