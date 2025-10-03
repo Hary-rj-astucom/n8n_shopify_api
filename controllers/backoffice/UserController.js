@@ -51,7 +51,7 @@ const getUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const [updated] = await User.update(req.body, { where: { id: req.params.id } });
-    updated ? res.json({ message: "User updated" }) : res.status(404).json({ error: "User not found" });
+    updated ? res.json({ message: "User updated" }) : res.status(403).json({ error: "Incorrect data" });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
