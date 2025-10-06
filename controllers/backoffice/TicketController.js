@@ -64,7 +64,7 @@ const getTickets = async (req, res) => {
 
       //desc for ticket ferme
       if(key == "status" && req.query[key] == "cloture"){
-        let order_by = ", ticket.id DESC"; 
+        order_by = ", ticket.id DESC"; 
       }
     }
 
