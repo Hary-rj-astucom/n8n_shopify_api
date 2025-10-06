@@ -50,6 +50,9 @@ const getTickets = async (req, res) => {
       "status"
     ];
 
+    //order
+    let order_by = ", ticket.id ASC";
+
     for (const field of multiFields) {
       const key = field.replace('.', '_'); // ex: magasin.name → magasin_name
       if (req.query[key]) {
@@ -57,6 +60,11 @@ const getTickets = async (req, res) => {
         subQuery += ` AND ${field} LIKE ?`;
         paramsTotal.push(likeValue);
         params.push(likeValue);
+      }
+
+      //desc for ticket ferme
+      if(key == "status" && req.query[key] == "cloture"){
+        let order_by = ", ticket.id DESC"; 
       }
     }
 
@@ -98,7 +106,7 @@ const getTickets = async (req, res) => {
       FROM ticket
       JOIN label ON label.id = ticket.label_id 
       JOIN project ON project.id = ticket.project_id
-      WHERE ticket.state=1 ${subQuery} ORDER BY need_attention DESC, ticket.id ASC
+      WHERE ticket.state=1 ${subQuery} ORDER BY need_attention DESC ${order_by} 
       LIMIT ? OFFSET ? 
     `;
     params.push(perPage, offset);
