@@ -58,7 +58,7 @@ async function callback(code){
 }
 
 // ------------------------ get attachment ---------------------------- //
-async function getMessageAttachments(gmail, messageId, parts) {
+async function getMessageAttachments(gmail, messageId, parts, baseUrl = "https://dev-ia.astucom.com/n8n_cosmia") {
   const attachments = [];
 
   async function traverse(parts) {
@@ -74,11 +74,39 @@ async function getMessageAttachments(gmail, messageId, parts) {
         // Gmail sends base64url, convert to base64
         const base64 = attachRes.data.data.replace(/-/g, '+').replace(/_/g, '/');
 
+        // attachments.push({
+        //   filename: part.filename,
+        //   mimeType: part.mimeType,
+        //   data: `data:${part.mimeType};base64,${base64}` // 👉 ready to preview on frontend
+        // });
+
+        const buffer = Buffer.from(base64Data, 'base64');
+
+        // Créer le dossier /uploads s’il n’existe pas
+        const uploadDir = path.join(__dirname, '../public/uploads');
+        fs.mkdirSync(uploadDir, { recursive: true });
+
+        // Enregistrer le fichier
+        const filePath = path.join(uploadDir, messageId + "_" + part.filename);
+
+        // Supprimer le fichier s’il existe déjà
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log(`🗑️ Fichier existant supprimé : ${part.filename}`);
+        }
+
+        // Écrire le nouveau fichier
+        fs.writeFileSync(filePath, buffer);
+
+        // Générer le lien public de consultation
+        const fileUrl = `${baseUrl}/public/uploads/${encodeURIComponent(messageId + "_" + part.filename)}`;
+
         attachments.push({
           filename: part.filename,
           mimeType: part.mimeType,
-          data: `data:${part.mimeType};base64,${base64}` // 👉 ready to preview on frontend
+          url: fileUrl,
         });
+
       }
 
       // recurse if nested
