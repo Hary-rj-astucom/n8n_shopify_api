@@ -80,7 +80,7 @@ async function getMessageAttachments(gmail, messageId, parts, baseUrl = "https:/
         //   data: `data:${part.mimeType};base64,${base64}` // 👉 ready to preview on frontend
         // });
 
-        const buffer = Buffer.from(base64Data, 'base64');
+        const buffer = Buffer.from(base64, 'base64');
 
         // Créer le dossier /uploads s’il n’existe pas
         const uploadDir = path.join(__dirname, '../public/uploads');
