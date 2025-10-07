@@ -70,6 +70,9 @@ app.use(prefix + '/ticket', authenticateToken, ticketRoutes);
 app.use(prefix + '/dash', authenticateToken, dashRoutes);
 app.use(prefix + '/ticket2', ticketRoutes2);
 
+// Serve everything inside "uploads" under /n8n_cosmia/public/uploads
+app.use(prefix + '/public/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
