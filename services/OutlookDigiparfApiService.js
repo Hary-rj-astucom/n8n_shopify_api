@@ -2,6 +2,7 @@ require('dotenv').config();
 const axios = require('axios');
 const qs = require('qs');
 const path = require('path');
+const fs = require('fs');
 
 async function getAccessToken() {
   const tokenUrl = `https://login.microsoftonline.com/${process.env.OUTLOOK_DIGIPARF_TENANT_ID}/oauth2/v2.0/token`;
