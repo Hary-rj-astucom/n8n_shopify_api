@@ -1,6 +1,7 @@
 require('dotenv').config();
 const axios = require('axios');
 const qs = require('qs');
+const path = require('path');
 
 async function getAccessToken() {
   const tokenUrl = `https://login.microsoftonline.com/${process.env.OUTLOOK_COSMASHOP_TENANT_ID}/oauth2/v2.0/token`;
