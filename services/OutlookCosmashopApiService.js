@@ -65,7 +65,7 @@ async function getMessageAttachments(token, messageId, baseUrl = "https://dev-ia
         filename: att.name,
         mimeType: att.contentType,
         size: att.size,
-        data: fileUrl 
+        url: fileUrl 
       };
 
     }
