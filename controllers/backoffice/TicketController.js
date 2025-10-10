@@ -201,11 +201,6 @@ const getTicketsDetails = async (req, res) => {
         result_conv = [];
     }
 
-    // update need_attention to 0 
-    if(result[0].need_attention == 1){
-      await Ticket.update({ need_attention: 0}, { where: { id: req.params.id } })
-    }
-
     return res.json({
       details: result,
       comment: result_comment,
@@ -270,6 +265,11 @@ const respondMail = async (req, res) => {
 
     const user = await User.findByPk(req.user.id);
     await TicketHistoricalComment.create({ comment: "[ACTION] " + user.name + " a repondu(e) au client", ticket_id: ticket_id, user_id: req.user.id });
+
+    // update need_attention to 0 
+    if(result[0].need_attention == 1){
+      await Ticket.update({ need_attention: 0}, { where: { id: req.params.id } })
+    }
 
     return res.json({message: "message envoye"});
 
