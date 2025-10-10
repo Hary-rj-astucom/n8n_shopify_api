@@ -268,7 +268,7 @@ const respondMail = async (req, res) => {
 
     // update need_attention to 0 
     if(result[0].need_attention == 1){
-      await Ticket.update({ need_attention: 0}, { where: { id: req.params.id } })
+      await Ticket.update({ need_attention: 0}, { where: { id: ticket_id } })
     }
 
     return res.json({message: "message envoye"});
@@ -278,6 +278,23 @@ const respondMail = async (req, res) => {
     return res.status(200).json(error?.response?.data);
 
     //return res.status(400).json({ error: error.message });
+  }
+}
+
+const ignoreClientResponse = async (req, res) => {
+  try{
+    const ticket_id = req.body.ticket_id;
+
+    // update need_attention to 0 
+    await Ticket.update({ need_attention: 0}, { where: { id: ticket_id } })
+
+    const user = await User.findByPk(req.user.id);
+    await TicketHistoricalComment.create({ ticket_id: ticket_id, user_id: req.user.id, comment: `[ACTION] Reponse du client ignoree par ${user.name}` });
+    res.json({ message: "Ticket updated" })
+
+  }catch (error) {
+    console.error(error?.response?.data);
+    return res.status(200).json(error?.response?.data);
   }
 }
 
@@ -357,5 +374,6 @@ module.exports = {
   createTicket,
   respondMail,
   addTicketComment,
-  getTicketsbyConvId
+  getTicketsbyConvId,
+  ignoreClientResponse
 };
