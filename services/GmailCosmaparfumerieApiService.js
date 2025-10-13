@@ -218,22 +218,54 @@ async function formatGmailResponse(data) {
 
   const messages = await Promise.all(
     data.messages.map(async (msg) => {
+
       // -------- Extract body --------
+
       let messageBody = '';
-      if (msg.payload) {
-        if (msg.payload.parts && msg.payload.parts.length > 0) {
-          const htmlPart = msg.payload.parts.find(p => p.mimeType === 'text/html');
-          const plainPart = msg.payload.parts.find(p => p.mimeType === 'text/plain');
+
+
+      // if (msg.payload) {
+      //   if (msg.payload.parts && msg.payload.parts.length > 0) {
+      //     const htmlPart = msg.payload.parts.find(p => p.mimeType === 'text/html');
+      //     const plainPart = msg.payload.parts.find(p => p.mimeType === 'text/plain');
+      //     const part = htmlPart || plainPart;
+      //     if (part?.body?.data) {
+      //       const decoded = Buffer.from(part.body.data, 'base64').toString('utf-8');
+      //       messageBody = cleanHtml(decoded);
+      //     }
+      //   } else if (msg.payload.body?.data) {
+      //     const decoded = Buffer.from(msg.payload.body.data, 'base64').toString('utf-8');
+      //     messageBody = cleanHtml(decoded);
+      //   }
+      // }
+
+      const extractBody = (payload) => {
+        if (!payload) return '';
+
+        // Si on a des sous-parts dans payload.parts[0].parts
+        let parts = payload.parts;
+        if (Array.isArray(parts) && parts.length > 0 && parts[0].parts) {
+          parts = parts[0].parts;
+        }
+
+        if (Array.isArray(parts) && parts.length > 0) {
+          const htmlPart = parts.find((p) => p.mimeType === 'text/html');
+          const plainPart = parts.find((p) => p.mimeType === 'text/plain');
           const part = htmlPart || plainPart;
+
           if (part?.body?.data) {
             const decoded = Buffer.from(part.body.data, 'base64').toString('utf-8');
-            messageBody = cleanHtml(decoded);
+            return cleanHtml(decoded);
           }
-        } else if (msg.payload.body?.data) {
-          const decoded = Buffer.from(msg.payload.body.data, 'base64').toString('utf-8');
-          messageBody = cleanHtml(decoded);
+        } else if (payload.body?.data) {
+          const decoded = Buffer.from(payload.body.data, 'base64').toString('utf-8');
+          return cleanHtml(decoded);
         }
-      }
+
+        return '';
+      };
+
+      messageBody = extractBody(msg.payload);
 
       // -------- Extract headers --------
       const headers = msg.payload?.headers || [];
