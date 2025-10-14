@@ -12,7 +12,7 @@ async function tracingColisDetaille(expedition) {
     Expeditions: expedition,
     Langue: 'FR'
   };
-  let security = await this.createSecurityKey(privateKey, paramsObj);
+  let security = await createSecurityKey(privateKey, paramsObj);
 
   // Construction du corps XML SOAP
   const xml = `<?xml version="1.0" encoding="ISO-8859-1"?>
