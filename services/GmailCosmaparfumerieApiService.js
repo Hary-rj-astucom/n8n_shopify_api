@@ -210,6 +210,8 @@ async function replyConversation(threadId, replyText, destinataire, attachments 
 
 async function sendDraft(draftId) {
   try {
+    const auth = await authorize();
+    const gmail = google.gmail({ version: 'v1', auth });
 
     const res = await gmail.users.drafts.send({
       userId: 'me',
