@@ -29,8 +29,20 @@ const callback = async (req, res) => {
   }
 }
 
+const senddraft = async (req, res) => {
+  try{
+
+    const result = await GmailCosmaparfumerieApiService.sendDraft(req.body.draftId);
+    res.status(200).send(result); 
+
+  } catch (error) {
+    console.log('Error consultation gmail:', error);
+    res.status(400).send('Error consultation gmail : ' + error.response?.data?.error_description);
+  }
+}
 
 module.exports = { 
     auth,
-    callback
+    callback,
+    senddraft
 };

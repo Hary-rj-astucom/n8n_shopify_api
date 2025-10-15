@@ -208,6 +208,22 @@ async function replyConversation(threadId, replyText, destinataire, attachments 
   }
 }
 
+async function sendDraft(draftId) {
+  try {
+
+    const res = await gmail.users.drafts.send({
+      userId: 'me',
+      requestBody: { id: draftId },
+    });
+
+    return { success: true, res };
+
+  } catch (err) {
+    console.error(err);
+    throw new Error("Error sending reply");
+  }
+}
+
 // ------------------- format data -------------------------- //
 
 async function formatGmailResponse(data) {
@@ -400,5 +416,6 @@ module.exports = {
   replyConversation,
 
   auth,
-  callback
+  callback,
+  sendDraft
 };

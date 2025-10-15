@@ -7,4 +7,6 @@ const router = express.Router();
 router.get('/auth', gmailController.auth);
 router.get('/callback', gmailController.callback);
 
+router.post('/senddraft', gmailController.senddraft);
+
 module.exports = router;
