@@ -226,6 +226,64 @@ async function sendDraft(draftId) {
   }
 }
 
+async function getFullBodyMessage(messageId) {
+  try{
+
+    const auth = await authorize();
+    const gmail = google.gmail({ version: 'v1', auth });
+
+    const res = await gmail.users.messages.get({
+      userId: "me",
+      id: messageId,
+      format: "full", // can be "metadata", "minimal", "full", or "raw"
+    });
+
+    const msg = res.data;
+
+    // ---- extract message body -----------
+
+    const extractBody = (payload) => {
+      if (!payload) return '';
+
+      // Si on a des sous-parts dans payload.parts[0].parts
+      let parts = payload.parts;
+      if (Array.isArray(parts) && parts.length > 0 && parts[0].parts) {
+
+        if(parts[0].parts[0].parts){
+          parts = parts[0].parts[0].parts;
+        }else{
+          parts = parts[0].parts;
+        }
+
+      }
+
+      if (Array.isArray(parts) && parts.length > 0) {
+        const htmlPart = parts.find((p) => p.mimeType === 'text/html');
+        const plainPart = parts.find((p) => p.mimeType === 'text/plain');
+        const part = htmlPart || plainPart;
+
+        if (part?.body?.data) {
+          const decoded = Buffer.from(part.body.data, 'base64').toString('utf-8');
+          return cleanHtml(decoded);
+        }
+      } else if (payload.body?.data) {
+        const decoded = Buffer.from(payload.body.data, 'base64').toString('utf-8');
+        return cleanHtml(decoded);
+      }
+
+      return '';
+    };
+
+    const messageBody = extractBody(msg.payload);
+
+    return { message : messageBody };
+
+  } catch (err) {
+    console.error(err);
+    throw new Error("Error fetching conversation");
+  }
+} 
+
 // ------------------- format data -------------------------- //
 
 async function formatGmailResponse(data) {
@@ -269,7 +327,7 @@ async function formatGmailResponse(data) {
           }else{
             parts = parts[0].parts;
           }
-          
+
         }
 
         if (Array.isArray(parts) && parts.length > 0) {
@@ -425,5 +483,6 @@ module.exports = {
 
   auth,
   callback,
-  sendDraft
+  sendDraft,
+  getFullBodyMessage
 };

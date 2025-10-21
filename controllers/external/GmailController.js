@@ -41,8 +41,21 @@ const senddraft = async (req, res) => {
   }
 }
 
+const getbodymessage = async (req, res) => {
+  try{
+
+    const result = await GmailCosmaparfumerieApiService.getFullBodyMessage(req.body.message_id);
+    res.status(200).send(result); 
+
+  } catch (error) {
+    console.log('Error consultation gmail:', error);
+    res.status(400).send('Error consultation gmail : ' + error.response?.data?.error_description);
+  }
+}
+
 module.exports = { 
     auth,
     callback,
-    senddraft
+    senddraft,
+    getbodymessage
 };
