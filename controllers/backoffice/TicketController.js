@@ -351,14 +351,29 @@ const getTicketsbyConvId = async (req, res) => {
     });
 
     if (count > 0) {
-      const [updated] = await Ticket.update(
-        { need_attention: 1 },
-        { where: { conversation_email_id: req.body.conversation_id } }
-      );
 
-      res.json({ found: 1, updated });
+      const ticket = await Ticket.findOne({
+        where: { conversation_email_id: req.body.conversation_id }
+      });
+
+      if(ticket.status == "cloture"){
+        const [updated2] = await Ticket.update(
+          { need_attention: 1, status: "en cours"},
+          { where: { conversation_email_id: req.body.conversation_id } }
+        );
+        res.json({ found: 1, updated2 });
+      }else{
+        const [updated] = await Ticket.update(
+          { need_attention: 1},
+          { where: { conversation_email_id: req.body.conversation_id } }
+        );
+        res.json({ found: 1, updated });
+      }
+
     } else {
+
       res.json({ found: 0 });
+      
     }
   } catch (err) {
     console.error(err);
