@@ -263,7 +263,13 @@ async function formatGmailResponse(data) {
         // Si on a des sous-parts dans payload.parts[0].parts
         let parts = payload.parts;
         if (Array.isArray(parts) && parts.length > 0 && parts[0].parts) {
-          parts = parts[0].parts;
+
+          if(parts[0].parts[0].parts){
+            parts = parts[0].parts[0].parts;
+          }else{
+            parts = parts[0].parts;
+          }
+          
         }
 
         if (Array.isArray(parts) && parts.length > 0) {
