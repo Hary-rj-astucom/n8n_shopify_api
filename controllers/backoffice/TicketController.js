@@ -64,7 +64,9 @@ const getTickets = async (req, res) => {
 
       //desc for ticket ferme
       if(key == "status" && req.query[key] == "cloture"){
-        order_by = ", ticket.id DESC"; 
+        order_by = " ticket.id DESC"; 
+      }else{
+        order_by = " ticket.id ASC";
       }
     }
 
@@ -107,7 +109,7 @@ const getTickets = async (req, res) => {
       FROM ticket
       JOIN label ON label.id = ticket.label_id 
       JOIN project ON project.id = ticket.project_id
-      WHERE ticket.state=1 ${subQuery} ORDER BY need_attention DESC ${order_by} 
+      WHERE ticket.state=1 ${subQuery} ORDER BY ${order_by} 
       LIMIT ? OFFSET ? 
     `;
     params.push(perPage, offset);
