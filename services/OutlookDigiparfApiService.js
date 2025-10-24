@@ -179,33 +179,38 @@ async function formatConversation(token, messages) {
 function cleanHtml(html) {
     if (!html) return '';
 
-    // Supprime CSS <style>...</style>
+    // Supprimer les balises <style>...</style>
     html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
 
-    // Remplace certaines balises par des sauts de ligne
-    html = html.replace(/<br\s*\/?>/gi, '\n');
-    html = html.replace(/<\/p>/gi, '\n');
-    html = html.replace(/<\/div>/gi, '\n');
-    html = html.replace(/<\/h[1-6]>/gi, '\n');
+    // Remplacer les balises <br>, </p> et </div> par des sauts de ligne
+    let text = html.replace(/<br\s*\/?>/gi, '\n');
+    text = text.replace(/<\/p>/gi, '\n');
+    text = text.replace(/<\/div>/gi, '\n');
 
-    // Supprime toutes les autres balises
-    html = html.replace(/<[^>]+>/g, '');
+    // Supprimer toutes les balises sauf <a href="...">...</a>
+    text = text.replace(/<(?!\/?a\b[^>]*>)[^>]+>/gi, '');
 
-    // Décodage des entités HTML
-    html = html.replace(/&nbsp;/gi, ' ')
+    // Nettoyer les attributs de <a> pour ne garder que href
+    text = text.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
+        const hrefMatch = attrs.match(/href\s*=\s*(['"])(.*?)\1/i);
+        const href = hrefMatch ? hrefMatch[2] : '#';
+        return `<a href="${href}">`;
+    });
+
+    // Décoder les entités HTML courantes
+    text = text.replace(/&nbsp;/gi, ' ')
                .replace(/&amp;/gi, '&')
                .replace(/&lt;/gi, '<')
                .replace(/&gt;/gi, '>')
                .replace(/&quot;/gi, '"')
-               .replace(/&apos;/gi, "'");
+               .replace(/&apos;/gi, "'")
+               .replace(/&ntilde;/gi, 'ñ');
 
-    // Normalisation des espaces et retours à la ligne
-    html = html.replace(/\r/g, '');
-    html = html.replace(/\n\s*\n/g, '\n\n').trim();
+    // Supprimer les espaces et lignes vides multiples
+    text = text.replace(/\n\s*\n/g, '\n\n').trim();
 
-    return html;
+    return text;
 }
-
 
 module.exports = { 
   getConversationThreads,

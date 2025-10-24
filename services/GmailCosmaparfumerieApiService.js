@@ -382,18 +382,25 @@ async function formatGmailResponse(data) {
 function cleanHtml(html) {
     if (!html) return '';
 
-    // Supprime le CSS dans <style>...</style>
+    // Supprimer les balises <style>...</style>
     html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
 
-    // Remplacer les balises de paragraphe et <br> par des sauts de ligne
+    // Remplacer les balises <br>, </p> et </div> par des sauts de ligne
     let text = html.replace(/<br\s*\/?>/gi, '\n');
     text = text.replace(/<\/p>/gi, '\n');
     text = text.replace(/<\/div>/gi, '\n');
 
-    // Supprimer toutes les autres balises
-    text = text.replace(/<[^>]+>/g, '');
+    // Supprimer toutes les balises sauf <a href="...">...</a>
+    text = text.replace(/<(?!\/?a\b[^>]*>)[^>]+>/gi, '');
 
-    // Décode les entités HTML basiques
+    // Nettoyer les attributs de <a> pour ne garder que href
+    text = text.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
+        const hrefMatch = attrs.match(/href\s*=\s*(['"])(.*?)\1/i);
+        const href = hrefMatch ? hrefMatch[2] : '#';
+        return `<a href="${href}">`;
+    });
+
+    // Décoder les entités HTML courantes
     text = text.replace(/&nbsp;/gi, ' ')
                .replace(/&amp;/gi, '&')
                .replace(/&lt;/gi, '<')
@@ -402,7 +409,7 @@ function cleanHtml(html) {
                .replace(/&apos;/gi, "'")
                .replace(/&ntilde;/gi, 'ñ');
 
-    // Supprime les espaces et lignes vides multiples
+    // Supprimer les espaces et lignes vides multiples
     text = text.replace(/\n\s*\n/g, '\n\n').trim();
 
     return text;
