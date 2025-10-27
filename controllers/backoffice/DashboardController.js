@@ -309,7 +309,10 @@ async function getUserPivot() {
     `;
 
     // Étape 3️⃣ : Exécuter la requête finale
-    const [rows] = await sequelize.query(finalQuery, { type: QueryTypes.SELECT });
+    const [rows] = await sequelize.query(finalQuery, { 
+      replacements: [],
+      type: sequelize.QueryTypes.SELECT 
+    });
 
     return rows;
   } catch (error) {
