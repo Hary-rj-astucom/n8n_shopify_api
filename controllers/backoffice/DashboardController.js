@@ -215,7 +215,64 @@ const getDonutSummary = async (req, res) => {
   }
 }
 
+const getTicketPartitionSummary= async (req, res) =>{
+  try {
+
+    let sql = `SELECT 
+      DATE(created_at) as date, 
+      SUM(CASE 
+          WHEN label_id = 1 THEN 1
+          ELSE 0
+        END) as suivi_commande,
+        SUM(CASE 
+          WHEN label_id = 2 THEN 1
+          ELSE 0
+        END) as colis_non_recu,
+        SUM(CASE 
+          WHEN label_id = 3 THEN 1
+          ELSE 0
+        END) as paiement,
+        SUM(CASE 
+          WHEN label_id = 4 THEN 1
+          ELSE 0
+        END) as facture_non_recu,
+        SUM(CASE 
+          WHEN label_id = 5 THEN 1
+          ELSE 0
+        END) as produit_defectueux,
+        SUM(CASE 
+          WHEN label_id = 6 THEN 1
+          ELSE 0
+        END) as retour_retractation,
+        SUM(CASE 
+          WHEN label_id = 7 THEN 1
+          ELSE 0
+        END) as demande_specifique,
+        SUM(CASE 
+          WHEN label_id = 8 THEN 1
+          ELSE 0
+        END) as colis_vide
+    FROM ticket 
+    WHERE DATE(created_at) BETWEEN DATE_SUB(now(), INTERVAL 30 DAY) AND DATE(now())
+    GROUP BY DATE(created_at)`;
+
+    result = await sequelize.query(sql, {
+      replacements: [],
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    return res.json({
+      details: result
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(400).json({ error: error.message });
+  }
+}
+
 module.exports = {
   getTicketSummary,
-  getDonutSummary
+  getDonutSummary,
+  getTicketPartitionSummary
 };
