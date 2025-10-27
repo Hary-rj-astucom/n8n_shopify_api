@@ -304,7 +304,7 @@ async function getUserPivot() {
         WHERE DATE(created_at) BETWEEN DATE_SUB(now(), INTERVAL 30 DAY) AND DATE(now())
         GROUP BY DATE(created_at), user_id, user.name
       ) AS data
-      GROUP BY date ORDER BY date;
+      GROUP BY date ORDER BY date
     `;
 
     console.log(finalQuery);
