@@ -325,6 +325,9 @@ const getUserActivitySummary = async (req, res) =>{
   try {
 
     const data = await getUserPivot();
+
+    console.log(data);
+
     return res.json({
       details: data
     });
