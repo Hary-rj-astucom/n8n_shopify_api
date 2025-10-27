@@ -181,6 +181,37 @@ const getTicketSummary = async (req, res) => {
   }
 }
 
+const getDonutSummary = async (req, res) => {
+  try {
+
+    let where = " WHERE 1=1 "
+
+    if(req.body.month){
+      where += ` AND MONTH(created_at) = ${req.body.month} `;
+    }
+    if(req.body.year){
+      where += ` AND YEAR(created_at) = ${req.body.year} `;
+    }
+
+    let sql = `SELECT 
+      count(ticket.id) as nb, label_id, label.name as label_name 
+      FROM ticket 
+      JOIN label ON label.id = ticket.label_id 
+      ${ where }
+      GROUP BY label_id, label.name`;
+
+      result = await sequelize.query(sql, {
+        replacements: [],
+        type: sequelize.QueryTypes.SELECT
+      });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(400).json({ error: error.message });
+  }
+}
+
 module.exports = {
-  getTicketSummary
+  getTicketSummary,
+  getDonutSummary
 };

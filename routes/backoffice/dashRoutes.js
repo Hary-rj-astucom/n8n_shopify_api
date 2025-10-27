@@ -4,5 +4,6 @@ const dashboardController = require("../../controllers/backoffice/DashboardContr
 const router = express.Router();
 
 router.post("/getticketsummary", dashboardController.getTicketSummary);
+router.post("/getdonutSummary", dashboardController.getDonutSummary);
 
 module.exports = router;
