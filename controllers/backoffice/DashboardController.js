@@ -324,11 +324,10 @@ async function getUserPivot() {
 const getUserActivitySummary = async (req, res) =>{
   try {
 
-    getUserPivot().then((data) => {
-      return res.json({
-        details: data
-      });
-    })
+    const data = await getUserPivot();
+    return res.json({
+      details: data
+    });
 
   } catch (error) {
     console.error("Erreur dans getUserPivot:", error);
