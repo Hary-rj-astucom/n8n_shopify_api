@@ -186,10 +186,10 @@ const getDonutSummary = async (req, res) => {
 
     let where = " WHERE 1=1 "
 
-    if(req.body.month){
+    if(req.body.month != "all"){
       where += ` AND MONTH(created_at) = ${req.body.month} `;
     }
-    if(req.body.year){
+    if(req.body.year != "all"){
       where += ` AND YEAR(created_at) = ${req.body.year} `;
     }
 
