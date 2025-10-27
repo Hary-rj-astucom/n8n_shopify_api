@@ -277,7 +277,7 @@ async function getUserPivot() {
     const [pivotColsResult] = await sequelize.query(`
       SELECT GROUP_CONCAT(DISTINCT
         CONCAT(
-          'SUM(CASE WHEN user.name = ''',
+          'SUM(CASE WHEN name = ''',
           name,
           ''' THEN nb_action ELSE 0 END) AS \`',
           name, '\`'
