@@ -317,7 +317,7 @@ async function getUserPivot() {
     return rows;
   } catch (error) {
     console.error("Erreur dans getUserPivot:", error);
-    return res.status(400).json({ error: error.message });
+    throw error;
   }
 }
 
