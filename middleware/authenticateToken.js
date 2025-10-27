@@ -25,6 +25,11 @@ const authenticateToken = (req, res, next) => {
       return res.status(403).json({ error: "Access denied: Super admins only" });
     }
 
+    // Restrict: only admins allowed for /user paths
+    if (req.baseUrl.includes("/getuseractivitysummary") && req.user.role != "super_admin") {
+      return res.status(403).json({ error: "Access denied: Super admins only" });
+    }
+
     next();
   });
 };

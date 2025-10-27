@@ -215,7 +215,7 @@ const getDonutSummary = async (req, res) => {
   }
 }
 
-const getTicketPartitionSummary= async (req, res) =>{
+const getTicketPartitionSummary = async (req, res) =>{
   try {
 
     let sql = `SELECT 
@@ -271,8 +271,74 @@ const getTicketPartitionSummary= async (req, res) =>{
   }
 }
 
+async function getUserPivot() {
+  try {
+    // Étape 1️⃣ : Construire dynamiquement les colonnes
+    const [pivotColsResult] = await sequelize.query(`
+      SELECT GROUP_CONCAT(DISTINCT
+        CONCAT(
+          'SUM(CASE WHEN user.name = ''',
+          user.name,
+          ''' THEN nb_action ELSE 0 END) AS \`',
+          user.name, '\`'
+        )
+      ) AS pivot_columns
+      FROM (
+        SELECT COUNT(*) AS nb_action, user_id, user.name, DATE(created_at) AS date
+        FROM ticket_historical_comment
+        JOIN user ON user_id = user.id
+        WHERE DATE(created_at) BETWEEN DATE_SUB(now(), INTERVAL 30 DAY) AND DATE(now())
+        GROUP BY DATE(created_at), user_id, user.name
+      ) AS base;
+    `);
+
+    const pivotColumns = pivotColsResult[0]?.pivot_columns;
+    if (!pivotColumns) {
+      throw new Error("Impossible de générer les colonnes dynamiques (aucune donnée trouvée).");
+    }
+
+    // Étape 2️⃣ : Construire la requête finale
+    const finalQuery = `
+      SELECT date, ${pivotColumns}
+      FROM (
+        SELECT COUNT(*) AS nb_action, user_id, user.name, DATE(created_at) AS date
+        FROM ticket_historical_comment
+        JOIN user ON user_id = user.id
+        WHERE DATE(created_at) BETWEEN DATE_SUB(now(), INTERVAL 30 DAY) AND DATE(now())
+        GROUP BY DATE(created_at), user_id, user.name
+      ) AS data
+      GROUP BY date
+      ORDER BY date;
+    `;
+
+    // Étape 3️⃣ : Exécuter la requête finale
+    const [rows] = await sequelize.query(finalQuery, { type: QueryTypes.SELECT });
+
+    return rows;
+  } catch (error) {
+    console.error("Erreur dans getUserPivot:", error);
+    throw error;
+  }
+}
+
+const getUserActivitySummary = async (req, res) =>{
+  try {
+
+    getUserPivot().then((data) => {
+      return res.json({
+        details: data
+      });
+    })
+
+  } catch (error) {
+    console.error("Erreur dans getUserPivot:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   getTicketSummary,
   getDonutSummary,
-  getTicketPartitionSummary
+  getTicketPartitionSummary,
+  getUserActivitySummary
 };

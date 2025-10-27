@@ -6,5 +6,6 @@ const router = express.Router();
 router.post("/getticketsummary", dashboardController.getTicketSummary);
 router.post("/getdonutSummary", dashboardController.getDonutSummary);
 router.post("/getticketpartitionsummary", dashboardController.getTicketPartitionSummary);
+router.post("/getuseractivitysummary", dashboardController.getUserActivitySummary);
 
 module.exports = router;
