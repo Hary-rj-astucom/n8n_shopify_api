@@ -1,4 +1,4 @@
-const { sequelize, QueryTypes} = require("../../config/database.js");
+const sequelize = require("../../config/database.js");
 
 const getTicketSummary = async (req, res) => {
   try{
