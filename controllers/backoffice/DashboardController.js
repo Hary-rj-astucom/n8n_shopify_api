@@ -317,7 +317,7 @@ async function getUserPivot() {
     return rows;
   } catch (error) {
     console.error("Erreur dans getUserPivot:", error);
-    throw error;
+    return res.status(400).json({ error: error.message });
   }
 }
 
@@ -331,7 +331,7 @@ const getUserActivitySummary = async (req, res) =>{
 
   } catch (error) {
     console.error("Erreur dans getUserPivot:", error);
-    throw error;
+    return res.status(400).json({ error: error.message });
   }
 }
 
