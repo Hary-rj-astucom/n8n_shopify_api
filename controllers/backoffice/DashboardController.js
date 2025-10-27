@@ -273,7 +273,7 @@ const getTicketPartitionSummary = async (req, res) =>{
 
 async function getUserPivot() {
   try {
-    // Étape 1️⃣ : Construire dynamiquement les colonnes
+    // Construire dynamiquement les colonnes
     const [pivotColsResult] = await sequelize.query(`
       SELECT GROUP_CONCAT(DISTINCT
         CONCAT(
@@ -294,7 +294,7 @@ async function getUserPivot() {
       throw new Error("Impossible de générer les colonnes dynamiques (aucune donnée trouvée).");
     }
 
-    // Étape 2️⃣ : Construire la requête finale
+    // Construire la requête finale
     const finalQuery = `
       SELECT date, ${pivotColumns}
       FROM (
@@ -307,15 +307,14 @@ async function getUserPivot() {
       GROUP BY date ORDER BY date
     `;
 
-    console.log(finalQuery);
-
-    // Étape 3️⃣ : Exécuter la requête finale
-    const [rows] = await sequelize.query(finalQuery, { 
+    // Exécuter la requête finale
+    const result = await sequelize.query(finalQuery, { 
       replacements: [],
       type: sequelize.QueryTypes.SELECT 
     });
 
-    return rows;
+    return result;
+
   } catch (error) {
     console.error("Erreur dans getUserPivot:", error);
     throw error;
