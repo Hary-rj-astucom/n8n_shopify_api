@@ -200,10 +200,14 @@ const getDonutSummary = async (req, res) => {
       ${ where }
       GROUP BY label_id, label.name`;
 
-      result = await sequelize.query(sql, {
-        replacements: [],
-        type: sequelize.QueryTypes.SELECT
-      });
+    result = await sequelize.query(sql, {
+      replacements: [],
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    return res.json({
+      details: result
+    });
 
   } catch (error) {
     console.error(error);
