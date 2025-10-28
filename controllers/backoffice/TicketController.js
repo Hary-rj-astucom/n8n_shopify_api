@@ -312,6 +312,10 @@ const createTicket = async (req, res) => {
 
 const updateTicketDetails = async (req, res) => {
   try {
+    
+    // Ajouter la date de mise à jour au body
+    req.body.updated_at = new Date();
+    
     const [updated] = await Ticket.update(req.body, { where: { id: req.params.id } });
     if(updated){
       const user = await User.findByPk(req.user.id);
