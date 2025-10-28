@@ -192,6 +192,10 @@ const getDonutSummary = async (req, res) => {
     if(req.body.year != "all"){
       where += ` AND YEAR(created_at) = ${req.body.year} `;
     }
+   
+    if(req.body.project_id && req.body.project_id != 'all'){
+      where = ` AND project_id = ${req.body.project_id}`;
+    }
 
     let sql = `SELECT 
       count(ticket.id) as nb, label_id, label.name as label_name 
@@ -215,8 +219,13 @@ const getDonutSummary = async (req, res) => {
   }
 }
 
-const getTicketPartitionSummary = async (req, res) =>{
+const getTicketPartitionSummary = async (req, res) => {
   try {
+
+    let where = "";
+    if(req.body.project_id && req.body.project_id != 'all'){
+      where = ` AND project_id = ${ req.body.project_id }`;
+    }
 
     let sql = `SELECT 
       DATE(created_at) as date, 
@@ -253,7 +262,7 @@ const getTicketPartitionSummary = async (req, res) =>{
           ELSE 0
         END) as colis_vide
     FROM ticket 
-    WHERE DATE(created_at) BETWEEN DATE_SUB(now(), INTERVAL 30 DAY) AND DATE(now())
+    WHERE DATE(created_at) BETWEEN DATE_SUB(now(), INTERVAL 30 DAY) AND DATE(now()) ${where}
     GROUP BY DATE(created_at)`;
 
     result = await sequelize.query(sql, {
