@@ -194,7 +194,7 @@ const getDonutSummary = async (req, res) => {
     }
    
     if(req.body.project_id && req.body.project_id != 'all'){
-      where = ` AND project_id = ${req.body.project_id}`;
+      where += ` AND project_id = ${req.body.project_id}`;
     }
 
     let sql = `SELECT 
