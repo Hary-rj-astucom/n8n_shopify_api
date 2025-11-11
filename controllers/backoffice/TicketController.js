@@ -502,14 +502,14 @@ const getDetailRedudentTicket = async (req, res) => {
   try{
 
     let params = [];
-    params.push(req.body.client_email);
-    params.push(req.body.num_commande);
+    params.push(`%${ req.body.client_email }%`);
+    params.push(`%${ req.body.num_commande }%`);
 
     // get detail ticket
     const dataQuery = `
       SELECT *
       FROM ranked_tiket
-      WHERE total_in_group > 2 AND original_client_mail = ? AND num_commande = ? 
+      WHERE total_in_group > 2 AND original_client_mail like ? AND num_commande = ? 
       ORDER BY original_client_mail, num_commande, ordre 
     `;
     const result = await sequelize.query(dataQuery, {
