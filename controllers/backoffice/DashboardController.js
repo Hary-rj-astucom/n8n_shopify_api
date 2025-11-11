@@ -294,7 +294,7 @@ async function getUserPivot() {
       ) AS pivot_columns
       FROM (
         SELECT user.name 
-        FROM user WHERE email NOT IN ('hrajaonah@astucom.com', 'mphrygien@astucom.com', 'adv@cosma-parfumeries.fr')
+        FROM user WHERE email NOT IN ('hrajaonah@astucom.com', 'mphrygien@astucom.com', 'adv@cosma-parfumeries.fr', 'gpa@techmode-group.com', 'jpanier@techmode-group.com')
       ) AS base
     `);
 
