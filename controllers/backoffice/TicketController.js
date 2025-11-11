@@ -469,7 +469,7 @@ const getRedudentTicket = async (req, res) => {
     const dataQuery = `
       SELECT 
         subjects_ticket, 
-        TRIM(original_client_mail), 
+        REPLACE(original_client_mail, '\n', '') as original_client_mail, 
         num_commande, 
         total_in_group
       FROM ranked_tiket_list
