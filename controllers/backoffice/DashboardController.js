@@ -347,9 +347,30 @@ const getUserActivitySummary = async (req, res) =>{
   }
 }
 
+const getRedudantRequest = async (req, res) => {
+  try{
+
+    let sql = `SELECT COUNT(*) as nb_reccurent, SUM(total_in_group) as total_mail_trigered FROM ranked_tiket_list`;
+
+    result = await sequelize.query(sql, {
+      replacements: [],
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    return res.json({
+      details: result
+    });
+
+  }catch (error) {
+    console.error("Erreur dans getRedudantRequest:", error);
+    return res.status(400).json({ error: error.message });
+  }
+}
+
 module.exports = {
   getTicketSummary,
   getDonutSummary,
   getTicketPartitionSummary,
-  getUserActivitySummary
+  getUserActivitySummary,
+  getRedudantRequest
 };

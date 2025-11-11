@@ -135,3 +135,30 @@ CREATE TABLE ticket_historical_comment (
     created_at DATETIME NOT NULL DEFAULT NOW(),
     state INT NOT NULL DEFAULT 1
 );
+
+CREATE VIEW ranked_tiket as (
+    SELECT 
+    	(ROW_NUMBER() OVER (
+            PARTITION BY original_client_mail, num_commande 
+            ORDER BY created_at
+        )) AS ordre,
+        (COUNT(*) OVER (
+            PARTITION BY original_client_mail, num_commande
+        )) AS total_in_group,
+    	t.*
+    FROM ticket t
+);
+
+-- detail ranked_tiket
+SELECT *
+FROM ranked_tiket
+WHERE total_in_group > 2
+ORDER BY original_client_mail, num_commande, ordre limit 100;
+
+-- list des demandes reccurent
+CREATE VIEW ranked_tiket_list as  (
+    SELECT GROUP_CONCAT(DISTINCT subject_ticket SEPARATOR ', ') as subjects_ticket, original_client_mail, num_commande, total_in_group FROM ranked_tiket WHERE total_in_group > 2 GROUP BY original_client_mail, num_commande
+);
+
+-- Stat ranked_tiket_list
+SELECT COUNT(*) as nb_reccurent, SUM(total_in_group) as total_mail_trigered FROM ranked_tiket_list;

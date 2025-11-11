@@ -385,6 +385,148 @@ const getTicketsbyConvId = async (req, res) => {
   }
 };
 
+// get redudent ticket
+const getRedudentTicket = async (req, res) => {
+  try{
+
+    const perPage = parseInt(req.query.per_page) || 10;
+    let page = Math.max(1, parseInt(req.query.page) || 1);
+    let offset = (page - 1) * perPage;
+
+    let subQuery = '';
+    let paramsTotal = [];
+    let params = [];
+
+    // // Global search
+    // if (req.query.search) {
+    //   const search = `%${req.query.search}%`;
+    //   subQuery += ` AND (
+    //     num_ticket LIKE ? OR 
+    //     subject_ticket LIKE ? OR 
+    //     original_client_mail LIKE ? OR 
+    //     nom_client LIKE ? OR 
+    //     num_commande LIKE ? OR 
+    //     label_id LIKE ? OR 
+    //     project_id LIKE ? OR 
+    //     status LIKE ? 
+    //   )`;
+
+    //   paramsTotal.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+    //   params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+    // }
+
+    // // Multi-criteria filters
+    // const multiFields = [
+    //   "num_ticket",
+    //   "subject_ticket",
+    //   "original_client_mail",
+    //   "nom_client",
+    //   "num_commande",
+    //   "label_id",
+    //   "project_id",
+    //   "status"
+    // ];
+
+    //order
+    //let order_by = ", ticket.id ASC";
+
+    // for (const field of multiFields) {
+    //   const key = field.replace('.', '_'); // ex: magasin.name → magasin_name
+    //   if (req.query[key]) {
+    //     const likeValue = `%${req.query[key]}%`;
+    //     subQuery += ` AND ${field} LIKE ?`;
+    //     paramsTotal.push(likeValue);
+    //     params.push(likeValue);
+    //   }
+
+    //   //desc for ticket ferme
+    //   if(key == "status" && req.query[key] == "cloture"){
+    //     order_by = ", ticket.id DESC"; 
+    //   }
+    // }
+
+    // Total count
+    const totalQuery = `
+      SELECT COUNT(*) as nb 
+      FROM ranked_tiket_list 
+      WHERE 1=1 ${subQuery}
+    `;
+    const [resultTotal] = await sequelize.query(totalQuery, {
+      replacements: paramsTotal,
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    const total = resultTotal.nb || 0;
+    const nbPage = Math.ceil(total / perPage);
+
+    // Reset page if too big
+    if (page > nbPage) {
+      page = 1;
+      offset = 0;
+    }
+
+    // 📄 Paginated data
+    const dataQuery = `
+      SELECT 
+        subjects_ticket, 
+        original_client_mail, 
+        num_commande, 
+        total_in_group
+      FROM ranked_tiket_list
+      WHERE 1=1 ${subQuery} ORDER BY total_in_group DESC
+      LIMIT ? OFFSET ? 
+    `;
+    params.push(perPage, offset);
+
+    const result = await sequelize.query(dataQuery, {
+      replacements: params,
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    return res.json({
+      total_item: total,
+      per_page: perPage,
+      total_page: nbPage,
+      current_page: page,
+      data: result
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// get detail redudant ticket
+const getDetailRedudentTicket = async (req, res) => {
+  try{
+
+    let params = [];
+    params.push(req.body.client_email);
+    params.push(req.body.num_commande);
+
+    // get detail ticket
+    const dataQuery = `
+      SELECT *
+      FROM ranked_tiket
+      WHERE total_in_group > 2 AND original_client_mail = ? AND num_commande = ? 
+      ORDER BY original_client_mail, num_commande, ordre 
+    `;
+    const result = await sequelize.query(dataQuery, {
+      replacements: params,
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    return res.json({
+      details: result
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   getTickets,
   getTicketsDetails,
@@ -394,5 +536,7 @@ module.exports = {
   respondMail,
   addTicketComment,
   getTicketsbyConvId,
-  ignoreClientResponse
+  ignoreClientResponse,
+  getRedudentTicket,
+  getDetailRedudentTicket
 };

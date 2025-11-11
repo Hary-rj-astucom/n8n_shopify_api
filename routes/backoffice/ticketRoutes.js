@@ -12,4 +12,7 @@ router.post("/replymail", ticketController.respondMail);
 router.post("/ignoreclientresponse", ticketController.ignoreClientResponse);
 router.post("/addcomment", ticketController.addTicketComment);
 
+router.get("/getRedudentTicket", ticketController.getRedudentTicket);
+router.post("/getDetailRedudentTicket", ticketController.getDetailRedudentTicket);
+
 module.exports = router;
