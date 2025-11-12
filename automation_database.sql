@@ -152,12 +152,12 @@ CREATE VIEW ranked_tiket as (
 -- detail ranked_tiket
 SELECT *
 FROM ranked_tiket
-WHERE total_in_group > 2
+WHERE total_in_group >= 2
 ORDER BY original_client_mail, num_commande, ordre limit 100;
 
 -- list des demandes reccurent
 CREATE VIEW ranked_tiket_list as  (
-    SELECT GROUP_CONCAT(DISTINCT subject_ticket SEPARATOR ', ') as subjects_ticket, original_client_mail, num_commande, total_in_group FROM ranked_tiket WHERE total_in_group > 2 GROUP BY original_client_mail, num_commande
+    SELECT GROUP_CONCAT(DISTINCT subject_ticket SEPARATOR ', ') as subjects_ticket, original_client_mail, num_commande, total_in_group FROM ranked_tiket WHERE total_in_group >= 2 GROUP BY original_client_mail, num_commande
 );
 
 -- Stat ranked_tiket_list

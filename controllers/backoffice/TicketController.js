@@ -509,7 +509,7 @@ const getDetailRedudentTicket = async (req, res) => {
     const dataQuery = `
       SELECT *
       FROM ranked_tiket
-      WHERE total_in_group > 2 AND original_client_mail like ? AND num_commande like ? 
+      WHERE total_in_group >= 2 AND original_client_mail like ? AND num_commande like ? 
       ORDER BY original_client_mail, num_commande, ordre 
     `;
     const result = await sequelize.query(dataQuery, {
