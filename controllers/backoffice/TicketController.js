@@ -509,7 +509,7 @@ const getDetailRedudentTicket = async (req, res) => {
     const dataQuery = `
       SELECT 
         ranked_tiket.*, 
-        label.name as label_name, 
+        label.name as label, 
         project.name as project_name
       FROM ranked_tiket 
       JOIN label ON label.id = ranked_tiket.label_id 
