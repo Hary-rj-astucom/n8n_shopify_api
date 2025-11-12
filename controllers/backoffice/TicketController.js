@@ -507,8 +507,13 @@ const getDetailRedudentTicket = async (req, res) => {
 
     // get detail ticket
     const dataQuery = `
-      SELECT *
-      FROM ranked_tiket
+      SELECT 
+        ranked_tiket.*, 
+        label.name as label_name, 
+        project.name as project_name
+      FROM ranked_tiket 
+      JOIN label ON label.id = ranked_tiket.label_id 
+      JOIN project ON project.id = ranked_tiket.project_id
       WHERE total_in_group >= 2 AND original_client_mail like ? AND num_commande like ? 
       ORDER BY original_client_mail, num_commande, ordre 
     `;
