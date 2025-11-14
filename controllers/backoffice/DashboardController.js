@@ -198,9 +198,9 @@ const getDonutSummary = async (req, res) => {
     }
 
     let sql = `SELECT 
-      count(ticket.id) as nb, label_id, label.name as label_name 
+      count(ticket.id) as nb, label.id as label_id, label.name as label_name 
       FROM ticket 
-      JOIN label ON label.id = ticket.label_id 
+      RIGHT JOIN label ON label.id = ticket.label_id 
       ${ where }
       GROUP BY label_id, label.name`;
 
