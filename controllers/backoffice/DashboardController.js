@@ -260,7 +260,11 @@ const getTicketPartitionSummary = async (req, res) => {
         SUM(CASE 
           WHEN label_id = 8 THEN 1
           ELSE 0
-        END) as colis_vide
+        END) as colis_vide,
+        SUM(CASE 
+          WHEN label_id = 9 THEN 1
+          ELSE 0
+        END) as spam_publicite
     FROM ticket 
     WHERE DATE(created_at) BETWEEN DATE_SUB(now(), INTERVAL 30 DAY) AND DATE(now()) ${where}
     GROUP BY DATE(created_at)`;
