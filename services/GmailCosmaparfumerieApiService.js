@@ -443,7 +443,7 @@ function makeEmail(to, subject, body, messageId) {
 
   const htmlBody = `
     <div>
-      ${body.replace(/\n/g, '<br>')} - test
+      ${body.replace(/\n/g, '<br>')}
       ${signature}
     </div>
   `;
