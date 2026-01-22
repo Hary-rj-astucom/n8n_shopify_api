@@ -43,7 +43,7 @@ app.use(cors());
 app.use(express.json());
 
 // prefixe
-const prefix = "";
+const prefix = "/n8n_cosmia";
 
 // Transporteur 
 app.use(prefix + '/colissimo', colissimoRoutes);
