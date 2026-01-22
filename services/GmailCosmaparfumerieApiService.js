@@ -474,40 +474,130 @@ function makeEmail(to, subject, body, messageId) {
         { filename: "file2.jpg", contentBase64: req.body.file2Base64, mimeType: "image/jpeg" }
       ]
  */
-function makeEmailWithMultipleAttachments(to, subject, body, messageId, attachments = []) {
-  const boundary = "----=_Part_" + Date.now();
+// function makeEmailWithMultipleAttachments(to, subject, body, messageId, attachments = []) {
+//   const boundary = "----=_Part_" + Date.now();
+
+//   const mailParts = [
+//     `To: ${to.trim().replace(/[\r\n]+/g, '')}`,
+//     `Subject: ${subject.trim().replace(/[\r\n]+/g, '')}`,
+//     `In-Reply-To: ${messageId}`,
+//     `References: ${messageId}`,
+//     "MIME-Version: 1.0",
+//     `Content-Type: multipart/mixed; boundary="${boundary}"`,
+//     "",
+//     `--${boundary}`,
+//     'Content-Type: text/plain; charset="UTF-8"',
+//     "Content-Transfer-Encoding: 7bit",
+//     "",
+//     body,
+//     ""
+//   ];
+
+//   // Add each attachment
+//   attachments.forEach(att => {
+//     mailParts.push(
+//       `--${boundary}`,
+//       `Content-Type: ${att.mimeType || "application/octet-stream"}; name="${att.filename}"`,
+//       "Content-Transfer-Encoding: base64",
+//       `Content-Disposition: attachment; filename="${att.filename}"`,
+//       "",
+//       att.contentBase64.replace(/\r?\n/g, ""), // sanitize base64
+//       ""
+//     );
+//   });
+
+//   // End boundary
+//   mailParts.push(`--${boundary}--`);
+
+//   return Buffer.from(mailParts.join("\r\n"))
+//     .toString("base64")
+//     .replace(/\+/g, "-")
+//     .replace(/\//g, "_")
+//     .replace(/=+$/, "");
+// }
+
+function makeEmailWithMultipleAttachments(to, subject, bodyText, messageId, attachments = []) {
+  const boundaryMixed = "mixed_" + Date.now();
+  const boundaryAlt = "alt_" + Date.now();
+
+  const signatureHtml = `
+  <div style="font-family: Calibri, sans-serif; font-size: 11pt; color: #000;">
+    <table cellspacing="0" cellpadding="0" style="border: none;">
+      <tr>
+        <td style="vertical-align: middle; padding-right: 12px;">
+          <img src="https://www.cosma-parfumeries.com/media/logo/websites/1/LOGO_1.png"
+               alt="Logo" width="140" style="border:none;">
+        </td>
+        <td style="vertical-align: middle; line-height:1.4;">
+          <strong>cosma-parfumeries</strong><br>
+          ✉️ <a href="mailto:contact@cosma-parfumeries.fr"
+               style="color:#000; text-decoration:none;">
+            contact@cosma-parfumeries.fr
+          </a><br>
+          🌐 <a href="https://www.cosma-parfumeries.com"
+               style="color:#0078D4; text-decoration:none;">
+            https://www.cosma-parfumeries.com
+          </a>
+        </td>
+      </tr>
+    </table>
+  </div>
+  `;
+
+  const bodyHtml = `
+    <div>
+      ${bodyText.replace(/\n/g, "<br>")}
+      <br><br>
+      ${signatureHtml}
+    </div>
+  `;
 
   const mailParts = [
-    `To: ${to.trim().replace(/[\r\n]+/g, '')}`,
-    `Subject: ${subject.trim().replace(/[\r\n]+/g, '')}`,
+    `To: ${to.trim().replace(/[\r\n]+/g, "")}`,
+    `Subject: ${subject.trim().replace(/[\r\n]+/g, "")}`,
     `In-Reply-To: ${messageId}`,
     `References: ${messageId}`,
     "MIME-Version: 1.0",
-    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    `Content-Type: multipart/mixed; boundary="${boundaryMixed}"`,
     "",
-    `--${boundary}`,
+    `--${boundaryMixed}`,
+    `Content-Type: multipart/alternative; boundary="${boundaryAlt}"`,
+    "",
+
+    // TEXT
+    `--${boundaryAlt}`,
     'Content-Type: text/plain; charset="UTF-8"',
     "Content-Transfer-Encoding: 7bit",
     "",
-    body,
+    bodyText,
+    "",
+
+    // HTML
+    `--${boundaryAlt}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: 7bit",
+    "",
+    bodyHtml,
+    "",
+
+    `--${boundaryAlt}--`,
     ""
   ];
 
-  // Add each attachment
+  // Pièces jointes
   attachments.forEach(att => {
     mailParts.push(
-      `--${boundary}`,
+      `--${boundaryMixed}`,
       `Content-Type: ${att.mimeType || "application/octet-stream"}; name="${att.filename}"`,
       "Content-Transfer-Encoding: base64",
       `Content-Disposition: attachment; filename="${att.filename}"`,
       "",
-      att.contentBase64.replace(/\r?\n/g, ""), // sanitize base64
+      att.contentBase64.replace(/\r?\n/g, ""),
       ""
     );
   });
 
-  // End boundary
-  mailParts.push(`--${boundary}--`);
+  mailParts.push(`--${boundaryMixed}--`);
 
   return Buffer.from(mailParts.join("\r\n"))
     .toString("base64")
@@ -515,6 +605,7 @@ function makeEmailWithMultipleAttachments(to, subject, body, messageId, attachme
     .replace(/\//g, "_")
     .replace(/=+$/, "");
 }
+
 
 module.exports = { 
   getConversation,
