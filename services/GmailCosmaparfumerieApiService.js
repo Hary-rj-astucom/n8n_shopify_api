@@ -3,6 +3,7 @@ const fs = require('fs');
 const { google } = require('googleapis');
 const path = require('path');
 const sharp = require("sharp");
+const heicConvert = require('heic-convert');
 
 const TOKEN_PATH = path.join(__dirname, 'json_mock/gmail_token.json');
 const client_secret = process.env.GMAIL_CLIENT_SECRET; 
@@ -93,19 +94,32 @@ async function getMessageAttachments(gmail, messageId, parts, baseUrl = "https:/
         // Supprimer le fichier s’il existe déjà
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
-          console.log(`🗑️ Fichier existant supprimé : ${part.filename}`);
+          console.log(`🗑️ Fichier existant supprimé : ${messageId + "_" + part.filename}`);
         }
 
         // Écrire le nouveau fichier
         fs.writeFileSync(filePath, buffer);
 
         // Générer le lien public de consultation
-        const fileUrl = `${baseUrl}/public/uploads/${encodeURIComponent(messageId + "_" + part.filename)}`;
+        // const fileUrl = `${baseUrl}/public/uploads/${encodeURIComponent(messageId + "_" + part.filename)}`;
+
+        // attachments.push({
+        //   filename: part.filename,
+        //   mimeType: part.mimeType,
+        //   url: fileUrl,
+        // });
+
+        const result = await convertToJpgIfHeic(filePath);
+
+        const finalPath = result.path;
+        const finalFilename = path.basename(finalPath);
+        const finalUrl = `${baseUrl}/public/uploads/${encodeURIComponent(finalFilename)}`;
 
         attachments.push({
-          filename: part.filename,
-          mimeType: part.mimeType,
-          url: fileUrl,
+          filename: finalFilename,
+          mimeType: result.converted ? 'image/jpeg' : part.mimeType,
+          url: finalUrl,
+          converted: result.converted // 👈 flag exposé si tu veux
         });
 
       }
@@ -121,8 +135,41 @@ async function getMessageAttachments(gmail, messageId, parts, baseUrl = "https:/
   return attachments;
 }
 
+async function convertToJpgIfHeic(inputPath) {
+  const ext = path.extname(inputPath).toLowerCase();
 
+  // ⛔ Pas HEIC / HEIF → rien à faire
+  if (ext !== '.heic' && ext !== '.heif') {
+    return {
+      path: inputPath,
+      converted: false
+    };
+  }
 
+  console.log('🟡 HEIC détecté, conversion en JPG…');
+
+  const inputBuffer = fs.readFileSync(inputPath);
+
+  const outputBuffer = await heicConvert({
+    buffer: inputBuffer,
+    format: 'JPEG',
+    quality: 0.85
+  });
+
+  const outputPath = inputPath.replace(/\.(heic|heif)$/i, '.jpg');
+
+  fs.writeFileSync(outputPath, outputBuffer);
+
+  // Optionnel : supprimer le HEIC original
+  fs.unlinkSync(inputPath);
+
+  console.log('✅ Conversion HEIC → JPG terminée');
+
+  return {
+    path: outputPath,
+    converted: true
+  };
+}
 
 // ----------------------------------------------------- // 
 
