@@ -158,6 +158,12 @@ async function convertToJpgIfHeic(inputPath) {
 
   const outputPath = inputPath.replace(/\.(heic|heif)$/i, '.jpg');
 
+  // Supprimer le fichier s’il existe déjà
+  if (fs.existsSync(outputPath)) {
+    fs.unlinkSync(outputPath);
+    console.log(`🗑️ Fichier existant supprimé : ${path.basename(outputPath)}`);
+  }
+
   fs.writeFileSync(outputPath, outputBuffer);
 
   // Optionnel : supprimer le HEIC original
