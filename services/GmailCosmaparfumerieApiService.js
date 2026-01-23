@@ -2,6 +2,7 @@ require('dotenv').config();
 const fs = require('fs');
 const { google } = require('googleapis');
 const path = require('path');
+const sharp = require("sharp");
 
 const TOKEN_PATH = path.join(__dirname, 'json_mock/gmail_token.json');
 const client_secret = process.env.GMAIL_CLIENT_SECRET; 
@@ -98,14 +99,49 @@ async function getMessageAttachments(gmail, messageId, parts, baseUrl = "https:/
         // Écrire le nouveau fichier
         fs.writeFileSync(filePath, buffer);
 
-        // Générer le lien public de consultation
-        const fileUrl = `${baseUrl}/public/uploads/${encodeURIComponent(messageId + "_" + part.filename)}`;
+        // 🔥 HEIC → JPG conversion
+        if (part.mimeType === "image/heic" || part.mimeType === "image/heif" || part.filename.toLowerCase().endsWith(".heic")) {
 
-        attachments.push({
-          filename: part.filename,
-          mimeType: part.mimeType,
-          url: fileUrl,
-        });
+          let finalFilename = messageId + "_" + part.filename;
+          let finalMimeType = part.mimeType;
+          let finalFilePath = filePath;
+
+          const jpgFilename = finalFilename.replace(/\.heic$/i, ".jpg");
+          const jpgPath = path.join(uploadDir, jpgFilename);
+
+          await sharp(filePath)
+            .jpeg({ quality: 85 })
+            .toFile(jpgPath);
+
+          // Supprimer le HEIC original (optionnel)
+          fs.unlinkSync(filePath);
+
+          finalFilename = jpgFilename;
+          finalMimeType = "image/jpeg";
+          finalFilePath = jpgPath;
+
+          const fileUrl = `${baseUrl}/public/uploads/${encodeURIComponent(finalFilename)}`;
+
+          attachments.push({
+            filename: finalFilename,
+            mimeType: finalMimeType,
+            url: fileUrl,
+          });
+
+        }
+        // Tout autre type de fichier
+        else{
+
+          // Générer le lien public de consultation
+          const fileUrl = `${baseUrl}/public/uploads/${encodeURIComponent(messageId + "_" + part.filename)}`;
+
+          attachments.push({
+            filename: part.filename,
+            mimeType: part.mimeType,
+            url: fileUrl,
+          });
+
+        }
 
       }
 
