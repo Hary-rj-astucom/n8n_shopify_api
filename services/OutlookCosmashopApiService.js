@@ -4,6 +4,8 @@ const qs = require('qs');
 const path = require('path');
 const fs = require('fs');
 
+const OpenAiApiService = require('../services/OpenAiApiService');
+
 async function getAccessToken() {
   const tokenUrl = `https://login.microsoftonline.com/${process.env.OUTLOOK_COSMASHOP_TENANT_ID}/oauth2/v2.0/token`;
   const data = {
@@ -94,6 +96,10 @@ async function getConversationThreads(conversationId) {
 async function replyToMessage(messageId, replyText, attachments = []) {
   const token = await getAccessToken();
 
+  //text to HTML
+  const openai = new OpenAiApiService();
+  const replyTextHtml = await openai.formatTextToHtml(replyText);
+
   // 1. Create draft reply
   const draftResponse = await axios.post(
     `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${messageId}/createReply`,
@@ -108,8 +114,8 @@ async function replyToMessage(messageId, replyText, attachments = []) {
     `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}`,
     {
       body: {
-        contentType: "Text",
-        content: replyText
+        contentType: "HTML",
+        content: replyTextHtml
       }
     },
     { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }

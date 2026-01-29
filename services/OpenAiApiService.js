@@ -108,6 +108,44 @@ class OpenAiService {
       throw error;
     }
   }
+
+  /**
+ * Réorganise un texte brut en HTML lisible et structuré
+ * @param {string} text - Texte brut (email, message, note…)
+ * @returns {Promise<string>} - HTML propre
+ */
+async formatTextToHtml(text) {
+  if (!text) throw new Error('No text provided for HTML formatting');
+
+  const instructions = `
+    Tu es un assistant de mise en forme.
+    Ta tâche est de transformer un texte brut en HTML clair et lisible.
+
+    Règles STRICTES :
+    - Ne change PAS le sens du texte
+    - N'ajoute AUCUNE information
+    - Ne supprime aucun contenu
+    - Réorganise uniquement la structure
+
+    Format HTML attendu :
+    - Paragraphes : <p>
+    - Listes si pertinent : <ul><li>
+    - Sauts de ligne logiques
+    - Pas de <html>, <body> ou <head>
+    - Pas de CSS
+    - HTML simple et compatible email
+
+    Réponds UNIQUEMENT avec le HTML final.
+    `.trim();
+
+      const response = await this.client.responses.create({
+        model: this.model,
+        instructions,
+        input: [{ role: 'user', content: text }],
+      });
+
+      return response.output_text ?? '';
+    }
   
 }
 
