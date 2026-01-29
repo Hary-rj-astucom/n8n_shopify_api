@@ -108,7 +108,7 @@ async function replyToMessage(messageId, replyText, attachments = []) {
     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}`,
     {
       body: {
-        contentType: "HTML",
+        contentType: "Text",
         content: replyText
       }
     },
