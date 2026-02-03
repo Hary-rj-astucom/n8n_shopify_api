@@ -59,6 +59,8 @@ function convertInvoiceItems(invoiceItems) {
       ? `${parent.name} (${child.name.replace(parent.name, "").trim()})`
       : parent.name;
 
+    const variation = `${child.name.replace(parent.name, "").trim()}`;
+
     // 3️⃣ Calcul TVA%
     const taxPercent =
       parent.price > 0
@@ -68,6 +70,7 @@ function convertInvoiceItems(invoiceItems) {
     return {
       sku: parent.sku,
       name: finalName.replace(/\s+/g, " ").trim(),
+      variation : variation,
       qty: parent.qty,
       price_ht: parent.base_price,
       price_ttc: parent.base_price_incl_tax || parent.price_incl_tax,
@@ -105,8 +108,8 @@ async function getOrderWithInvoiceByNumber(orderNumber) {
 
     let data = {
       "order_id": order.entity_id,
-      "increment_id": order.increment_id,
-      "created_at": order.created_at,
+      "order_number": order.increment_id,
+      "order_created_at": order.created_at,
       "status": order.status,
       "currency": order.order_currency_code,
       "totals": {
@@ -149,8 +152,11 @@ async function getOrderWithInvoiceByNumber(orderNumber) {
         "status": order.payment.cc_status_description,
         "transaction_id": order.payment.last_trans_id
       },
-      "invoices":invoices,
-      "invoice": convertInvoiceItems(invoices[0].items)
+      "invoice": {
+        "invoice_number": invoices[0].increment_id,
+        "invoice_created_at": invoices[0].created_at,
+        "items": convertInvoiceItems(invoices[0].items)
+      }
     }
 
     return {
