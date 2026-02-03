@@ -55,9 +55,7 @@ function convertInvoiceItems(invoiceItems) {
     // trouver le child avec même sku
     const child = Object.values(children).find(c => c.sku === parent.sku);
 
-    const finalName = child
-      ? `${parent.name} (${child.name.replace(parent.name, "").trim()})`
-      : parent.name;
+    const finalName = parent.name;
 
     const variation = `${child.name.replace(parent.name, "").trim()}`;
 
