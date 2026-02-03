@@ -24,8 +24,19 @@ async function getOrderWithTransactionsByNumber(orderNumber) {
     }
     const order = orderResponse.data.items[0];
 
+    // 2. Récupérer les factures liées via order_id
+    const invoiceSearch =
+      `searchCriteria[filter_groups][0][filters][0][field]=order_id` +
+      `&searchCriteria[filter_groups][0][filters][0][value]=${order.entity_id}` +
+      `&searchCriteria[filter_groups][0][filters][0][condition_type]=eq`;
+
+    const invoiceResponse = await magento.get(`/invoices?${invoiceSearch}`);
+
+    const invoices = invoiceResponse.data.items || [];
+
     return {
-      order
+      order,
+      invoices
     };
   } catch (error) {
     console.error('Erreur_Magento:', error.response?.data || error.message);
