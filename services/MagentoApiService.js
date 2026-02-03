@@ -70,8 +70,8 @@ function convertInvoiceItems(invoiceItems) {
       name: finalName.replace(/\s+/g, " ").trim(),
       variation : variation,
       qty: parent.qty,
-      price_ht: parent.base_price,
-      price_ttc: parent.base_price_incl_tax || parent.price_incl_tax,
+      unit_price_ht: parent.base_price,
+      unit_price_ttc: parent.base_price_incl_tax || parent.price_incl_tax,
       tax_percent: taxPercent
     };
   });
