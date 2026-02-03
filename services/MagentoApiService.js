@@ -149,6 +149,7 @@ async function getOrderWithInvoiceByNumber(orderNumber) {
         "status": order.payment.cc_status_description,
         "transaction_id": order.payment.last_trans_id
       },
+      "invoices":invoices,
       "invoice": convertInvoiceItems(invoices[0].items)
     }
 
