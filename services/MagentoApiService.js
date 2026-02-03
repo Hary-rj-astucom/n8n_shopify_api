@@ -11,36 +11,32 @@ const magento = axios.create({
   }
 });
 
-async function getInvoicePDF(numero_commande, invoiceId, baseUrlFile = "https://dev-ia.astucom.com/n8n_cosmia") {
+async function getOrderWithTransactionsByNumber(orderNumber) {
   try {
-    const response = await magento.get(`/invoices/${invoiceId}/pdf`);
-    const pdfBase64 = response.data;
 
-    const buffer = Buffer.from(pdfBase64, 'base64');
+    // 1. Rechercher la commande via increment_id
+    const searchCriteria = `searchCriteria[filter_groups][0][filters][0][field]=increment_id` +
+      `&searchCriteria[filter_groups][0][filters][0][value]=${orderNumber}` +
+      `&searchCriteria[filter_groups][0][filters][0][condition_type]=eq`;
 
-    const uploadDir = path.join(__dirname, '../public/uploads/invoices');
-    fs.mkdirSync(uploadDir, { recursive: true });
+    const orderResponse = await magento.get(`/orders?${searchCriteria}`);
 
-    const filename = `${numero_commande}_${invoiceId}.pdf`;
-    const filePath = path.join(uploadDir, filename);
-
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-      console.log(`🗑️ Fichier existant supprimé : ${filename}`);
+    if (!orderResponse.data.items || orderResponse.data.items.length === 0) {
+      throw new Error(`Commande ${orderNumber} introuvable`);
     }
+    const order = orderResponse.data.items[0];
 
-    fs.writeFileSync(filePath, buffer);
-    const finalUrl = `${baseUrlFile}/public/uploads/invoices/${encodeURIComponent(filename)}`;
-
-    return finalUrl;
+    return {
+      order
+    };
 
   } catch (error) {
-    console.error("Erreur PDF invoice:", error.response?.data || error.message);
+    console.error('Erreur_Magento:', error.response?.data || error.message);
     throw error;
   }
 }
 
-async function getOrderWithTransactionsByNumber(orderNumber) {
+async function getOrderWithInvoiceByNumber(orderNumber) {
   try {
 
     // 1. Rechercher la commande via increment_id
@@ -82,4 +78,7 @@ async function getOrderWithTransactionsByNumber(orderNumber) {
   }
 }
 
-module.exports = { getOrderWithTransactionsByNumber };
+module.exports = { 
+  getOrderWithTransactionsByNumber, 
+  getOrderWithInvoiceByNumber
+};

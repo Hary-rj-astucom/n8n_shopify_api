@@ -5,5 +5,6 @@ const router = express.Router();
 
 //Shopify format
 router.post('/getOrderWithTransactionsByNumber', magentoController.getOrderWithTransactionsByNumber);
+router.post('/getOrderWithInvoiceByNumber', magentoController.getOrderWithInvoiceByNumber);
 
 module.exports = router;
