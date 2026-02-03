@@ -37,6 +37,46 @@ async function getOrderWithTransactionsByNumber(orderNumber) {
 }
 
 //Invoice data
+function convertInvoiceItems(invoiceItems) {
+  // 1️⃣ Séparer les parents et les enfants
+  const parents = {};
+  const children = {};
+
+  invoiceItems.forEach(item => {
+    if (item.base_price > 0) {
+      parents[item.entity_id] = item;
+    } else {
+      children[item.entity_id] = item;
+    }
+  });
+
+  // 2️⃣ Associer les enfants à leur parent (même SKU)
+  const merged = Object.values(parents).map(parent => {
+    // trouver le child avec même sku
+    const child = Object.values(children).find(c => c.sku === parent.sku);
+
+    const finalName = child
+      ? `${parent.name} (${child.name.replace(parent.name, "").trim()})`
+      : parent.name;
+
+    // 3️⃣ Calcul TVA%
+    const taxPercent =
+      parent.price > 0
+        ? Math.round((parent.tax_amount / parent.price) * 100)
+        : 0;
+
+    return {
+      sku: parent.sku,
+      name: finalName.replace(/\s+/g, " ").trim(),
+      qty: parent.qty,
+      price_ht: parent.base_price,
+      price_ttc: parent.base_price_incl_tax || parent.price_incl_tax,
+      tax_percent: taxPercent
+    };
+  });
+
+  return merged;
+}
 
 async function getOrderWithInvoiceByNumber(orderNumber) {
   try {
@@ -109,7 +149,7 @@ async function getOrderWithInvoiceByNumber(orderNumber) {
         "status": order.payment.cc_status_description,
         "transaction_id": order.payment.last_trans_id
       },
-      "invoice": invoices[0].items,
+      "invoice": convertInvoiceItems(invoices[0].items),
       "items": [
         {
           "sku": "3348901637602",
