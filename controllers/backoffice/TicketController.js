@@ -31,11 +31,12 @@ const getTickets = async (req, res) => {
         num_commande LIKE ? OR 
         label_id LIKE ? OR 
         project_id LIKE ? OR 
-        status LIKE ? 
+        status LIKE ? OR 
+        label.name LIKE ? 
       )`;
 
-      paramsTotal.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+      paramsTotal.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
     }
 
     // 🔍 Multi-criteria filters
@@ -72,6 +73,7 @@ const getTickets = async (req, res) => {
     const totalQuery = `
       SELECT COUNT(*) as nb 
       FROM ticket 
+      JOIN label ON label.id = ticket.label_id 
       WHERE 1=1 ${subQuery}
     `;
     const [resultTotal] = await sequelize.query(totalQuery, {
