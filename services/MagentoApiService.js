@@ -140,7 +140,7 @@ async function getOrderWithInvoiceByNumber(orderNumber) {
         "postcode": order.extension_attributes.shipping_assignments[0].shipping.address.postcode,
         "country": order.extension_attributes.shipping_assignments[0].shipping.address.country_id,
         "telephone": order.extension_attributes.shipping_assignments[0].shipping.address.telephone,
-        "method": order.extension_attributes.shipping_assignments[0].shipping.method
+        "method": order.shipping_description
       },
       "payment": {
         "method": order.payment.method,
