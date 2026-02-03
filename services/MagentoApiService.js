@@ -38,6 +38,7 @@ async function getOrderWithTransactionsByNumber(orderNumber) {
       order,
       invoices
     };
+    
   } catch (error) {
     console.error('Erreur_Magento:', error.response?.data || error.message);
     throw error;
