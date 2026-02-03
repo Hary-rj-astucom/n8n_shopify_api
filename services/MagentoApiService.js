@@ -103,7 +103,7 @@ async function getOrderWithInvoiceByNumber(orderNumber) {
 
     const invoices = invoiceResponse.data.items || [];
 
-    let result = {
+    let data = {
       "order_id": order.entity_id,
       "increment_id": order.increment_id,
       "created_at": order.created_at,
@@ -149,29 +149,11 @@ async function getOrderWithInvoiceByNumber(orderNumber) {
         "status": order.payment.cc_status_description,
         "transaction_id": order.payment.last_trans_id
       },
-      "invoice": convertInvoiceItems(invoices[0].items),
-      "items": [
-        {
-          "sku": "3348901637602",
-          "name": "Dior - Dior Forever Skin Correct (3 CR Cool Rosy)",
-          "qty": 1,
-          "price_ht": 19.31,
-          "price_ttc": 23.17,
-          "tax_percent": 20
-        },
-        {
-          "sku": "3331841141261",
-          "name": "IKKS - For a Kiss - Eau de Toilette 50 ml",
-          "qty": 1,
-          "price_ht": 23.71,
-          "price_ttc": 28.45,
-          "tax_percent": 20
-        }
-      ]
+      "invoice": convertInvoiceItems(invoices[0].items)
     }
 
     return {
-      result
+      data
     };
 
     
