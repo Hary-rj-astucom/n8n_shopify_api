@@ -65,11 +65,11 @@ async function getOrderWithTransactionsByNumber(orderNumber) {
 
     const invoices = invoiceResponse.data.items || [];
 
-    // Ajouter le lien PDF
-    for (let invoice of invoices) {
-      const pdfUrl = await getInvoicePDF(orderNumber, invoice.entity_id);
-      invoice.pdf_link = pdfUrl;
-    }
+    // // Ajouter le lien PDF
+    // for (let invoice of invoices) {
+    //   const pdfUrl = await getInvoicePDF(orderNumber, invoice.entity_id);
+    //   invoice.pdf_link = pdfUrl;
+    // }
 
     return {
       order,
