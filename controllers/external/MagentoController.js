@@ -15,7 +15,7 @@ const getOrderWithTransactionsByNumber = async (req, res) => {
 const getInvoicePDF = async (req, res) => {
   try {
 
-    let result = await MagentoApiService.getInvoicePDF(req.body.order_num);
+    let result = await MagentoApiService.getInvoicePDF(req.body.order_num, req.body.langue);
     res.status(200).send(result);
 
   } catch (error) {

@@ -5,6 +5,8 @@ const fs = require("fs-extra");
 const path = require("path");
 const { PDFDocument } = require("pdf-lib");
 
+const OpenAiApiService = require('../services/OpenAiApiService');
+
 const magento = axios.create({
   baseURL: `${process.env.MAGENTO_URL}/rest/V1`,
   headers: {
@@ -371,7 +373,7 @@ function createHtmlInvoice(data){
 `;
 }
 
-async function getInvoicePDF(orderNumber, baseUrl = "https://dev-ia.astucom.com/n8n_cosmia") {
+async function getInvoicePDF(orderNumber, langue, baseUrl = "https://dev-ia.astucom.com/n8n_cosmia") {
   try {
 
     // 1. Rechercher la commande via increment_id
@@ -452,6 +454,10 @@ async function getInvoicePDF(orderNumber, baseUrl = "https://dev-ia.astucom.com/
     // HTML invoice
     const html = createHtmlInvoice(data);
 
+    //Translate HTML
+    const openai = new OpenAiApiService();
+    const html_translated = await openai.translate(html, {target: langue});
+
     // Générer PDF normal
     const browser = await puppeteer.launch({
         headless: "new",
@@ -459,7 +465,7 @@ async function getInvoicePDF(orderNumber, baseUrl = "https://dev-ia.astucom.com/
     });
 
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+    await page.setContent(html_translated, { waitUntil: "networkidle0" });
 
     const pdfBuffer = await page.pdf({
         format: "A4",
