@@ -1,7 +1,9 @@
 require('dotenv').config();
 const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
+const puppeteer = require("puppeteer");
+const fs = require("fs-extra");
+const path = require("path");
+const { PDFDocument } = require("pdf-lib");
 
 const magento = axios.create({
   baseURL: `${process.env.MAGENTO_URL}/rest/V1`,
@@ -369,7 +371,7 @@ function createHtmlInvoice(data){
 `;
 }
 
-async function getOrderWithInvoiceByNumber(orderNumber) {
+async function getOrderWithInvoiceByNumber(orderNumber, baseUrl = "https://dev-ia.astucom.com/n8n_cosmia") {
   try {
 
     // 1. Rechercher la commande via increment_id
@@ -447,10 +449,64 @@ async function getOrderWithInvoiceByNumber(orderNumber) {
       }
     }
 
-    return {
-      data
-    };
+    // return {
+    //   data
+    // };
 
+    const html = createHtmlInvoice(data);
+
+    const browser = await puppeteer.launch({
+        headless: "new",
+        args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+
+    const pdfBuffer = await page.pdf({
+        format: "A4",
+        printBackground: true
+    });
+
+    await browser.close();
+
+    // Générer PDF normal
+    const rawPdf = await this.generateInvoicePDF(pdfBuffer);
+
+    // Charger PDF dans pdf-lib
+    const pdfDoc = await PDFDocument.load(rawPdf);
+
+    // Générer mot de passe
+    const password = "123456"; // 👉 générique ou random: Math.random().toString(36).slice(-8)
+
+    // Protéger PDF
+    pdfDoc.encrypt({
+        userPassword: password,
+        ownerPassword: password,
+        permissions: {
+            printing: "highResolution",
+            copying: false,
+            modifying: false
+        }
+    });
+
+    // Exporter PDF protégé
+    const protectedPdf = await pdfDoc.save();
+
+    // Sauvegarder dans un dossier
+    const filename = `${orderNumber}.pdf`;
+    const outputPath = path.join(__dirname, "../public/uploads/invoices", filename);
+
+    await fs.ensureDir(path.dirname(outputPath));
+    await fs.writeFile(outputPath, protectedPdf);
+
+    const finalUrl = `${baseUrl}/public/uploads/invoices/${encodeURIComponent(filename)}`;
+
+    // Retourner infos
+    return {
+        filePath: finalUrl,
+        password: password
+    };
     
   } catch (error) {
     console.error('Erreur_Magento:', error.response?.data || error.message);
