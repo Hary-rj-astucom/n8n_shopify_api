@@ -371,7 +371,7 @@ function createHtmlInvoice(data){
 `;
 }
 
-async function getOrderWithInvoiceByNumber(orderNumber, baseUrl = "https://dev-ia.astucom.com/n8n_cosmia") {
+async function getInvoicePDF(orderNumber, baseUrl = "https://dev-ia.astucom.com/n8n_cosmia") {
   try {
 
     // 1. Rechercher la commande via increment_id
@@ -495,5 +495,5 @@ async function getOrderWithInvoiceByNumber(orderNumber, baseUrl = "https://dev-i
 
 module.exports = { 
   getOrderWithTransactionsByNumber, 
-  getOrderWithInvoiceByNumber
+  getInvoicePDF
 };

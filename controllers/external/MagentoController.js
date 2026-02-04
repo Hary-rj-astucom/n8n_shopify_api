@@ -12,10 +12,10 @@ const getOrderWithTransactionsByNumber = async (req, res) => {
   }
 }
 
-const getOrderWithInvoiceByNumber = async (req, res) => {
+const getInvoicePDF = async (req, res) => {
   try {
 
-    let result = await MagentoApiService.getOrderWithInvoiceByNumber(req.body.order_num);
+    let result = await MagentoApiService.getInvoicePDF(req.body.order_num);
     res.status(200).send(result);
 
   } catch (error) {
@@ -26,5 +26,5 @@ const getOrderWithInvoiceByNumber = async (req, res) => {
 
 module.exports = { 
   getOrderWithTransactionsByNumber,
-  getOrderWithInvoiceByNumber
+  getInvoicePDF
 };
