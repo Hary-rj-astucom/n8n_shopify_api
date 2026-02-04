@@ -470,20 +470,6 @@ async function getOrderWithInvoiceByNumber(orderNumber, baseUrl = "https://dev-i
     // Charger PDF dans pdf-lib
     const pdfDoc = await PDFDocument.load(pdfBuffer);
 
-    // Générer mot de passe
-    const password = "123456"; // 👉 générique ou random: Math.random().toString(36).slice(-8)
-
-    // Protéger PDF
-    pdfDoc.encrypt({
-        userPassword: password,
-        ownerPassword: password,
-        permissions: {
-            printing: "highResolution",
-            copying: false,
-            modifying: false
-        }
-    });
-
     // Exporter PDF protégé
     const protectedPdf = await pdfDoc.save();
 
@@ -498,8 +484,7 @@ async function getOrderWithInvoiceByNumber(orderNumber, baseUrl = "https://dev-i
 
     // Retourner infos
     return {
-        filePath: finalUrl,
-        password: password
+        filePath: finalUrl
     };
     
   } catch (error) {
