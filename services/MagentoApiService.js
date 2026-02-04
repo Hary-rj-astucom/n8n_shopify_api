@@ -124,7 +124,7 @@ function createHtmlInvoice(data){
                 }
 
                 .info-table {
-                    width: 40%;
+                    width: 65%;
                     border-collapse: collapse;
                     margin-top: 5px;
                 }
@@ -256,11 +256,11 @@ function createHtmlInvoice(data){
                         </tr>
                         <tr>
                             <td><b>Commande :</b></td>
-                            <td>${data.invoice.order_number}</td>
+                            <td>${data.order_number}</td>
                         </tr>
                         <tr>
                             <td><b>Date de commande :</b></td>
-                            <td>${data.invoice.order_created_at}</td>
+                            <td>${data.order_created_at}</td>
                         </tr>
                     </table>
                 </div>
