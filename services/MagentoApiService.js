@@ -490,7 +490,7 @@ async function getInvoicePDF(orderNumber, langue, baseUrl = "https://dev-ia.astu
 
     // Retourner infos
     return {
-        filePath: finalUrl
+        invoice_link: finalUrl
     };
     
   } catch (error) {
