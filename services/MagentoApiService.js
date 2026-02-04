@@ -78,6 +78,296 @@ function convertInvoiceItems(invoiceItems) {
 
   return merged;
 }
+// create invoice html
+function createHtmlInvoice(data){
+  return `<!DOCTYPE html>
+    <html lang="fr">
+        <head>
+            <meta charset="UTF-8">
+            <title>Facture</title>
+
+            <style>
+                @page {
+                    size: A4;
+                    margin: 5mm; /* marge basse pour éviter que le contenu touche le footer */
+                }
+
+                body {
+                    font-family: Arial, sans-serif;
+                    color: #333;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .container {
+                    width: 100%;
+                    padding: 20px;
+                    box-sizing: border-box;
+                }
+
+                .title {
+                    margin-bottom: 30px;
+                    font-size: 28px;
+                    font-weight: bold;
+                }
+
+                .section {
+                    margin-bottom: 25px;
+                }
+
+                .section-title {
+                    font-size: 16px;
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }
+
+                .info-table {
+                    width: 40%;
+                    border-collapse: collapse;
+                    margin-top: 5px;
+                }
+
+                .info-table td {
+                    border: none;
+                    padding: 3px;
+                }
+
+                .double-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 10px;
+                }
+
+                .double-table td {
+                    padding: 10px;
+                    vertical-align: top;
+                }
+
+                .double-table-header td {
+                    font-weight: bold;
+                    padding-bottom: 5px;
+                }
+
+                .double-table-body td {
+                    border: 1px solid #333;
+                }
+
+                .items-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 20px;
+                }
+
+                .items-table th,
+                .items-table td {
+                    border-bottom: 1px solid #999;
+                    padding: 10px;
+                    width: max-content;
+                }
+
+                .items-table .no_border td {
+                    border: none;
+                    padding: 10px;
+                    width: max-content;
+                }
+
+                .items-table th {
+                    background: #f2f2f2;
+                    font-weight: bold;
+                    text-align: center;
+                }
+
+                .items-table td {
+                    text-align: center;
+                }
+
+                .total {
+                    text-align: right;
+                    margin-top: 20px;
+                    font-size: 18px;
+                    font-weight: bold;
+                }
+
+                .footer {
+                    top: 0;
+                    width: 100%;
+                    border-bottom: 1px solid #ccc;
+                    padding: 5px 10px;
+                    font-size: 10px;
+                    background: #fff;
+                    margin-top: 0px; /* pour séparer du contenu */
+                }
+
+                .triple-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 5px;
+                }
+
+                .triple-table td {
+                    padding: 5px;
+                    vertical-align: top;
+                }
+
+            </style>
+        </head>
+        <body>
+            <div  class="footer">
+                <table class="triple-table">
+                    <tr>
+                        <td>
+                            COSMA PARFUMERIES S.A au Capital de 1 216 600 €<br>
+                            384 736 666 R.C.S. Versailles<br>
+                            SIRET 384 736 666 00072<br>
+                            TVA FR26 384 736 666
+                        </td>
+                        <td>
+                            Siège social<br>
+                            17 Route des Boulangers<br>
+                            78530 BUC - FRANCE<br>
+                            Tél. : 01 56 83 84 88
+                        </td>
+                        <td>
+                            E-commerce : cosma-parfumeries.com<br>
+                            17 Route des Boulangers<br>
+                            78530 BUC - FRANCE<br>
+                            Tél. : 01 56 83 84 88
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="container">
+
+                <h1 class="title">
+                    <img src="https://www.cosma-parfumeries.com/media/logo/websites/1/LOGO_1.png"  width="230px">
+                </h1>
+
+                <div class="section">
+                    <table class="info-table">
+                        <tr>
+                            <td><b>Facture :</b></td>
+                            <td>${data.invoice.invoice_number}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Date de facturation :</b></td>
+                            <td>${data.invoice.invoice_created_at}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Commande :</b></td>
+                            <td>${data.invoice.order_number}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Date de commande :</b></td>
+                            <td>${data.invoice.order_created_at}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <table class="double-table">
+                        <tr class="double-table-header">
+                            <td style="width: 50%;"><b>Adresse de facturation</b></td>
+                            <td><b>Adresse de livraison</b></td>
+                        </tr>
+                        <tr class="double-table-body">
+                            <td>
+                                ${data.billing_address.firstname} ${data.billing_address.lastname}<br>
+                                ${
+                                  data.billing_address.street.map(item => `
+                                    ${item}<br>
+                                  `).join('')
+                                }
+                                ${data.billing_address.postcode} ${data.billing_address.city}<br>
+                                ${data.billing_address.country}<br>
+                                T: ${data.billing_address.telephone}
+                            </td>
+                            <td>
+                                ${data.shipping_address.firstname} ${data.shipping_address.lastname}<br>
+                                ${
+                                  data.shipping_address.street.map(item => `
+                                    ${item}<br>
+                                  `).join('')
+                                }
+                                ${data.shipping_address.postcode} ${data.shipping_address.city}<br>
+                                ${data.shipping_address.country}<br>
+                                T: ${data.shipping_address.telephone}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <table class="double-table">
+                        <tr class="double-table-header">
+                            <td style="width: 50%;"><b>Mode de paiement</b></td>
+                            <td><b>Méthode de livraison</b></td>
+                        </tr>
+                        <tr class="double-table-body">
+                            <td>
+                                ${data.payment.method} ${data.payment.type}<br>
+                                Ref: ${data.payment.transaction_id}
+                            </td>
+                            <td>
+                                ${data.shipping_address.method}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <h3>Résumé de la commande</h3>
+
+                <table class="items-table">
+                    <tr>
+                        <th>Référence</th>
+                        <th>Désignation</th>
+                        <th>Prix</th>
+                        <th>Qté</th>
+                        <th>Sous-total</th>
+                    </tr>
+
+                    ${
+                        data.invoice.items.map(item => `
+                          <tr>
+                              <td>
+                                  ${item.sku}<br>
+                                  ${item.variation}
+                              </td>
+                              <td> ${item.name}</td>
+                              <td>${item.unit_price_ttc} ${data.currency}</td>
+                              <td>${item.qty}</td>
+                              <td>${(item.unit_price_ttc * item.qty).toFixed(2)} ${data.currency}</td>
+                          </tr>
+                        `).join('')
+                      }
+
+                    <tr class="no_border">
+                        <td></td>
+                        <td></td>
+                        <td>Sous-total :</td>
+                        <td></td>
+                        <td>${data.totals.subtotal_ht} ${data.currency}</td>
+                    </tr>
+                    <tr class="no_border">
+                        <td></td>
+                        <td></td>
+                        <td>TVA :</td>
+                        <td></td>
+                        <td>${data.totals.tax} ${data.currency}</td>
+                    </tr>
+                    <tr class="no_border">
+                        <td></td>
+                        <td></td>
+                        <td><b>Total :</b></td>
+                        <td></td>
+                        <td><b>${data.totals.grand_total_ttc} ${data.currency}</b></td>
+                    </tr>
+                </table>
+
+            </div>
+        </body>
+    </html>
+`;
+}
 
 async function getOrderWithInvoiceByNumber(orderNumber) {
   try {
