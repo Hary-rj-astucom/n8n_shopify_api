@@ -449,12 +449,10 @@ async function getOrderWithInvoiceByNumber(orderNumber, baseUrl = "https://dev-i
       }
     }
 
-    // return {
-    //   data
-    // };
-
+    // HTML invoice
     const html = createHtmlInvoice(data);
 
+    // Générer PDF normal
     const browser = await puppeteer.launch({
         headless: "new",
         args: ["--no-sandbox", "--disable-setuid-sandbox"]
@@ -467,14 +465,10 @@ async function getOrderWithInvoiceByNumber(orderNumber, baseUrl = "https://dev-i
         format: "A4",
         printBackground: true
     });
-
     await browser.close();
 
-    // Générer PDF normal
-    const rawPdf = await this.generateInvoicePDF(pdfBuffer);
-
     // Charger PDF dans pdf-lib
-    const pdfDoc = await PDFDocument.load(rawPdf);
+    const pdfDoc = await PDFDocument.load(pdfBuffer);
 
     // Générer mot de passe
     const password = "123456"; // 👉 générique ou random: Math.random().toString(36).slice(-8)
