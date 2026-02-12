@@ -264,7 +264,15 @@ const getTicketPartitionSummary = async (req, res) => {
         SUM(CASE 
           WHEN label_id = 9 THEN 1
           ELSE 0
-        END) as spam_publicite
+        END) as spam_publicite,
+        SUM(CASE 
+          WHEN label_id = 10 THEN 1
+          ELSE 0
+        END) as changement_adresse_livraison,
+        SUM(CASE 
+          WHEN label_id = 11 THEN 1
+          ELSE 0
+        END) as inversion_colis
     FROM ticket 
     WHERE DATE(created_at) BETWEEN DATE_SUB(now(), INTERVAL 30 DAY) AND DATE(now()) ${where}
     GROUP BY DATE(created_at)`;
