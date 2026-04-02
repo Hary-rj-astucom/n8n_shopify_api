@@ -163,7 +163,7 @@ async function replyToMessage2( messageId, replyText, attachments = [], options 
   // 1. Create draft reply
   const draftResponse = await axios.post(
     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}/createReply`,
-    {},
+    null,
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
