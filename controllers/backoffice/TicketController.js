@@ -651,9 +651,7 @@ const getOutlookDigiparfMessageDetailByMessageId = async (req, res) => {
   try{
 
     result_conv = await OutlookDigiparfApiService.getMessageDetailByMessageId(req.body.messageId);
-    return res.json({
-      data: result_conv
-    });
+    return result_conv
 
   } catch (err) {
     console.error(err);
