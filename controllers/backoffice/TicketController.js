@@ -361,7 +361,7 @@ const respondMail2 = async (req, res) => {
       case 1:
         // COSMASHOP
         console.log("envoie messagerie COSMASHOP");
-        result_conv = await OutlookCosmashopApiService.replyToMessage2(messageId, replyText, attachments, optionsOutlook);
+        result_conv = await OutlookCosmashopApiService.replyToMessage2(messageId, replyText, attachements, optionsOutlook);
         break;
       case 2:
         // COSMA-PARFUMERIE
@@ -371,7 +371,7 @@ const respondMail2 = async (req, res) => {
       case 3:
         // DIGIPARF
         console.log("envoie messagerie DIGIPARF");
-        result_conv = await OutlookDigiparfApiService.replyToMessage2(messageId, replyText, attachments, optionsOutlook);
+        result_conv = await OutlookDigiparfApiService.replyToMessage2(messageId, replyText, attachements, optionsOutlook);
         break;
       default:
         result_conv = [];
