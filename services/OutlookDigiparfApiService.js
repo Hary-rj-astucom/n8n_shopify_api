@@ -358,33 +358,22 @@ async function getMessageDetailByMessageId(messageId) {
 
   const user = process.env.OUTLOOK_DIGIPARF_USER_APP
   const token = await getAccessToken();
-  const safeId = encodeURIComponent(messageId);
 
-  // 1. Get ALL folders, even hidden ones
-  const foldersRes = await axios.get(
-    `https://graph.microsoft.com/v1.0/users/${user}/mailFolders?$top=500`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+  const headers = { Authorization: `Bearer ${token}` };
 
-  const folders = foldersRes.data.value;
-
-  // 2. Search every folder physically
-  for (const folder of folders) {
+  for (let attempt = 0; attempt < 10; attempt++) {
     try {
-      const url = `https://graph.microsoft.com/v1.0/users/${user}/mailFolders/${folder.id}/messages/${safeId}`;
-      console.log(folder.displayName + ' : ' + url);
-
-      const res = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      return res.data; // ✅ FOUND
-
+      let res = await axios.get(
+        `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${user}/messages/${encodeURIComponent(messageId)}`,
+        { headers }
+      );
+      console.log("email safe : ", res);
+      return res; // ✅ Exists, safe to send
     } catch (e) {
-      if (e?.response?.status !== 404) throw e;
+      await new Promise(res => res(200)); // Wait 200ms and retry
     }
   }
-
-  throw new Error("Message not found in ANY folder (even system folders)");
+  return null;
 }
 
 
