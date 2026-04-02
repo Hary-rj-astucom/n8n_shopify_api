@@ -325,6 +325,7 @@ async function replyToMessage2(messageId, replyText, attachments = [], options =
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
+  console.log(draftId);
   console.log("Reply with attachments sent successfully and stored!");
 }
 
