@@ -518,60 +518,6 @@ function makeEmail(to, subject, body, messageId) {
   return Buffer.from(mail).toString("base64").replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-/**
- * to: string - recipient
- * subject: string - email subject
- * body: string - email body
- * messageId: string - In-Reply-To / References
- * attachments: array of objects [{ filename, contentBase64, mimeType }]
- * exemple attachement 
-      * attachments = [
-        { filename: "file1.pdf", contentBase64: req.body.file1Base64, mimeType: "application/pdf" },
-        { filename: "file2.jpg", contentBase64: req.body.file2Base64, mimeType: "image/jpeg" }
-      ]
- */
-// function makeEmailWithMultipleAttachments(to, subject, body, messageId, attachments = []) {
-//   const boundary = "----=_Part_" + Date.now();
-
-//   const mailParts = [
-//     `To: ${to.trim().replace(/[\r\n]+/g, '')}`,
-//     `Subject: ${subject.trim().replace(/[\r\n]+/g, '')}`,
-//     `In-Reply-To: ${messageId}`,
-//     `References: ${messageId}`,
-//     "MIME-Version: 1.0",
-//     `Content-Type: multipart/mixed; boundary="${boundary}"`,
-//     "",
-//     `--${boundary}`,
-//     'Content-Type: text/plain; charset="UTF-8"',
-//     "Content-Transfer-Encoding: 7bit",
-//     "",
-//     body,
-//     ""
-//   ];
-
-//   // Add each attachment
-//   attachments.forEach(att => {
-//     mailParts.push(
-//       `--${boundary}`,
-//       `Content-Type: ${att.mimeType || "application/octet-stream"}; name="${att.filename}"`,
-//       "Content-Transfer-Encoding: base64",
-//       `Content-Disposition: attachment; filename="${att.filename}"`,
-//       "",
-//       att.contentBase64.replace(/\r?\n/g, ""), // sanitize base64
-//       ""
-//     );
-//   });
-
-//   // End boundary
-//   mailParts.push(`--${boundary}--`);
-
-//   return Buffer.from(mailParts.join("\r\n"))
-//     .toString("base64")
-//     .replace(/\+/g, "-")
-//     .replace(/\//g, "_")
-//     .replace(/=+$/, "");
-// }
-
 function makeEmailWithMultipleAttachments(to, subject, bodyText, messageId, attachments = []) {
   const boundaryMixed = "mixed_" + Date.now();
   const boundaryAlt = "alt_" + Date.now();
@@ -662,10 +608,159 @@ function makeEmailWithMultipleAttachments(to, subject, bodyText, messageId, atta
     .replace(/=+$/, "");
 }
 
+// ------------------------ send mail 2 -------------------------- //
+
+function makeEmail2(to, subject, body, messageId, cc = []) {
+  const clean = str => str.trim().replace(/[\r\n]+/g, '');
+
+  const signature = `...`; // ton HTML inchangé
+
+  const htmlBody = `
+    <div>
+      ${body.replace(/\n/g, '<br>')}
+      ${signature}
+    </div>
+  `;
+
+  const headers = [
+    `To: ${clean(to)}`,
+    cc.length ? `Cc: ${cc.map(clean).join(", ")}` : null,
+    `Subject: ${clean(subject)}`,
+    `In-Reply-To: ${messageId}`,
+    `References: ${messageId}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    "MIME-Version: 1.0",
+    "",
+    htmlBody
+  ].filter(Boolean);
+
+  return Buffer.from(headers.join("\n"))
+    .toString("base64")
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, attachments = [], cc = []) {
+  const clean = str => str.trim().replace(/[\r\n]+/g, '');
+
+  const boundaryMixed = "mixed_" + Date.now();
+  const boundaryAlt = "alt_" + Date.now();
+
+  const headers = [
+    `To: ${clean(to)}`,
+    cc.length ? `Cc: ${cc.map(clean).join(", ")}` : null,
+    `Subject: ${clean(subject)}`,
+    `In-Reply-To: ${messageId}`,
+    `References: ${messageId}`,
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/mixed; boundary="${boundaryMixed}"`,
+    ""
+  ].filter(Boolean);
+
+  const bodyHtml = `<div>${bodyText.replace(/\n/g, "<br>")}</div>`;
+
+  const mailParts = [
+    ...headers,
+
+    `--${boundaryMixed}`,
+    `Content-Type: multipart/alternative; boundary="${boundaryAlt}"`,
+    "",
+
+    `--${boundaryAlt}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    "",
+    bodyText,
+    "",
+
+    `--${boundaryAlt}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    "",
+    bodyHtml,
+    "",
+
+    `--${boundaryAlt}--`,
+    ""
+  ];
+
+  attachments.forEach(att => {
+    mailParts.push(
+      `--${boundaryMixed}`,
+      `Content-Type: ${att.mimeType || "application/octet-stream"}; name="${att.filename}"`,
+      "Content-Transfer-Encoding: base64",
+      `Content-Disposition: attachment; filename="${att.filename}"`,
+      "",
+      att.contentBase64.replace(/\r?\n/g, ""),
+      ""
+    );
+  });
+
+  mailParts.push(`--${boundaryMixed}--`);
+
+  return Buffer.from(mailParts.join("\r\n"))
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+async function replyConversation2(threadId, replyText, attachments = [], options = {}) {
+  try {
+    const { to, cc = [], subjectOverride = null } = options;
+
+    const auth = await authorize();
+    const gmail = google.gmail({ version: 'v1', auth });
+
+    // 1. Get thread
+    const thread = await gmail.users.threads.get({
+      userId: 'me',
+      id: threadId
+    });
+
+    const messages = thread.data.messages;
+    const lastMessage = messages[messages.length - 1];
+
+    const headers = lastMessage.payload.headers;
+
+    const originalSubject = headers.find(h => h.name === 'Subject')?.value || "";
+    const messageIdHeader = headers.find(h => h.name === 'Message-ID')?.value;
+
+    // ✅ Subject modifié ou fallback
+    const subject = subjectOverride || `Re: ${originalSubject}`;
+
+    // ⚠️ TO obligatoire
+    if (!to) {
+      throw new Error("TO is required");
+    }
+
+    let rawMessage = "";
+
+    if (attachments.length === 0) {
+      rawMessage = makeEmail2(to, subject, replyText, messageIdHeader, cc);
+    } else {
+      rawMessage = makeEmailWithMultipleAttachments2(to, subject, replyText, messageIdHeader, attachments, cc);
+    }
+
+    const res = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw: rawMessage,
+        threadId
+      }
+    });
+
+    return { success: true, res };
+
+  } catch (err) {
+    console.error(err);
+    throw new Error("Error sending reply");
+  }
+}
 
 module.exports = { 
   getConversation,
   replyConversation,
+  replyConversation2,
 
   auth,
   callback,

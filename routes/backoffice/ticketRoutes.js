@@ -15,4 +15,6 @@ router.post("/addcomment", ticketController.addTicketComment);
 router.get("/list/getRedudentTicket", ticketController.getRedudentTicket);
 router.post("/getDetailRedudentTicket", ticketController.getDetailRedudentTicket);
 
+router.post("/replymail2", ticketController.respondMail2);
+
 module.exports = router;

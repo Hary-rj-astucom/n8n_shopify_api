@@ -283,6 +283,118 @@ const respondMail = async (req, res) => {
   }
 }
 
+/**
+ * req.body {
+ *  ticket_id (int)
+ *  first_message_id (text)
+ *  replyText (text)
+ *  attachements (array)
+ * 
+ *  destinataire (string)
+ *  cc (array)
+ *  subject (string)
+ * }
+*/
+const respondMail2 = async (req, res) => {
+  try{
+
+    const ticket_id = req.body.ticket_id;
+    const messageId = req.body.first_message_id;
+    const replyText = req.body.replyText;
+
+    //get ticket and needed information
+    const dataQuery = `
+      SELECT ticket.id, ticket.num_ticket, ticket.subject_ticket, ticket.conversation_email_id, ticket.original_client_mail,
+        ticket.reception_mail, ticket.nom_client, ticket.num_commande, ticket.label_id, ticket.project_id, ticket.created_at,
+        ticket.status, ticket.need_attention, ticket.state, label.name as label_name, project.name as project_name 
+      FROM ticket 
+      JOIN label ON label.id = ticket.label_id 
+      JOIN project ON project.id = ticket.project_id
+      WHERE ticket.id = ?
+    `;
+    const result = await sequelize.query(dataQuery, {
+      replacements: [ticket_id],
+      type: sequelize.QueryTypes.SELECT
+    });
+    const project_id = result[0].project_id;
+    const destinataire = result[0].original_client_mail;
+    const conversation_id = result[0].conversation_email_id;
+
+    let attachements = [];
+    if(req.body.attachements){
+      attachements = req.body.attachements;
+    }
+
+    // parametre destinataire, cc, sujet
+
+     let optionsGmail = {
+      to: destinataire, 
+      cc: [], 
+      subjectOverride: null
+    };
+
+    let optionsOutlook = {
+      toRecipients: [],
+      ccRecipients: [],
+      subject: null
+    };
+
+    // si on envoie un destinataire
+    if(req.body.destinataire){
+      optionsGmail.to = req.body.destinataire;
+      optionsOutlook.toRecipients.push(req.body.destinataire);
+    }
+
+    // si on a des CC
+    if(req.body.cc){
+      optionsGmail.cc = req.body.cc;
+      optionsOutlook.ccRecipients = req.body.cc;
+    }
+
+    // si on a un nouveau sujet
+    if(req.body.subject){
+      optionsGmail.subjectOverride = req.body.subject;
+      optionsOutlook.subject = req.body.subject;
+    }
+
+    switch (project_id) {
+      case 1:
+        // COSMASHOP
+        console.log("envoie messagerie COSMASHOP");
+        result_conv = await OutlookCosmashopApiService.replyToMessage2(messageId, replyText, attachments, optionsOutlook);
+        break;
+      case 2:
+        // COSMA-PARFUMERIE
+        console.log("envoie messagerie COSMA-PARFUMERIE");
+        result_conv = await GmailCosmaparfumerieApiService.replyConversation2(conversation_id, replyText, attachements, optionsGmail);
+        break;
+      case 3:
+        // DIGIPARF
+        console.log("envoie messagerie DIGIPARF");
+        result_conv = await OutlookDigiparfApiService.replyToMessage2(messageId, replyText, attachments, optionsOutlook);
+        break;
+      default:
+        result_conv = [];
+    }
+
+    const user = await User.findByPk(req.user.id);
+    await TicketHistoricalComment.create({ comment: "[ACTION] " + user.name + " a repondu(e) au client", ticket_id: ticket_id, user_id: req.user.id });
+
+    // update need_attention to 0 
+    if(result[0].need_attention == 1){
+      await Ticket.update({ need_attention: 0}, { where: { id: ticket_id } })
+    }
+
+    return res.json({message: "message envoye"});
+
+  } catch (error) {
+    console.error(error?.response?.data);
+    return res.status(200).json(error?.response?.data);
+
+    //return res.status(400).json({ error: error.message });
+  }
+}
+
 const ignoreClientResponse = async (req, res) => {
   try{
     const ticket_id = req.body.ticket_id;
@@ -545,5 +657,7 @@ module.exports = {
   getTicketsbyConvId,
   ignoreClientResponse,
   getRedudentTicket,
-  getDetailRedudentTicket
+  getDetailRedudentTicket,
+  
+  respondMail2
 };
