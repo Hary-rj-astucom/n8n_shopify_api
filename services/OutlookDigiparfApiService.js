@@ -160,11 +160,9 @@ async function replyToMessage2( messageId, replyText, attachments = [], options 
   const openai = new OpenAiApiService();
   const replyTextHtml = await openai.formatTextToHtml(replyText);
 
-  const encodedMessageId = encodeURIComponent(messageId);
-
   // 1. Create draft reply
   const draftResponse = await axios.post(
-    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${encodedMessageId}/createReply`,
+    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}/createReply`,
     {},
     { headers: { 
         "Content-Type": "application/json",
