@@ -232,12 +232,13 @@ async function replyToMessage2( messageId, replyText, attachments = [], options 
   }
 
   // 5. Send
-  await axios.post(
+  const res = await axios.post(
     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}/send`,
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
+  console.log(res);
   console.log("Reply with attachments sent successfully!");
 }
 
