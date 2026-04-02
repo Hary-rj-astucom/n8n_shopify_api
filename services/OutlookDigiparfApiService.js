@@ -343,7 +343,7 @@ async function waitUntilMessageExists(user, messageId, token) {
         `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${user}/messages/${encodeURIComponent(messageId)}`,
         { headers }
       );
-      console.log("email safe : ", res);
+      console.log("email safe : ", res.data);
       return; // ✅ Exists, safe to send
     } catch (e) {
       await new Promise(res => res(200)); // Wait 200ms and retry
