@@ -613,12 +613,36 @@ function makeEmailWithMultipleAttachments(to, subject, bodyText, messageId, atta
 function makeEmail2(to, subject, body, messageId, cc = []) {
   const clean = str => str.trim().replace(/[\r\n]+/g, '');
 
-  const signature = `...`; // ton HTML inchangé
+  const signatureHtml = `
+    <br><br>
+    <div style="font-family: Calibri, sans-serif; font-size: 11pt; color: #000;">
+      <table cellspacing="0" cellpadding="0" style="border: none;">
+        <tr>
+          <td style="vertical-align: middle; padding-right: 12px;">
+            <img src="https://www.cosma-parfumeries.com/media/logo/websites/1/LOGO_1.png"
+                alt="Logo" width="140" style="border: none;">
+          </td>
+          <td style="vertical-align: middle;">
+            <div style="line-height: 1.4;">
+              <strong>cosma-parfumeries</strong><br>
+              ✉️ <a href="mailto:contact@cosma-parfumeries.fr" style="color:#000; text-decoration:none;">
+                contact@cosma-parfumeries.fr
+              </a><br>
+              🌐 <a href="https://www.cosma-parfumeries.com" style="color:#0078D4; text-decoration:none;">
+                https://www.cosma-parfumeries.com
+              </a>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  `;
 
   const htmlBody = `
     <div>
-      ${body.replace(/\n/g, '<br>')}
-      ${signature}
+      ${body.replace(/\n/g, "<br>")}
+      <br><br>
+      ${signatureHtml}
     </div>
   `;
 
@@ -642,6 +666,32 @@ function makeEmail2(to, subject, body, messageId, cc = []) {
 }
 
 function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, attachments = [], cc = []) {
+
+  const signatureHtml = `
+    <br><br>
+    <div style="font-family: Calibri, sans-serif; font-size: 11pt; color: #000;">
+      <table cellspacing="0" cellpadding="0" style="border: none;">
+        <tr>
+          <td style="vertical-align: middle; padding-right: 12px;">
+            <img src="https://www.cosma-parfumeries.com/media/logo/websites/1/LOGO_1.png"
+                alt="Logo" width="140" style="border: none;">
+          </td>
+          <td style="vertical-align: middle;">
+            <div style="line-height: 1.4;">
+              <strong>cosma-parfumeries</strong><br>
+              ✉️ <a href="mailto:contact@cosma-parfumeries.fr" style="color:#000; text-decoration:none;">
+                contact@cosma-parfumeries.fr
+              </a><br>
+              🌐 <a href="https://www.cosma-parfumeries.com" style="color:#0078D4; text-decoration:none;">
+                https://www.cosma-parfumeries.com
+              </a>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  `;
+
   const clean = str => str.trim().replace(/[\r\n]+/g, '');
 
   const boundaryMixed = "mixed_" + Date.now();
@@ -658,7 +708,12 @@ function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, att
     ""
   ].filter(Boolean);
 
-  const bodyHtml = `<div>${bodyText.replace(/\n/g, "<br>")}</div>`;
+  const bodyHtml = `
+    <div>
+      ${bodyText.replace(/\n/g, "<br>")}
+      <br><br>
+      ${signatureHtml}
+    </div>`;
 
   const mailParts = [
     ...headers,
