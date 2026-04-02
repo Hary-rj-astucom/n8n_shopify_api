@@ -243,13 +243,27 @@ async function replyToMessage2( messageId, replyText, attachments = [], options 
 }
 
 // --------------------------------------------------------------- //
-async function getMessageDetailByMessageId(messageId){
+async function getMessageDetailByMessageId(messageId) {
   const token = await getAccessToken();
-  const response = await axios.get(
-    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  return response;
+  const safeId = encodeURIComponent(messageId);
+
+  const folders = ["inbox", "sentitems", "drafts", "deleteditems"];
+
+  for (const folder of folders) {
+    try {
+      const url = `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/mailFolders/${folder}/messages/${safeId}`;
+      
+      const res = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      return res.data; // ✅ Found!
+    } catch (e) {
+      if (e?.response?.status !== 404) throw e;
+    }
+  }
+
+  throw new Error(`Message ${messageId} not found in any known folder`);
 }
 
 
