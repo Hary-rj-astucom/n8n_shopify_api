@@ -243,7 +243,7 @@ async function replyToMessage2( messageId, replyText, attachments = [], options 
 }
 
 // --------------------------------------------------------------- //
-async function getMessageDetailByMessageId(user, messageId) {
+async function getMessageDetailByMessageId(messageId) {
 
   const user = process.env.OUTLOOK_DIGIPARF_USER_APP
   const token = await getAccessToken();
@@ -267,7 +267,7 @@ async function getMessageDetailByMessageId(user, messageId) {
         headers: { Authorization: `Bearer ${token}` }
       });
       return res.data; // ✅ FOUND
-      
+
     } catch (e) {
       if (e?.response?.status !== 404) throw e;
     }
