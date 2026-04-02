@@ -253,6 +253,8 @@ async function getMessageDetailByMessageId(messageId) {
     try {
       const url = `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/mailFolders/${folder}/messages/${safeId}`;
       
+      console.log(url);
+
       const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
