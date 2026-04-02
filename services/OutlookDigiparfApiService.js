@@ -243,29 +243,37 @@ async function replyToMessage2( messageId, replyText, attachments = [], options 
 }
 
 // --------------------------------------------------------------- //
-async function getMessageDetailByMessageId(messageId) {
+async function getMessageDetailByMessageId(user, messageId) {
+
+  const user = process.env.OUTLOOK_DIGIPARF_USER_APP
   const token = await getAccessToken();
   const safeId = encodeURIComponent(messageId);
 
-  const folders = ["inbox", "sentitems", "drafts", "deleteditems"];
+  // 1. Get ALL folders, even hidden ones
+  const foldersRes = await axios.get(
+    `https://graph.microsoft.com/v1.0/users/${user}/mailFolders?$top=500`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
 
+  const folders = foldersRes.data.value;
+
+  // 2. Search every folder physically
   for (const folder of folders) {
     try {
-      const url = `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/mailFolders/${folder}/messages/${safeId}`;
-      
-      console.log(url);
+      const url = `https://graph.microsoft.com/v1.0/users/${user}/mailFolders/${folder.id}/messages/${safeId}`;
+      console.log(folder.displayName + ' : ' + url);
 
       const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      return res.data; // ✅ Found!
+      return res.data; // ✅ FOUND
+      
     } catch (e) {
       if (e?.response?.status !== 404) throw e;
     }
   }
 
-  throw new Error(`Message ${messageId} not found in any known folder`);
+  throw new Error("Message not found in ANY folder (even system folders)");
 }
 
 
