@@ -368,7 +368,7 @@ async function getMessageDetailByMessageId(messageId) {
         { headers }
       );
       console.log("email safe : ", res);
-      return res; // ✅ Exists, safe to send
+      return res.data; // ✅ Exists, safe to send
     } catch (e) {
       await new Promise(res => res(200)); // Wait 200ms and retry
     }
