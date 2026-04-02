@@ -388,7 +388,7 @@ const respondMail2 = async (req, res) => {
     return res.json({message: "message envoye"});
 
   } catch (error) {
-    console.error(error?.response?.data);
+    console.error(error);
     return res.status(200).json(error?.response?.data);
 
     //return res.status(400).json({ error: error.message });
