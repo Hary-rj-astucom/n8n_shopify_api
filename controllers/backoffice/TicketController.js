@@ -646,6 +646,21 @@ const getDetailRedudentTicket = async (req, res) => {
   }
 }
 
+// get message outlook
+const getOutlookDigiparfMessageDetailByMessageId = async (req, res) => {
+  try{
+
+    result_conv = await OutlookDigiparfApiService.getMessageDetailByMessageId(req.body.messageId);
+    return res.json({
+      data: result_conv
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   getTickets,
   getTicketsDetails,
@@ -659,5 +674,6 @@ module.exports = {
   getRedudentTicket,
   getDetailRedudentTicket,
   
-  respondMail2
+  respondMail2,
+  getOutlookDigiparfMessageDetailByMessageId
 };

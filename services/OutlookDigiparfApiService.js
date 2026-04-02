@@ -242,6 +242,16 @@ async function replyToMessage2( messageId, replyText, attachments = [], options 
   console.log("Reply with attachments sent successfully!");
 }
 
+// --------------------------------------------------------------- //
+async function getMessageDetailByMessageId(messageId){
+  const token = await getAccessToken();
+  const response = await axios.get(
+    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response;
+}
+
 
 // -------------------- format message --------------------------- //
 async function formatConversation(token, messages) {
@@ -318,5 +328,6 @@ function cleanHtml(html) {
 module.exports = { 
   getConversationThreads,
   replyToMessage,
-  replyToMessage2
+  replyToMessage2,
+  getMessageDetailByMessageId
 };
