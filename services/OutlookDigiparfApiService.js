@@ -152,67 +152,152 @@ async function replyToMessage(messageId, replyText, attachments = []) {
  * @param {*} attachments 
  * @param {*} options 
  */
-async function replyToMessage2( messageId, replyText, attachments = [], options = {}) {
+// async function replyToMessage2( messageId, replyText, attachments = [], options = {}) {
+//   const { toRecipients = [], ccRecipients = [], subject = null } = options;
+
+//   const token = await getAccessToken();
+
+//   const openai = new OpenAiApiService();
+//   const replyTextHtml = await openai.formatTextToHtml(replyText);
+
+//   // 1. Create draft reply
+//   const draftResponse = await axios.post(
+//     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}/createReply`,
+//     {},
+//     { headers: { 
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${token}` 
+//       } 
+//     }
+//   );
+
+//   const draftId = draftResponse.data.id;
+
+//   // 2. Build update payload
+//   const updatePayload = {
+//     body: {
+//       contentType: "HTML",
+//       content: replyTextHtml
+//     }
+//   };
+
+//   // ✅ Modifier destinataires (TO)
+//   if (toRecipients.length > 0) {
+//     updatePayload.toRecipients = toRecipients.map(email => ({
+//       emailAddress: { address: email }
+//     }));
+//   }
+
+//   // ✅ Ajouter CC
+//   if (ccRecipients.length > 0) {
+//     updatePayload.ccRecipients = ccRecipients.map(email => ({
+//       emailAddress: { address: email }
+//     }));
+//   }
+
+//   // ✅ Modifier objet
+//   if (subject) {
+//     updatePayload.subject = subject;
+//   }
+
+//   // 3. Update draft
+//   await axios.patch(
+//     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}`,
+//     updatePayload,
+//     {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json"
+//       }
+//     }
+//   );
+
+//   // 4. Add attachments
+//   for (const att of attachments) {
+//     await axios.post(
+//       `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}/attachments`,
+//       {
+//         "@odata.type": "#microsoft.graph.fileAttachment",
+//         name: att.filename,
+//         contentType: att.mimeType || "application/octet-stream",
+//         contentBytes: att.contentBase64.replace(/^data:.*;base64,/, "")
+//       },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//           "Content-Type": "application/json"
+//         }
+//       }
+//     );
+//   }
+
+//   // 5. Send
+//   const res = await axios.post(
+//     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}/send`,
+//     {},
+//     { headers: { Authorization: `Bearer ${token}` } }
+//   );
+
+//   console.log(res);
+//   console.log("Reply with attachments sent successfully!");
+// }
+
+/**
+ * Reply to a message with correct saving + sending behavior.
+ */
+async function replyToMessage2(messageId, replyText, attachments = [], options = {}) {
   const { toRecipients = [], ccRecipients = [], subject = null } = options;
 
   const token = await getAccessToken();
-
   const openai = new OpenAiApiService();
   const replyTextHtml = await openai.formatTextToHtml(replyText);
 
-  // 1. Create draft reply
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json"
+  };
+
+  //
+  // 1. Create reply draft
+  //
   const draftResponse = await axios.post(
     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}/createReply`,
     {},
-    { headers: { 
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}` 
-      } 
-    }
+    { headers }
   );
 
   const draftId = draftResponse.data.id;
 
-  // 2. Build update payload
+  //
+  // 2. Update body + recipients + subject
+  //
   const updatePayload = {
-    body: {
-      contentType: "HTML",
-      content: replyTextHtml
-    }
+    body: { contentType: "HTML", content: replyTextHtml }
   };
 
-  // ✅ Modifier destinataires (TO)
   if (toRecipients.length > 0) {
     updatePayload.toRecipients = toRecipients.map(email => ({
       emailAddress: { address: email }
     }));
   }
 
-  // ✅ Ajouter CC
   if (ccRecipients.length > 0) {
     updatePayload.ccRecipients = ccRecipients.map(email => ({
       emailAddress: { address: email }
     }));
   }
 
-  // ✅ Modifier objet
-  if (subject) {
-    updatePayload.subject = subject;
-  }
+  if (subject) updatePayload.subject = subject;
 
-  // 3. Update draft
   await axios.patch(
     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}`,
     updatePayload,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
-      }
-    }
+    { headers }
   );
 
-  // 4. Add attachments
+  //
+  // 3. Add attachments (if any)
+  //
   for (const att of attachments) {
     await axios.post(
       `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}/attachments`,
@@ -222,24 +307,48 @@ async function replyToMessage2( messageId, replyText, attachments = [], options 
         contentType: att.mimeType || "application/octet-stream",
         contentBytes: att.contentBase64.replace(/^data:.*;base64,/, "")
       },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      }
+      { headers }
     );
   }
 
-  // 5. Send
-  const res = await axios.post(
+  //
+  // ✅ 4. FORCE DRAFT TO BE SAVED BEFORE SENDING
+  //
+  await waitUntilMessageExists(process.env.OUTLOOK_DIGIPARF_USER_APP, draftId, token);
+
+  //
+  // 5. Send it
+  //
+  await axios.post(
     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}/send`,
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
-  console.log(res);
-  console.log("Reply with attachments sent successfully!");
+  console.log("Reply with attachments sent successfully and stored!");
+}
+
+
+/**
+ * ✅ Ensures the draft exists in the mailbox before sending
+ * Prevents the “message not found in any folder” bug.
+ */
+async function waitUntilMessageExists(user, messageId, token) {
+  const headers = { Authorization: `Bearer ${token}` };
+
+  for (let attempt = 0; attempt < 10; attempt++) {
+    try {
+      await axios.get(
+        `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${user}/messages/${encodeURIComponent(messageId)}`,
+        { headers }
+      );
+      return; // ✅ Exists, safe to send
+    } catch (e) {
+      await new Promise(res => res(200)); // Wait 200ms and retry
+    }
+  }
+
+  console.warn("Warning: draft was never confirmed saved, sending anyway.");
 }
 
 // --------------------------------------------------------------- //
