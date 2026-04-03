@@ -317,7 +317,20 @@ async function getAllMessage(first_conversation_id, ticket_id){
     conversations.push(data);
   }
 
-  return conversations;
+  const result_final = {
+    source_app: conversations[0]?.source_app || null,
+    conversation_id: conversations[0]?.conversation_id || null,
+    messages: await conversations.reduce((acc, conv) => {
+      if (Array.isArray(conv.messages)) {
+        acc.push(...conv.messages);
+      }
+      return acc;
+    }, [])
+  };
+
+  await result_final.messages.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  return result_final;
 
 }
 
