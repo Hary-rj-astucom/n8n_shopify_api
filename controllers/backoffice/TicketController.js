@@ -664,7 +664,7 @@ const getOutlookDigiparfMessageDetailByMessageId = async (req, res) => {
 const getConversationOutlookDigiparfThreads = async (req, res) => {
   try{
 
-    result_conv = await OutlookDigiparfApiService.getConversationThreads(req.body.conversation_email_id);
+    result_conv = await OutlookDigiparfApiService.getAllMessage(req.body.conversation_email_id, req.body.ticket_id);
     return res.json({
       conversation: result_conv
     });

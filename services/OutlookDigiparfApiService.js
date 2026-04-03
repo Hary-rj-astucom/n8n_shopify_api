@@ -5,7 +5,6 @@ const path = require('path');
 const fs = require('fs');
 
 const OpenAiApiService = require('../services/OpenAiApiService');
-
 const RelatedConversation = require("../models/RelatedConversation");
 
 async function getAccessToken() {
@@ -24,6 +23,7 @@ async function getAccessToken() {
 }
 
 // ----------------- get attachments ----------------------------- //
+
 async function getMessageAttachments(token, messageId, baseUrl = "https://dev-ia.astucom.com/n8n_cosmia") {
   //const token = await getAccessToken();
 
@@ -147,6 +147,8 @@ async function replyToMessage(messageId, replyText, attachments = []) {
   console.log("Reply with attachments sent successfully!");
 }
 
+// --------------------------------------------------------------- //
+
 /**
  * Reply to a message with correct saving + sending behavior.
  */
@@ -248,7 +250,6 @@ async function replyToMessage2(messageId, replyText, attachments = [], options =
   console.log("Reply with attachments sent successfully and stored!");
 }
 
-
 /**
  * ✅ Ensures the draft exists in the mailbox before sending
  * Prevents the “message not found in any folder” bug.
@@ -290,6 +291,37 @@ async function getSentMessageByInternetMessageId(internetMessageId) {
 }
 
 // --------------------------------------------------------------- //
+
+/**
+ * get the conversation and conversation related 
+ * In outlook, the conversation Id change when we send the mail
+*/
+async function getAllMessage(first_conversation_id, ticket_id){t
+  let conversations = [];
+
+  // get the first thread
+  conversations.push(await getConversationThreads(first_conversation_id));
+
+  // get all related conversation
+  const dataQuery = `
+    SELECT id, ticket_id, conversation_email_id WHERE ticket.id = ?
+  `;
+  const result = await sequelize.query(dataQuery, {
+    replacements: [ticket_id],
+    type: sequelize.QueryTypes.SELECT
+  });
+
+  for (const element of result) {
+    const data = await getConversationThreads(element.conversation_email_id);
+    conversations.push(data);
+  }
+
+  return conversations;
+
+}
+
+// --------------------------------------------------------------- //
+
 async function getMessageDetailByMessageId(messageId) {
 
   const user = process.env.OUTLOOK_DIGIPARF_USER_APP
@@ -313,6 +345,7 @@ async function getMessageDetailByMessageId(messageId) {
 }
 
 // -------------------- format message --------------------------- //
+
 async function formatConversation(token, messages) {
   if (!Array.isArray(messages) || messages.length === 0) return null;
 
@@ -388,5 +421,6 @@ module.exports = {
   getConversationThreads,
   replyToMessage,
   replyToMessage2,
-  getMessageDetailByMessageId
+  getMessageDetailByMessageId,
+  getAllMessage
 };
