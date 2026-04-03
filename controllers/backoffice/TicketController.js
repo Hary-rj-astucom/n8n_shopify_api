@@ -675,6 +675,55 @@ const getConversationOutlookDigiparfThreads = async (req, res) => {
   }
 }
 
+// avoir le regroupement de ticket concerant la meme commande 
+const getTicketSet = async (req, res) => {
+  try {
+    let params = [];
+    params.push(req.body.ticket_id);
+
+    // get detail ticket
+    const dataQuery1 = `
+      SELECT 
+        ticket.original_client_mail,
+        ticket.num_commande
+      FROM ticket 
+      JOIN label ON label.id = ticket.label_id 
+      JOIN project ON project.id = ticket.project_id
+      WHERE ticket.id = ?
+    `;
+    const ticket = await sequelize.query(dataQuery1, {
+      replacements: params,
+      type: sequelize.QueryTypes.SELECT
+    });
+    const num_commande = ticket[0].num_commande;
+    const original_client_mail = ticket[0].original_client_mail;
+
+    // get set of ticket
+    let params2 = [];
+    params2.push(num_commande, original_client_mail);
+    const dataQuery = `
+      SELECT 
+        id, num_ticket, num_commande, label_id
+      FROM ticket
+      WHERE num_commande IN (?, 'inconnu', '-', 'numéro de commande', 'N/A', 'Numero de la commande introuvable', 'unknown', '[Numero de la commande introuvable]') 
+      AND original_client_mail like ? 
+      ORDER BY id ASC
+    `;
+    const result = await sequelize.query(dataQuery, {
+      replacements: params2,
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    return res.json({
+      tickets: result
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   getTickets,
   getTicketsDetails,
@@ -690,5 +739,7 @@ module.exports = {
   
   respondMail2,
   getOutlookDigiparfMessageDetailByMessageId,
-  getConversationOutlookDigiparfThreads
+  getConversationOutlookDigiparfThreads,
+
+  getTicketSet
 };
