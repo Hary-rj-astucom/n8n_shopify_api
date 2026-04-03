@@ -6,6 +6,8 @@ const fs = require('fs');
 
 const OpenAiApiService = require('../services/OpenAiApiService');
 
+const RelatedConversation = require("../models/RelatedConversation");
+
 async function getAccessToken() {
   const tokenUrl = `https://login.microsoftonline.com/${process.env.OUTLOOK_DIGIPARF_TENANT_ID}/oauth2/v2.0/token`;
   const data = {
@@ -148,7 +150,7 @@ async function replyToMessage(messageId, replyText, attachments = []) {
 /**
  * Reply to a message with correct saving + sending behavior.
  */
-async function replyToMessage2(messageId, replyText, attachments = [], options = {}) {
+async function replyToMessage2(messageId, replyText, attachments = [], options = {}, ticket_id) {
   const { toRecipients = [], ccRecipients = [], subject = null } = options;
 
   const token = await getAccessToken();
@@ -237,6 +239,11 @@ async function replyToMessage2(messageId, replyText, attachments = [], options =
   const newConversationId = sentMessage?.conversationId; // ✅ The real post-send conversationId
   console.log("Old conversation ID:", draftConversationId);
   console.log("New conversation ID:", newConversationId);
+
+  await RelatedConversation.create({ 
+    ticket_id: ticket_id,
+    conversation_email_id: newConversationId, 
+  });
 
   console.log("Reply with attachments sent successfully and stored!");
 }

@@ -162,3 +162,11 @@ CREATE VIEW ranked_tiket_list as  (
 
 -- Stat ranked_tiket_list
 SELECT COUNT(*) as nb_reccurent, SUM(total_in_group) as total_mail_trigered FROM ranked_tiket_list;
+
+-- Stockage des conversations relative
+CREATE TABLE related_conversation (
+    id INT PRIMARY KEY auto_increment,
+    ticket_id INT NOT NULL,
+    conversation_email_id INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT NOW()
+);
