@@ -296,7 +296,7 @@ async function getSentMessageByInternetMessageId(internetMessageId) {
  * get the conversation and conversation related 
  * In outlook, the conversation Id change when we send the mail
 */
-async function getAllMessage(first_conversation_id, ticket_id){t
+async function getAllMessage(first_conversation_id, ticket_id){
   let conversations = [];
 
   // get the first thread
