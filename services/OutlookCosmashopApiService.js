@@ -3,8 +3,10 @@ const axios = require('axios');
 const qs = require('qs');
 const path = require('path');
 const fs = require('fs');
+const sequelize = require("../config/database");
 
 const OpenAiApiService = require('../services/OpenAiApiService');
+const RelatedConversation = require("../models/RelatedConversation");
 
 async function getAccessToken() {
   const tokenUrl = `https://login.microsoftonline.com/${process.env.OUTLOOK_COSMASHOP_TENANT_ID}/oauth2/v2.0/token`;
@@ -22,6 +24,7 @@ async function getAccessToken() {
 }
 
 // ----------------- get attachments ----------------------------- //
+
 async function getMessageAttachments(token, messageId, baseUrl = "https://dev-ia.astucom.com/n8n_cosmia") {
   //const token = await getAccessToken();
 
@@ -69,7 +72,7 @@ async function getMessageAttachments(token, messageId, baseUrl = "https://dev-ia
         size: att.size,
         url: fileUrl 
       };
-
+      
     }
     if (att['@odata.type'] === "#microsoft.graph.itemAttachment") {
       return {
@@ -145,70 +148,66 @@ async function replyToMessage(messageId, replyText, attachments = []) {
   console.log("Reply with attachments sent successfully!");
 }
 
+// --------------------------------------------------------------- //
+
 /**
- * 
- * @param {*} messageId 
- * @param {*} replyText 
- * @param {*} attachments 
- * @param {*} options 
+ * Reply to a message with correct saving + sending behavior.
  */
-async function replyToMessage2( messageId, replyText, attachments = [], options = {}) {
+async function replyToMessage2(messageId, replyText, attachments = [], options = {}, ticket_id) {
   const { toRecipients = [], ccRecipients = [], subject = null } = options;
 
   const token = await getAccessToken();
-
   const openai = new OpenAiApiService();
   const replyTextHtml = await openai.formatTextToHtml(replyText);
 
-  // 1. Create draft reply
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json"
+  };
+
+  //
+  // 1. Create reply draft
+  //
   const draftResponse = await axios.post(
     `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${messageId}/createReply`,
     {},
-    { headers: { Authorization: `Bearer ${token}` } }
+    { headers }
   );
 
   const draftId = draftResponse.data.id;
+  const internetMessageId = draftResponse.data.internetMessageId;
+  const draftConversationId = draftResponse.data.conversationId;
 
-  // 2. Build update payload
+  //
+  // 2. Update body + recipients + subject
+  //
   const updatePayload = {
-    body: {
-      contentType: "HTML",
-      content: replyTextHtml
-    }
+    body: { contentType: "HTML", content: replyTextHtml }
   };
 
-  // ✅ Modifier destinataires (TO)
   if (toRecipients.length > 0) {
     updatePayload.toRecipients = toRecipients.map(email => ({
       emailAddress: { address: email }
     }));
   }
 
-  // ✅ Ajouter CC
   if (ccRecipients.length > 0) {
     updatePayload.ccRecipients = ccRecipients.map(email => ({
       emailAddress: { address: email }
     }));
   }
 
-  // ✅ Modifier objet
-  if (subject) {
-    updatePayload.subject = subject;
-  }
+  if (subject) updatePayload.subject = subject;
 
-  // 3. Update draft
   await axios.patch(
     `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}`,
     updatePayload,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
-      }
-    }
+    { headers }
   );
 
-  // 4. Add attachments
+  //
+  // 3. Add attachments (if any)
+  //
   for (const att of attachments) {
     await axios.post(
       `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}/attachments`,
@@ -218,27 +217,149 @@ async function replyToMessage2( messageId, replyText, attachments = [], options 
         contentType: att.mimeType || "application/octet-stream",
         contentBytes: att.contentBase64.replace(/^data:.*;base64,/, "")
       },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      }
+      { headers }
     );
   }
 
-  // 5. Send
+  //
+  // ✅ 4. FORCE DRAFT TO BE SAVED BEFORE SENDING
+  //
+  await waitUntilMessageExists(process.env.OUTLOOK_COSMASHOP_USER_APP, draftId, token);
+
+  //
+  // 5. Send it
+  //
   await axios.post(
     `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}/send`,
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
-  console.log("Reply with attachments sent successfully!");
+  await new Promise(res => setTimeout(res, 1000));
+
+  const sentMessage = await getSentMessageByInternetMessageId(internetMessageId);
+
+  const newConversationId = sentMessage?.conversationId; // ✅ The real post-send conversationId
+  console.log("Old conversation ID:", draftConversationId);
+  console.log("New conversation ID:", newConversationId);
+
+  await RelatedConversation.create({ 
+    ticket_id: ticket_id,
+    conversation_email_id: newConversationId, 
+  });
+
+  console.log("Reply with attachments sent successfully and stored!");
 }
 
+/**
+ * ✅ Ensures the draft exists in the mailbox before sending
+ * Prevents the “message not found in any folder” bug.
+ */
+async function waitUntilMessageExists(user, messageId, token) {
+  const headers = { Authorization: `Bearer ${token}` };
+
+  for (let attempt = 0; attempt < 10; attempt++) {
+    try {
+      let res = await axios.get(
+        `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${user}/messages/${encodeURIComponent(messageId)}`,
+        { headers }
+      );
+      console.log("email draft safe : ", res.data);
+      return; // ✅ Exists, safe to send
+    } catch (e) {
+      await new Promise(res => res(200)); // Wait 200ms and retry
+    }
+  }
+
+  console.warn("Warning: draft was never confirmed saved, sending anyway.");
+}
+
+async function getSentMessageByInternetMessageId(internetMessageId) {
+  const token = await getAccessToken();
+
+  const response = await axios.get(
+    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      params: {
+        $filter: `internetMessageId eq '${internetMessageId}'`,
+        $top: 1
+      }
+    }
+  );
+
+  return response.data.value[0] ?? null;
+}
+
+// --------------------------------------------------------------- //
+
+/**
+ * get the conversation and conversation related 
+ * In outlook, the conversation Id change when we send the mail
+*/
+async function getAllMessage(first_conversation_id, ticket_id){
+  let conversations = [];
+
+  // get the first thread
+  conversations.push(await getConversationThreads(first_conversation_id));
+
+  // get all related conversation
+  const dataQuery = `
+    SELECT id, ticket_id, conversation_email_id FROM related_conversation WHERE ticket_id = ?
+  `;
+  const result = await sequelize.query(dataQuery, {
+    replacements: [ticket_id],
+    type: sequelize.QueryTypes.SELECT
+  });
+
+  for (const element of result) {
+    const data = await getConversationThreads(element.conversation_email_id);
+    conversations.push(data);
+  }
+
+  const result_final = {
+    source_app: conversations[0]?.source_app || null,
+    conversation_id: conversations[0]?.conversation_id || null,
+    messages: await conversations.reduce((acc, conv) => {
+      if (Array.isArray(conv.messages)) {
+        acc.push(...conv.messages);
+      }
+      return acc;
+    }, [])
+  };
+
+  await result_final.messages.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  return result_final;
+
+}
+
+// --------------------------------------------------------------- //
+
+async function getMessageDetailByMessageId(messageId) {
+
+  const user = process.env.OUTLOOK_COSMASHOP_USER_APP
+  const token = await getAccessToken();
+
+  const headers = { Authorization: `Bearer ${token}` };
+
+  for (let attempt = 0; attempt < 10; attempt++) {
+    try {
+      let res = await axios.get(
+        `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${user}/messages/${encodeURIComponent(messageId)}`,
+        { headers }
+      );
+      console.log("email safe : ", res);
+      return res.data; // ✅ Exists, safe to send
+    } catch (e) {
+      await new Promise(res => res(200)); // Wait 200ms and retry
+    }
+  }
+  return null;
+}
 
 // -------------------- format message --------------------------- //
+
 async function formatConversation(token, messages) {
   if (!Array.isArray(messages) || messages.length === 0) return null;
 
@@ -310,9 +431,10 @@ function cleanHtml(html) {
     return text;
 }
 
-
 module.exports = { 
   getConversationThreads,
   replyToMessage,
-  replyToMessage2
+  replyToMessage2,
+  getMessageDetailByMessageId,
+  getAllMessage
 };
