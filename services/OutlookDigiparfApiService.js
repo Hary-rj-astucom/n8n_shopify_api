@@ -146,103 +146,6 @@ async function replyToMessage(messageId, replyText, attachments = []) {
 }
 
 /**
- * 
- * @param {*} messageId 
- * @param {*} replyText 
- * @param {*} attachments 
- * @param {*} options 
- */
-// async function replyToMessage2( messageId, replyText, attachments = [], options = {}) {
-//   const { toRecipients = [], ccRecipients = [], subject = null } = options;
-
-//   const token = await getAccessToken();
-
-//   const openai = new OpenAiApiService();
-//   const replyTextHtml = await openai.formatTextToHtml(replyText);
-
-//   // 1. Create draft reply
-//   const draftResponse = await axios.post(
-//     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}/createReply`,
-//     {},
-//     { headers: { 
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${token}` 
-//       } 
-//     }
-//   );
-
-//   const draftId = draftResponse.data.id;
-
-//   // 2. Build update payload
-//   const updatePayload = {
-//     body: {
-//       contentType: "HTML",
-//       content: replyTextHtml
-//     }
-//   };
-
-//   // ✅ Modifier destinataires (TO)
-//   if (toRecipients.length > 0) {
-//     updatePayload.toRecipients = toRecipients.map(email => ({
-//       emailAddress: { address: email }
-//     }));
-//   }
-
-//   // ✅ Ajouter CC
-//   if (ccRecipients.length > 0) {
-//     updatePayload.ccRecipients = ccRecipients.map(email => ({
-//       emailAddress: { address: email }
-//     }));
-//   }
-
-//   // ✅ Modifier objet
-//   if (subject) {
-//     updatePayload.subject = subject;
-//   }
-
-//   // 3. Update draft
-//   await axios.patch(
-//     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}`,
-//     updatePayload,
-//     {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json"
-//       }
-//     }
-//   );
-
-//   // 4. Add attachments
-//   for (const att of attachments) {
-//     await axios.post(
-//       `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}/attachments`,
-//       {
-//         "@odata.type": "#microsoft.graph.fileAttachment",
-//         name: att.filename,
-//         contentType: att.mimeType || "application/octet-stream",
-//         contentBytes: att.contentBase64.replace(/^data:.*;base64,/, "")
-//       },
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//           "Content-Type": "application/json"
-//         }
-//       }
-//     );
-//   }
-
-//   // 5. Send
-//   const res = await axios.post(
-//     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}/send`,
-//     {},
-//     { headers: { Authorization: `Bearer ${token}` } }
-//   );
-
-//   console.log(res);
-//   console.log("Reply with attachments sent successfully!");
-// }
-
-/**
  * Reply to a message with correct saving + sending behavior.
  */
 async function replyToMessage2(messageId, replyText, attachments = [], options = {}) {
@@ -267,6 +170,8 @@ async function replyToMessage2(messageId, replyText, attachments = [], options =
   );
 
   const draftId = draftResponse.data.id;
+  const internetMessageId = draftResponse.data.internetMessageId;
+  const draftConversationId = draftResponse.data.conversationId;
 
   //
   // 2. Update body + recipients + subject
@@ -325,7 +230,14 @@ async function replyToMessage2(messageId, replyText, attachments = [], options =
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
-  console.log(draftId);
+  await new Promise(res => setTimeout(res, 1000));
+
+  const sentMessage = await getSentMessageByInternetMessageId(internetMessageId);
+
+  const newConversationId = sentMessage?.conversationId; // ✅ The real post-send conversationId
+  console.log("Old conversation ID:", draftConversationId);
+  console.log("New conversation ID:", newConversationId);
+
   console.log("Reply with attachments sent successfully and stored!");
 }
 
@@ -343,7 +255,7 @@ async function waitUntilMessageExists(user, messageId, token) {
         `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${user}/messages/${encodeURIComponent(messageId)}`,
         { headers }
       );
-      console.log("email safe : ", res.data);
+      console.log("email draft safe : ", res.data);
       return; // ✅ Exists, safe to send
     } catch (e) {
       await new Promise(res => res(200)); // Wait 200ms and retry
@@ -351,6 +263,23 @@ async function waitUntilMessageExists(user, messageId, token) {
   }
 
   console.warn("Warning: draft was never confirmed saved, sending anyway.");
+}
+
+async function getSentMessageByInternetMessageId(internetMessageId) {
+  const token = await getAccessToken();
+
+  const response = await axios.get(
+    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      params: {
+        $filter: `internetMessageId eq '${internetMessageId}'`,
+        $top: 1
+      }
+    }
+  );
+
+  return response.data.value[0] ?? null;
 }
 
 // --------------------------------------------------------------- //
@@ -375,7 +304,6 @@ async function getMessageDetailByMessageId(messageId) {
   }
   return null;
 }
-
 
 // -------------------- format message --------------------------- //
 async function formatConversation(token, messages) {
