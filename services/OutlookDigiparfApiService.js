@@ -305,7 +305,7 @@ async function getAllMessage(first_conversation_id, ticket_id){
 
   // get all related conversation
   const dataQuery = `
-    SELECT id, ticket_id, conversation_email_id WHERE ticket_id = ?
+    SELECT id, ticket_id, conversation_email_id FROM related_conversation WHERE ticket_id = ?
   `;
   const result = await sequelize.query(dataQuery, {
     replacements: [ticket_id],
