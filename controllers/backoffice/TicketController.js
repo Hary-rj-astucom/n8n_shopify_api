@@ -649,10 +649,24 @@ const getDetailRedudentTicket = async (req, res) => {
 // get message outlook
 const getOutlookDigiparfMessageDetailByMessageId = async (req, res) => {
   try{
-
     result_conv = await OutlookDigiparfApiService.getMessageDetailByMessageId(req.body.messageId);
     return res.json({
       data: result_conv
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// get conversation Outlook
+const getConversationOutlookDigiparfThreads = async (req, res) => {
+  try{
+
+    result_conv = await OutlookDigiparfApiService.getConversationThreads(req.body.conversation_email_id);
+    return res.json({
+      conversation: result_conv
     });
 
   } catch (err) {
@@ -675,5 +689,6 @@ module.exports = {
   getDetailRedudentTicket,
   
   respondMail2,
-  getOutlookDigiparfMessageDetailByMessageId
+  getOutlookDigiparfMessageDetailByMessageId,
+  getConversationOutlookDigiparfThreads
 };

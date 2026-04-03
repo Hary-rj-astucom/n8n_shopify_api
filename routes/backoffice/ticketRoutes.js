@@ -18,5 +18,6 @@ router.post("/getDetailRedudentTicket", ticketController.getDetailRedudentTicket
 router.post("/replymail2", ticketController.respondMail2);
 
 router.post("/getOutlookDigiparfMessageDetailByMessageId", ticketController.getOutlookDigiparfMessageDetailByMessageId);
+router.post("/getConversationOutlookDigiparfThreads", ticketController.getConversationOutlookDigiparfThreads);
 
 module.exports = router;
