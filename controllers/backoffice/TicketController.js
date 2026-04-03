@@ -187,7 +187,7 @@ const getTicketsDetails = async (req, res) => {
       case 1:
         // COSMASHOP
         console.log("consultation messagerie COSMASHOP");
-        result_conv = await OutlookCosmashopApiService.getConversationThreads(result[0].conversation_email_id);
+        result_conv = await OutlookCosmashopApiService.getAllMessage(result[0].conversation_email_id, result[0].id);
         break;
       case 2:
         // COSMA-PARFUMERIE
@@ -197,7 +197,7 @@ const getTicketsDetails = async (req, res) => {
       case 3:
         // DIGIPARF
          console.log("consultation messagerie DIGIPARF");
-        result_conv = await OutlookDigiparfApiService.getConversationThreads(result[0].conversation_email_id);
+        result_conv = await OutlookDigiparfApiService.getAllMessage(result[0].conversation_email_id, result[0].id);
         break;
       default:
         result_conv = [];
