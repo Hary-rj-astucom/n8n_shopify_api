@@ -3,6 +3,7 @@ const axios = require('axios');
 const qs = require('qs');
 const path = require('path');
 const fs = require('fs');
+const sequelize = require("../config/database");
 
 const OpenAiApiService = require('../services/OpenAiApiService');
 const RelatedConversation = require("../models/RelatedConversation");
