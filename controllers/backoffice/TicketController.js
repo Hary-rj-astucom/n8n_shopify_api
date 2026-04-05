@@ -498,24 +498,24 @@ const getTicketsbyConvId = async (req, res) => {
 
       if (count2 > 0) {
         // avoir l'id du ticket
-        const RelatedConversation = await RelatedConversation.findOne({
+        const RelatedConversationObj = await RelatedConversation.findOne({
           where: {conversation_email_id: req.body.conversation_id}
         });
 
         const ticket = await Ticket.findOne({
-          where: { id: RelatedConversation.ticket_id }
+          where: { id: RelatedConversationObj.ticket_id }
         });
 
         if(ticket.status == "cloture"){
           const [updated3] = await Ticket.update(
             { need_attention: 1, status: "en cours" },
-            { where: { id: RelatedConversation.ticket_id } }
+            { where: { id: RelatedConversationObj.ticket_id } }
           );
           res.json({ found: 1, updated3 });
         }else{
           const [updated4] = await Ticket.update(
             { need_attention: 1 },
-            { where: { id: RelatedConversation.ticket_id } }
+            { where: { id: RelatedConversationObj.ticket_id } }
           );
           res.json({ found: 1, updated4 });
         }
