@@ -6,6 +6,7 @@ const OutlookDigiparfApiService = require('../../services/OutlookDigiparfApiServ
 const GmailCosmaparfumerieApiService = require('../../services/GmailCosmaparfumerieApiService');
 
 const Ticket = require("../../models/Ticket.js");
+const RelatedConversation = require("../../models/RelatedConversation.js");
 const User = require("../../models/User.js");
 const TicketHistoricalComment = require("../../models/TicketHistoricalComment.js");
 const Project = require("../../models/Project.js");
@@ -490,8 +491,39 @@ const getTicketsbyConvId = async (req, res) => {
 
     } else {
 
-      res.json({ found: 0 });
+      // verification des conversation relative
+      const count2 = await RelatedConversation.count({
+        where: { conversation_email_id: req.body.conversation_id }
+      });
 
+      if (count2 > 0) {
+        // avoir l'id du ticket
+        const RelatedConversation = await RelatedConversation.findOne({
+          where: {conversation_email_id: req.body.conversation_id}
+        });
+
+        const ticket = await Ticket.findOne({
+          where: { id: RelatedConversation.ticket_id }
+        });
+
+        if(ticket.status == "cloture"){
+          const [updated3] = await Ticket.update(
+            { need_attention: 1, status: "en cours" },
+            { where: { id: RelatedConversation.ticket_id } }
+          );
+          res.json({ found: 1, updated3 });
+        }else{
+          const [updated4] = await Ticket.update(
+            { need_attention: 1 },
+            { where: { id: RelatedConversation.ticket_id } }
+          );
+          res.json({ found: 1, updated4 });
+        }
+
+      }else{
+        // on ne trouve rien
+        res.json({ found: 0 });
+      }
     }
   } catch (err) {
     console.error(err);
