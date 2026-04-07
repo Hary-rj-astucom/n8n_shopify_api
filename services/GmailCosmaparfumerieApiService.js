@@ -329,9 +329,8 @@ async function getFullBodyMessage(messageId) {
 
       return '';
     };
-
-    console.log(msg.payload);
-
+    // console.log(msg.payload);
+    
     const messageBody = extractBody(msg.payload);
 
     return { message : messageBody };
