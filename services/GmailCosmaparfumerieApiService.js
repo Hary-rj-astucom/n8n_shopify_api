@@ -762,37 +762,42 @@ function makeEmail2(to, subject, body, messageId, cc = []) {
 
 function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, attachments = [], cc = []) {
 
-  const signatureHtml = `
-    <br><br>
-    <div style="font-family: Calibri, sans-serif; font-size: 11pt; color: #000;">
-      <table cellspacing="0" cellpadding="0" style="border: none;">
-        <tr>
-          <td style="vertical-align: middle; padding-right: 12px;">
-            <img src="https://www.cosma-parfumeries.com/media/logo/websites/1/LOGO_1.png"
-                alt="Logo" width="140" style="border: none;">
-          </td>
-          <td style="vertical-align: middle;">
-            <div style="line-height: 1.4;">
-              <strong>cosma-parfumeries</strong><br>
-              ✉️ <a href="mailto:contact@cosma-parfumeries.fr" style="color:#000; text-decoration:none;">
-                contact@cosma-parfumeries.fr
-              </a><br>
-              🌐 <a href="https://www.cosma-parfumeries.com" style="color:#0078D4; text-decoration:none;">
-                https://www.cosma-parfumeries.com
-              </a>
-            </div>
-          </td>
-        </tr>
-      </table>
-    </div>
-  `;
-
-  const clean = str => str.trim().replace(/[\r\n]+/g, '');
-
   const boundaryMixed = "mixed_" + Date.now();
   const boundaryAlt = "alt_" + Date.now();
 
-  const headers = [
+  const signatureHtml = `
+  <div style="font-family: Calibri, sans-serif; font-size: 11pt; color: #000;">
+    <table cellspacing="0" cellpadding="0" style="border: none;">
+      <tr>
+        <td style="vertical-align: middle; padding-right: 12px;">
+          <img src="https://www.cosma-parfumeries.com/media/logo/websites/1/LOGO_1.png"
+               alt="Logo" width="140" style="border:none;">
+        </td>
+        <td style="vertical-align: middle; line-height:1.4;">
+          <strong>cosma-parfumeries</strong><br>
+          ✉️ <a href="mailto:contact@cosma-parfumeries.fr"
+               style="color:#000; text-decoration:none;">
+            contact@cosma-parfumeries.fr
+          </a><br>
+          🌐 <a href="https://www.cosma-parfumeries.com"
+               style="color:#0078D4; text-decoration:none;">
+            https://www.cosma-parfumeries.com
+          </a>
+        </td>
+      </tr>
+    </table>
+  </div>
+  `;
+
+  const bodyHtml = `
+    <div>
+      ${bodyText.replace(/\n/g, "<br>")}
+      <br><br>
+      ${signatureHtml}
+    </div>
+  `;
+
+  const mailParts = [
     `To: ${clean(to)}`,
     cc.length ? `Cc: ${cc.map(clean).join(", ")}` : null,
     `Subject: ${clean(subject)}`,
@@ -800,23 +805,12 @@ function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, att
     `References: ${messageId}`,
     "MIME-Version: 1.0",
     `Content-Type: multipart/mixed; boundary="${boundaryMixed}"`,
-    ""
-  ].filter(Boolean);
-
-  const bodyHtml = `
-    <div>
-      ${bodyText.replace(/\n/g, "<br>")}
-      <br><br>
-      ${signatureHtml}
-    </div>`;
-
-  const mailParts = [
-    ...headers,
-
+    "",
     `--${boundaryMixed}`,
     `Content-Type: multipart/alternative; boundary="${boundaryAlt}"`,
     "",
 
+    // TEXT
     `--${boundaryAlt}`,
     'Content-Type: text/plain; charset="UTF-8"',
     "Content-Transfer-Encoding: 7bit",
@@ -824,6 +818,7 @@ function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, att
     bodyText,
     "",
 
+    // HTML
     `--${boundaryAlt}`,
     'Content-Type: text/html; charset="UTF-8"',
     "Content-Transfer-Encoding: 7bit",
@@ -835,7 +830,7 @@ function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, att
     ""
   ];
 
-  // Attachments
+  // Pièces jointes
   attachments.forEach(att => {
     mailParts.push(
       `--${boundaryMixed}`,
