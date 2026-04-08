@@ -797,6 +797,8 @@ function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, att
     </div>
   `;
 
+  const clean = str => str.trim().replace(/[\r\n]+/g, '');
+
   const mailParts = [
     `To: ${clean(to)}`,
     cc.length ? `Cc: ${cc.map(clean).join(", ")}` : null,
