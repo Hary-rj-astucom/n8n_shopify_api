@@ -330,7 +330,7 @@ async function getFullBodyMessage(messageId) {
       return '';
     };
     // console.log(msg.payload);
-    
+
     const messageBody = extractBody(msg.payload);
 
     return { message : messageBody };
@@ -666,6 +666,100 @@ function makeEmail2(to, subject, body, messageId, cc = []) {
     .replace(/=+$/, '');
 }
 
+// function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, attachments = [], cc = []) {
+
+//   const signatureHtml = `
+//     <br><br>
+//     <div style="font-family: Calibri, sans-serif; font-size: 11pt; color: #000;">
+//       <table cellspacing="0" cellpadding="0" style="border: none;">
+//         <tr>
+//           <td style="vertical-align: middle; padding-right: 12px;">
+//             <img src="https://www.cosma-parfumeries.com/media/logo/websites/1/LOGO_1.png"
+//                 alt="Logo" width="140" style="border: none;">
+//           </td>
+//           <td style="vertical-align: middle;">
+//             <div style="line-height: 1.4;">
+//               <strong>cosma-parfumeries</strong><br>
+//               ✉️ <a href="mailto:contact@cosma-parfumeries.fr" style="color:#000; text-decoration:none;">
+//                 contact@cosma-parfumeries.fr
+//               </a><br>
+//               🌐 <a href="https://www.cosma-parfumeries.com" style="color:#0078D4; text-decoration:none;">
+//                 https://www.cosma-parfumeries.com
+//               </a>
+//             </div>
+//           </td>
+//         </tr>
+//       </table>
+//     </div>
+//   `;
+
+//   const clean = str => str.trim().replace(/[\r\n]+/g, '');
+
+//   const boundaryMixed = "mixed_" + Date.now();
+//   const boundaryAlt = "alt_" + Date.now();
+
+//   const headers = [
+//     `To: ${clean(to)}`,
+//     cc.length ? `Cc: ${cc.map(clean).join(", ")}` : null,
+//     `Subject: ${clean(subject)}`,
+//     `In-Reply-To: ${messageId}`,
+//     `References: ${messageId}`,
+//     "MIME-Version: 1.0",
+//     `Content-Type: multipart/mixed; boundary="${boundaryMixed}"`,
+//     ""
+//   ].filter(Boolean);
+
+//   const bodyHtml = `
+//     <div>
+//       ${bodyText.replace(/\n/g, "<br>")}
+//       <br><br>
+//       ${signatureHtml}
+//     </div>`;
+
+//   const mailParts = [
+//     ...headers,
+
+//     `--${boundaryMixed}`,
+//     `Content-Type: multipart/alternative; boundary="${boundaryAlt}"`,
+//     "",
+
+//     `--${boundaryAlt}`,
+//     'Content-Type: text/plain; charset="UTF-8"',
+//     "",
+//     bodyText,
+//     "",
+
+//     `--${boundaryAlt}`,
+//     'Content-Type: text/html; charset="UTF-8"',
+//     "",
+//     bodyHtml,
+//     "",
+
+//     `--${boundaryAlt}--`,
+//     ""
+//   ];
+
+//   attachments.forEach(att => {
+//     mailParts.push(
+//       `--${boundaryMixed}`,
+//       `Content-Type: ${att.mimeType || "application/octet-stream"}; name="${att.filename}"`,
+//       "Content-Transfer-Encoding: base64",
+//       `Content-Disposition: attachment; filename="${att.filename}"`,
+//       "",
+//       att.contentBase64.replace(/\r?\n/g, ""),
+//       ""
+//     );
+//   });
+
+//   mailParts.push(`--${boundaryMixed}--`);
+
+//   return Buffer.from(mailParts.join("\r\n"))
+//     .toString("base64")
+//     .replace(/\+/g, "-")
+//     .replace(/\//g, "_")
+//     .replace(/=+$/, "");
+// }
+
 function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, attachments = [], cc = []) {
 
   const signatureHtml = `
@@ -725,12 +819,14 @@ function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, att
 
     `--${boundaryAlt}`,
     'Content-Type: text/plain; charset="UTF-8"',
+    "Content-Transfer-Encoding: 7bit",
     "",
     bodyText,
     "",
 
     `--${boundaryAlt}`,
     'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: 7bit",
     "",
     bodyHtml,
     "",
@@ -739,6 +835,7 @@ function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, att
     ""
   ];
 
+  // Attachments
   attachments.forEach(att => {
     mailParts.push(
       `--${boundaryMixed}`,
