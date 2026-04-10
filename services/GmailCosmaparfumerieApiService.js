@@ -666,6 +666,100 @@ function makeEmail2(to, subject, body, messageId, cc = []) {
     .replace(/=+$/, '');
 }
 
+// function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, attachments = [], cc = []) {
+
+//   const boundaryMixed = "mixed_" + Math.random().toString(36).slice(2);
+//   const boundaryAlt = "alt_" + Math.random().toString(36).slice(2);
+
+//   const signatureHtml = `
+//   <div style="font-family: Calibri, sans-serif; font-size: 11pt; color: #000;">
+//     <table cellspacing="0" cellpadding="0" style="border: none;">
+//       <tr>
+//         <td style="vertical-align: middle; padding-right: 12px;">
+//           <img src="https://www.cosma-parfumeries.com/media/logo/websites/1/LOGO_1.png"
+//                alt="Logo" width="140" style="border:none;">
+//         </td>
+//         <td style="vertical-align: middle; line-height:1.4;">
+//           <strong>cosma-parfumeries</strong><br>
+//           ✉️ <a href="mailto:contact@cosma-parfumeries.fr"
+//                style="color:#000; text-decoration:none;">
+//             contact@cosma-parfumeries.fr
+//           </a><br>
+//           🌐 <a href="https://www.cosma-parfumeries.com"
+//                style="color:#0078D4; text-decoration:none;">
+//             https://www.cosma-parfumeries.com
+//           </a>
+//         </td>
+//       </tr>
+//     </table>
+//   </div>
+//   `;
+
+//   const bodyHtml = `
+//     <div>
+//       ${bodyText.replace(/\n/g, "<br>")}
+//       <br><br>
+//       ${signatureHtml}
+//     </div>
+//   `;
+
+//   const clean = str => str.trim().replace(/[\r\n]+/g, '');
+
+//   const mailParts = [
+//     `To: ${clean(to)}`,
+//     cc.length ? `Cc: ${cc.map(clean).join(", ")}` : null,
+//     `Subject: ${clean(subject)}`,
+//     `In-Reply-To: ${messageId}`,
+//     `References: ${messageId}`,
+//     "MIME-Version: 1.0",
+//     `Content-Type: multipart/mixed; boundary="${boundaryMixed}"`,
+//     "",
+//     `--${boundaryMixed}`,
+//     `Content-Type: multipart/alternative; boundary="${boundaryAlt}"`,
+//     "",
+
+//     // TEXT
+//     `--${boundaryAlt}`,
+//     'Content-Type: text/plain; charset="UTF-8"',
+//     "Content-Transfer-Encoding: 7bit",
+//     "",
+//     bodyText,
+//     "",
+
+//     // HTML
+//     `--${boundaryAlt}`,
+//     'Content-Type: text/html; charset="UTF-8"',
+//     "Content-Transfer-Encoding: 7bit",
+//     "",
+//     bodyHtml,
+//     "",
+
+//     `--${boundaryAlt}--`,
+//     ""
+//   ];
+
+//   // Pièces jointes
+//   attachments.forEach(att => {
+//     mailParts.push(
+//       `--${boundaryMixed}`,
+//       `Content-Type: ${att.mimeType || "application/octet-stream"}; name="${att.filename}"`,
+//       "Content-Transfer-Encoding: base64",
+//       `Content-Disposition: attachment; filename="${att.filename}"`,
+//       "",
+//       att.contentBase64.replace(/\r?\n/g, ""),
+//       ""
+//     );
+//   });
+
+//   mailParts.push(`--${boundaryMixed}--`);
+
+//   return Buffer.from(mailParts.join("\r\n"))
+//     .toString("base64")
+//     .replace(/\+/g, "-")
+//     .replace(/\//g, "_")
+//     .replace(/=+$/, "");
+// }
+
 function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, attachments = [], cc = []) {
 
   const boundaryMixed = "mixed_" + Math.random().toString(36).slice(2);
@@ -692,68 +786,75 @@ function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, att
         </td>
       </tr>
     </table>
-  </div>
-  `;
+  </div>`;
 
-  const bodyHtml = `
-    <div>
-      ${bodyText.replace(/\n/g, "<br>")}
-      <br><br>
-      ${signatureHtml}
-    </div>
-  `;
+  const bodyHtml = `<div>${bodyText.replace(/\n/g, "<br>")}<br><br>${signatureHtml}</div>`;
 
   const clean = str => str.trim().replace(/[\r\n]+/g, '');
 
-  const mailParts = [
+  // --- HEADERS ---
+  const headerLines = [
     `To: ${clean(to)}`,
     cc.length ? `Cc: ${cc.map(clean).join(", ")}` : null,
     `Subject: ${clean(subject)}`,
     `In-Reply-To: ${messageId}`,
     `References: ${messageId}`,
-    "MIME-Version: 1.0",
+    `MIME-Version: 1.0`,
     `Content-Type: multipart/mixed; boundary="${boundaryMixed}"`,
-    "",
+  ].filter(Boolean);
+
+  // --- BODY PART (multipart/alternative) ---
+  const altPart = [
     `--${boundaryMixed}`,
     `Content-Type: multipart/alternative; boundary="${boundaryAlt}"`,
-    "",
-
-    // TEXT
+    ``,
     `--${boundaryAlt}`,
-    'Content-Type: text/plain; charset="UTF-8"',
-    "Content-Transfer-Encoding: 7bit",
-    "",
+    `Content-Type: text/plain; charset="UTF-8"`,
+    `Content-Transfer-Encoding: 7bit`,
+    ``,
     bodyText,
-    "",
-
-    // HTML
+    ``,
     `--${boundaryAlt}`,
-    'Content-Type: text/html; charset="UTF-8"',
-    "Content-Transfer-Encoding: 7bit",
-    "",
+    `Content-Type: text/html; charset="UTF-8"`,
+    `Content-Transfer-Encoding: 7bit`,
+    ``,
     bodyHtml,
-    "",
-
+    ``,
     `--${boundaryAlt}--`,
-    ""
   ];
 
-  // Pièces jointes
+  // --- ATTACHMENTS ---
+  const attachmentParts = [];
   attachments.forEach(att => {
-    mailParts.push(
+    // Nettoyer le base64 : enlever espaces/sauts de ligne éventuels
+    const cleanBase64 = att.contentBase64.replace(/\s+/g, '');
+
+    // Découper en lignes de 76 caractères (RFC 2045)
+    const chunked = cleanBase64.match(/.{1,76}/g).join("\r\n");
+
+    attachmentParts.push(
       `--${boundaryMixed}`,
       `Content-Type: ${att.mimeType || "application/octet-stream"}; name="${att.filename}"`,
-      "Content-Transfer-Encoding: base64",
+      `Content-Transfer-Encoding: base64`,
       `Content-Disposition: attachment; filename="${att.filename}"`,
-      "",
-      att.contentBase64.replace(/\r?\n/g, ""),
-      ""
+      ``,
+      chunked,
+      ``
     );
   });
 
-  mailParts.push(`--${boundaryMixed}--`);
+  // --- ASSEMBLAGE FINAL ---
+  const allParts = [
+    ...headerLines,
+    ``,                          // ligne vide séparant headers du body
+    ...altPart,
+    ...attachmentParts,
+    `--${boundaryMixed}--`
+  ];
 
-  return Buffer.from(mailParts.join("\r\n"))
+  const raw = allParts.join("\r\n");
+
+  return Buffer.from(raw)
     .toString("base64")
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
