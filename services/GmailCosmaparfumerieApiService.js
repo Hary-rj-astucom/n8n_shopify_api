@@ -668,8 +668,8 @@ function makeEmail2(to, subject, body, messageId, cc = []) {
 
 function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, attachments = [], cc = []) {
 
-  const boundaryMixed = "mixed_" + Date.now();
-  const boundaryAlt = "alt_" + Date.now();
+  const boundaryMixed = "mixed_" + Math.random().toString(36).slice(2);
+  const boundaryAlt = "alt_" + Math.random().toString(36).slice(2);
 
   const signatureHtml = `
   <div style="font-family: Calibri, sans-serif; font-size: 11pt; color: #000;">
