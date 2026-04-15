@@ -193,7 +193,7 @@ const getTicketsDetails = async (req, res) => {
       case 2:
         // COSMA-PARFUMERIE
         console.log("consultation messagerie COSMA-PARFUMERIE");
-        result_conv = await GmailCosmaparfumerieApiService.getConversation(result[0].conversation_email_id);
+        result_conv = await GmailCosmaparfumerieApiService.getAllMessage(result[0].conversation_email_id, result[0].id);
         break;
       case 3:
         // DIGIPARF
@@ -756,6 +756,67 @@ const getTicketSet = async (req, res) => {
   }
 }
 
+// avoir un ticket ressemblant dans la base 
+const getSimilarTicket = async (req, res) => {
+  try{
+
+    const client_email = req.body.client_email;
+    const numero_cmd = req.body.numero_cmd;
+    const label_id = req.body.label_id;
+
+    const new_conversation_email_id = req.body.conversation_email_id; // pour la creation
+
+    const count = await Ticket.count({
+      where: { 
+        original_client_mail: client_email,
+        num_commande: numero_cmd,
+        label_id: label_id 
+      }
+    });
+
+    if(count > 0){
+      
+      const ticket = await Ticket.findOne({
+        where: { 
+          original_client_mail: client_email,
+          num_commande: numero_cmd,
+          label_id: label_id 
+        }
+      });
+
+      // assigner le nouveau mail au ticket repere
+      await RelatedConversation.create({ 
+        ticket_id: ticket.id,
+        conversation_email_id: new_conversation_email_id, 
+      });
+
+      // reouvrir le ticket repere si fermer
+      if(ticket.status == "cloture"){
+        const [updated2] = await Ticket.update(
+          { need_attention: 1, status: "en cours" },
+          { where: { id: ticket.id } }
+        );
+        res.json({ found: 1, updated2 });
+      }else{
+        const [updated] = await Ticket.update(
+          { need_attention: 1 },
+          { where: { id: ticket.id } }
+        );
+        res.json({ found: 1, updated });
+      }
+
+    }
+    else{
+      // on ne trouve rien
+      res.json({ found: 0 });
+    }
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   getTickets,
   getTicketsDetails,
@@ -773,5 +834,6 @@ module.exports = {
   getOutlookDigiparfMessageDetailByMessageId,
   getConversationOutlookDigiparfThreads,
 
-  getTicketSet
+  getTicketSet,
+  getSimilarTicket
 };

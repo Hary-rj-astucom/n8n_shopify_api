@@ -666,100 +666,6 @@ function makeEmail2(to, subject, body, messageId, cc = []) {
     .replace(/=+$/, '');
 }
 
-// function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, attachments = [], cc = []) {
-
-//   const boundaryMixed = "mixed_" + Math.random().toString(36).slice(2);
-//   const boundaryAlt = "alt_" + Math.random().toString(36).slice(2);
-
-//   const signatureHtml = `
-//   <div style="font-family: Calibri, sans-serif; font-size: 11pt; color: #000;">
-//     <table cellspacing="0" cellpadding="0" style="border: none;">
-//       <tr>
-//         <td style="vertical-align: middle; padding-right: 12px;">
-//           <img src="https://www.cosma-parfumeries.com/media/logo/websites/1/LOGO_1.png"
-//                alt="Logo" width="140" style="border:none;">
-//         </td>
-//         <td style="vertical-align: middle; line-height:1.4;">
-//           <strong>cosma-parfumeries</strong><br>
-//           ✉️ <a href="mailto:contact@cosma-parfumeries.fr"
-//                style="color:#000; text-decoration:none;">
-//             contact@cosma-parfumeries.fr
-//           </a><br>
-//           🌐 <a href="https://www.cosma-parfumeries.com"
-//                style="color:#0078D4; text-decoration:none;">
-//             https://www.cosma-parfumeries.com
-//           </a>
-//         </td>
-//       </tr>
-//     </table>
-//   </div>
-//   `;
-
-//   const bodyHtml = `
-//     <div>
-//       ${bodyText.replace(/\n/g, "<br>")}
-//       <br><br>
-//       ${signatureHtml}
-//     </div>
-//   `;
-
-//   const clean = str => str.trim().replace(/[\r\n]+/g, '');
-
-//   const mailParts = [
-//     `To: ${clean(to)}`,
-//     cc.length ? `Cc: ${cc.map(clean).join(", ")}` : null,
-//     `Subject: ${clean(subject)}`,
-//     `In-Reply-To: ${messageId}`,
-//     `References: ${messageId}`,
-//     "MIME-Version: 1.0",
-//     `Content-Type: multipart/mixed; boundary="${boundaryMixed}"`,
-//     "",
-//     `--${boundaryMixed}`,
-//     `Content-Type: multipart/alternative; boundary="${boundaryAlt}"`,
-//     "",
-
-//     // TEXT
-//     `--${boundaryAlt}`,
-//     'Content-Type: text/plain; charset="UTF-8"',
-//     "Content-Transfer-Encoding: 7bit",
-//     "",
-//     bodyText,
-//     "",
-
-//     // HTML
-//     `--${boundaryAlt}`,
-//     'Content-Type: text/html; charset="UTF-8"',
-//     "Content-Transfer-Encoding: 7bit",
-//     "",
-//     bodyHtml,
-//     "",
-
-//     `--${boundaryAlt}--`,
-//     ""
-//   ];
-
-//   // Pièces jointes
-//   attachments.forEach(att => {
-//     mailParts.push(
-//       `--${boundaryMixed}`,
-//       `Content-Type: ${att.mimeType || "application/octet-stream"}; name="${att.filename}"`,
-//       "Content-Transfer-Encoding: base64",
-//       `Content-Disposition: attachment; filename="${att.filename}"`,
-//       "",
-//       att.contentBase64.replace(/\r?\n/g, ""),
-//       ""
-//     );
-//   });
-
-//   mailParts.push(`--${boundaryMixed}--`);
-
-//   return Buffer.from(mailParts.join("\r\n"))
-//     .toString("base64")
-//     .replace(/\+/g, "-")
-//     .replace(/\//g, "_")
-//     .replace(/=+$/, "");
-// }
-
 function makeEmailWithMultipleAttachments2(to, subject, bodyText, messageId, attachments = [], cc = []) {
 
   const boundaryMixed = "mixed_" + Math.random().toString(36).slice(2);
@@ -914,6 +820,42 @@ async function replyConversation2(threadId, replyText, attachments = [], options
   }
 }
 
+async function getAllMessage(threadId, ticket_id){
+  let conversations = [];
+
+  // get the first thread
+  conversations.push(await getConversation(threadId));
+
+  // get all related conversation
+  const dataQuery = `
+    SELECT id, ticket_id, conversation_email_id FROM related_conversation WHERE ticket_id = ?
+  `;
+  const result = await sequelize.query(dataQuery, {
+    replacements: [ticket_id],
+    type: sequelize.QueryTypes.SELECT
+  });
+
+  for (const element of result) {
+    const data = await getConversation(element.conversation_email_id);
+    conversations.push(data);
+  }
+
+  const result_final = {
+    source_app: conversations[0]?.source_app || null,
+    conversation_id: conversations[0]?.conversation_id || null,
+    messages: await conversations.reduce((acc, conv) => {
+      if (Array.isArray(conv.messages)) {
+        acc.push(...conv.messages);
+      }
+      return acc;
+    }, [])
+  };
+
+  await result_final.messages.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  return result_final;
+}
+
 module.exports = { 
   getConversation,
   replyConversation,
@@ -922,5 +864,7 @@ module.exports = {
   auth,
   callback,
   sendDraft,
-  getFullBodyMessage
+  getFullBodyMessage,
+
+  getAllMessage
 };
