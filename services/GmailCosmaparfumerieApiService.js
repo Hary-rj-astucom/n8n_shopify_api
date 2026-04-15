@@ -4,6 +4,7 @@ const { google } = require('googleapis');
 const path = require('path');
 const sharp = require("sharp");
 const heicConvert = require('heic-convert');
+const sequelize = require("../config/database");
 
 const TOKEN_PATH = path.join(__dirname, 'json_mock/gmail_token.json');
 const client_secret = process.env.GMAIL_CLIENT_SECRET; 
