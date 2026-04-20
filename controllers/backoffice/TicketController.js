@@ -764,7 +764,7 @@ const getSimilarTicket = async (req, res) => {
     const numero_cmd = req.body.numero_cmd;
     const label_id = req.body.label_id;
 
-    const new_conversation_email_id = req.body.conversation_email_id; // pour la creation
+    const new_conversation_email_id = req.body.new_conversation_email_id; // pour la creation
 
     const count = await Ticket.count({
       where: { 
