@@ -781,7 +781,8 @@ const getSimilarTicket = async (req, res) => {
           original_client_mail: client_email,
           num_commande: numero_cmd,
           label_id: label_id 
-        }
+        },
+        order: [['id', 'DESC']]
       });
 
       // assigner le nouveau mail au ticket repere
