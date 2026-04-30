@@ -292,6 +292,30 @@ const getTicketPartitionSummary = async (req, res) => {
   }
 }
 
+const getRedudantRequest = async (req, res) => {
+  try{
+
+    let sql = `SELECT COUNT(*) as nb_reccurent, SUM(total_in_group) as total_mail_trigered FROM ranked_tiket_list`;
+
+    result = await sequelize.query(sql, {
+      replacements: [],
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    return res.json({
+      details: result
+    });
+
+  }catch (error) {
+    console.error("Erreur dans getRedudantRequest:", error);
+    return res.status(400).json({ error: error.message });
+  }
+}
+
+// --------------------------------- //
+//           User stat               //
+// --------------------------------- //
+
 async function getUserPivot() {
   try {
     // Construire dynamiquement les colonnes
@@ -359,23 +383,99 @@ const getUserActivitySummary = async (req, res) =>{
   }
 }
 
-const getRedudantRequest = async (req, res) => {
-  try{
+async function formatUserActivity(rows) {
+  const grouped = {};
 
-    let sql = `SELECT COUNT(*) as nb_reccurent, SUM(total_in_group) as total_mail_trigered FROM ranked_tiket_list`;
+  for (const row of rows) {
+    const date = row.date;
+    const name = row.name;
 
-    result = await sequelize.query(sql, {
-      replacements: [],
-      type: sequelize.QueryTypes.SELECT
+    if (!grouped[date]) {
+      grouped[date] = { date };
+    }
+
+    grouped[date][name] = {
+      total_action: row.total_action,
+      answer_mail: row.answer_customer,
+      mark_as_read: row.mark_as_read,
+      pending_ticket: row.pending_ticket,
+      in_progress_ticket: row.in_progress_ticket,
+      closed_ticket: row.closed_ticket
+    };
+  }
+
+  return {
+    details: Object.values(grouped)
+  };
+}
+
+const getUserActivitySummary2 = async (req, res) => {
+  try {
+
+    const date_start = req.body.date_start;
+    const date_end = req.body.date_end;
+
+    const finalQuery = `
+      SELECT 
+        COUNT(*) AS total_action,
+
+        SUM(CASE 
+            WHEN thc.comment LIKE '%a repondu(e) au client%' THEN 1
+            ELSE 0 
+        END) AS answer_customer,
+
+        SUM(CASE 
+            WHEN thc.comment LIKE '%Reponse du client ignoree%' THEN 1
+            ELSE 0 
+        END) AS mark_as_read,
+
+        SUM(CASE 
+            WHEN thc.comment LIKE '%Ticket mis à jour%' 
+             AND thc.comment LIKE '%[en attente]%' THEN 1
+            ELSE 0 
+        END) AS pending_ticket,
+
+        SUM(CASE 
+            WHEN thc.comment LIKE '%Ticket mis à jour%' 
+             AND thc.comment LIKE '%[en cours]%' THEN 1
+            ELSE 0 
+        END) AS in_progress_ticket,
+
+        SUM(CASE 
+            WHEN thc.comment LIKE '%Ticket mis à jour%' 
+             AND thc.comment LIKE '%[cloture]%' THEN 1
+            ELSE 0 
+        END) AS closed_ticket,
+
+        thc.user_id,
+        u.name,
+        DATE(thc.created_at) AS date
+
+      FROM ticket_historical_comment thc
+      JOIN \`user\` u ON thc.user_id = u.id
+
+      WHERE thc.created_at >= :date_start
+        AND thc.created_at <= :date_end 
+        AND u.email NOT IN ('hrajaonah@astucom.com', 'mphrygien@astucom.com', 'adv@cosma-parfumeries.fr', 'gpa@techmode-group.com', 'jpanier@techmode-group.com')
+
+      GROUP BY DATE(thc.created_at), thc.user_id, u.name
+      ORDER BY DATE(thc.created_at) ASC
+    `;
+
+    const result = await sequelize.query(finalQuery, { 
+      replacements: { date_start, date_end },
+      type: sequelize.QueryTypes.SELECT 
     });
+
+    let final_result = await formatUserActivity(result);
 
     return res.json({
-      details: result
+      details: final_result
     });
-
-  }catch (error) {
-    console.error("Erreur dans getRedudantRequest:", error);
-    return res.status(400).json({ error: error.message });
+   
+  } catch (error) {
+    console.error(error);
+    throw error;
   }
 }
 
@@ -384,5 +484,6 @@ module.exports = {
   getDonutSummary,
   getTicketPartitionSummary,
   getUserActivitySummary,
+  getUserActivitySummary2,
   getRedudantRequest
 };
