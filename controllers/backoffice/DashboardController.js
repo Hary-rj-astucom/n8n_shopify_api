@@ -411,7 +411,12 @@ const getUserActivitySummary2 = async (req, res) => {
   try {
 
     const date_start = req.body.date_start;
-    const date_end = req.body.date_end;
+    let date_end = req.body.date_end;
+    let d = new Date(date_end);
+    d.setDate(d.getDate() + 1);
+
+    // si tu veux garder format YYYY-MM-DD
+    date_end = d.toISOString().split('T')[0];
 
     const finalQuery = `
       SELECT 
@@ -452,7 +457,7 @@ const getUserActivitySummary2 = async (req, res) => {
       FROM (
           SELECT DISTINCT DATE(created_at) AS date
           FROM ticket_historical_comment
-          WHERE created_at >= :date_start AND created_at <= :date_end
+          WHERE created_at BETWEEN :date_start AND :date_end
       ) d
 
       CROSS JOIN \`user\` u
@@ -460,7 +465,7 @@ const getUserActivitySummary2 = async (req, res) => {
       LEFT JOIN ticket_historical_comment thc 
           ON thc.user_id = u.id
           AND DATE(thc.created_at) = d.date
-          AND thc.created_at >= :date_start AND thc.created_at <= :date_end
+          AND thc.created_at BETWEEN :date_start AND :date_end
 
       WHERE u.email NOT IN (
           'hrajaonah@astucom.com',
