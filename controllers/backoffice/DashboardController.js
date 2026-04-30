@@ -417,50 +417,64 @@ const getUserActivitySummary2 = async (req, res) => {
 
     const finalQuery = `
       SELECT 
-        COUNT(thc.id) AS total_action,
+        d.date,
+        u.id AS user_id,
+        u.name,
 
-        SUM(CASE 
+        COALESCE(COUNT(thc.id), 0) AS total_action,
+
+        COALESCE(SUM(CASE 
             WHEN thc.comment LIKE '%a repondu(e) au client%' THEN 1
             ELSE 0 
-        END) AS answer_customer,
+        END), 0) AS answer_customer,
 
-        SUM(CASE 
+        COALESCE(SUM(CASE 
             WHEN thc.comment LIKE '%Reponse du client ignoree%' THEN 1
             ELSE 0 
-        END) AS mark_as_read,
+        END), 0) AS mark_as_read,
 
-        SUM(CASE 
+        COALESCE(SUM(CASE 
             WHEN thc.comment LIKE '%Ticket mis à jour%' 
-             AND thc.comment LIKE '%[en attente]%' THEN 1
+            AND thc.comment LIKE '%[en attente]%' THEN 1
             ELSE 0 
-        END) AS pending_ticket,
+        END), 0) AS pending_ticket,
 
-        SUM(CASE 
+        COALESCE(SUM(CASE 
             WHEN thc.comment LIKE '%Ticket mis à jour%' 
-             AND thc.comment LIKE '%[en cours]%' THEN 1
+            AND thc.comment LIKE '%[en cours]%' THEN 1
             ELSE 0 
-        END) AS in_progress_ticket,
+        END), 0) AS in_progress_ticket,
 
-        SUM(CASE 
+        COALESCE(SUM(CASE 
             WHEN thc.comment LIKE '%Ticket mis à jour%' 
-             AND thc.comment LIKE '%[cloture]%' THEN 1
+            AND thc.comment LIKE '%[cloture]%' THEN 1
             ELSE 0 
-        END) AS closed_ticket,
+        END), 0) AS closed_ticket
 
-        thc.user_id,
-        u.name,
-        DATE(thc.created_at) AS date
+      FROM (
+          SELECT DISTINCT DATE(created_at) AS date
+          FROM ticket_historical_comment
+          WHERE created_at BETWEEN :date_start AND :date_end
+      ) d
 
-      FROM \`user\` u 
+      CROSS JOIN \`user\` u
+
       LEFT JOIN ticket_historical_comment thc 
-        ON thc.user_id = u.id 
-        AND thc.created_at >= :date_start
-        AND thc.created_at <= :date_end 
-      
-      WHERE u.email NOT IN ('hrajaonah@astucom.com', 'mphrygien@astucom.com', 'adv@cosma-parfumeries.fr', 'gpa@techmode-group.com', 'jpanier@techmode-group.com')
+          ON thc.user_id = u.id
+          AND DATE(thc.created_at) = d.date
+          AND thc.created_at BETWEEN :date_start AND :date_end
 
-      GROUP BY DATE(thc.created_at), thc.user_id, u.name
-      ORDER BY DATE(thc.created_at) ASC
+      WHERE u.email NOT IN (
+          'hrajaonah@astucom.com',
+          'mphrygien@astucom.com',
+          'adv@cosma-parfumeries.fr',
+          'gpa@techmode-group.com',
+          'jpanier@techmode-group.com'
+      )
+
+      GROUP BY d.date, u.id, u.name
+
+      ORDER BY d.date ASC, u.name ASC
     `;
 
     const result = await sequelize.query(finalQuery, { 
