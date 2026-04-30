@@ -404,9 +404,7 @@ async function formatUserActivity(rows) {
     };
   }
 
-  return {
-    details: Object.values(grouped)
-  };
+  return Object.values(grouped);
 }
 
 const getUserActivitySummary2 = async (req, res) => {
