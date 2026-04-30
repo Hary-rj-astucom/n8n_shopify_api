@@ -452,7 +452,7 @@ const getUserActivitySummary2 = async (req, res) => {
         DATE(thc.created_at) AS date
 
       FROM ticket_historical_comment thc
-      JOIN \`user\` u ON thc.user_id = u.id
+      RIGHT JOIN \`user\` u ON thc.user_id = u.id
 
       WHERE thc.created_at >= :date_start
         AND thc.created_at <= :date_end 
