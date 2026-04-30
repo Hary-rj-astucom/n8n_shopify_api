@@ -417,7 +417,7 @@ const getUserActivitySummary2 = async (req, res) => {
 
     const finalQuery = `
       SELECT 
-        COUNT(*) AS total_action,
+        COUNT(thc.id) AS total_action,
 
         SUM(CASE 
             WHEN thc.comment LIKE '%a repondu(e) au client%' THEN 1
@@ -452,11 +452,12 @@ const getUserActivitySummary2 = async (req, res) => {
         DATE(thc.created_at) AS date
 
       FROM \`user\` u 
-      LEFT JOIN ticket_historical_comment thc ON thc.user_id = u.id
-
-      WHERE thc.created_at >= :date_start
+      LEFT JOIN ticket_historical_comment thc 
+        ON thc.user_id = u.id 
+        AND thc.created_at >= :date_start
         AND thc.created_at <= :date_end 
-        AND u.email NOT IN ('hrajaonah@astucom.com', 'mphrygien@astucom.com', 'adv@cosma-parfumeries.fr', 'gpa@techmode-group.com', 'jpanier@techmode-group.com')
+      
+      WHERE u.email NOT IN ('hrajaonah@astucom.com', 'mphrygien@astucom.com', 'adv@cosma-parfumeries.fr', 'gpa@techmode-group.com', 'jpanier@techmode-group.com')
 
       GROUP BY DATE(thc.created_at), thc.user_id, u.name
       ORDER BY DATE(thc.created_at) ASC
