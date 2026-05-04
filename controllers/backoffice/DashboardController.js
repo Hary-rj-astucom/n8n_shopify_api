@@ -346,7 +346,7 @@ async function getUserPivot(month, year) {
         SELECT COUNT(*) AS nb_action, user_id, user.name, DATE(created_at) AS date
         FROM ticket_historical_comment
         JOIN user ON user_id = user.id
-        WHERE YEAR(created_at) = :year AND MONTH(created_at) := month
+        WHERE YEAR(created_at) = :year AND MONTH(created_at) = :month
         GROUP BY DATE(created_at), user_id, user.name
       ) AS data
       GROUP BY date ORDER BY date
