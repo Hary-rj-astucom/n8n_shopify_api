@@ -316,7 +316,7 @@ const getRedudantRequest = async (req, res) => {
 //           User stat               //
 // --------------------------------- //
 
-async function getUserPivot() {
+async function getUserPivot(month, year) {
   try {
     // Construire dynamiquement les colonnes
     const [pivotColsResult] = await sequelize.query(`
@@ -346,7 +346,7 @@ async function getUserPivot() {
         SELECT COUNT(*) AS nb_action, user_id, user.name, DATE(created_at) AS date
         FROM ticket_historical_comment
         JOIN user ON user_id = user.id
-        WHERE DATE(created_at) BETWEEN DATE_SUB(now(), INTERVAL 30 DAY) AND DATE(now())
+        WHERE YEAR(created_at) = :year AND MONTH(created_at) := month
         GROUP BY DATE(created_at), user_id, user.name
       ) AS data
       GROUP BY date ORDER BY date
@@ -354,7 +354,7 @@ async function getUserPivot() {
 
     // Exécuter la requête finale
     const result = await sequelize.query(finalQuery, { 
-      replacements: [],
+      replacements: { month, year },
       type: sequelize.QueryTypes.SELECT 
     });
 
@@ -369,7 +369,11 @@ async function getUserPivot() {
 const getUserActivitySummary = async (req, res) =>{
   try {
 
-    const data = await getUserPivot();
+    const d = new Date();
+    const month = req.body.month ?? (d.getMonth() + 1);
+    const year  = req.body.year  ?? d.getFullYear();
+
+    const data = await getUserPivot(month, year);
 
     // console.log(data);
 
