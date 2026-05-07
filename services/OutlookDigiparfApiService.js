@@ -431,10 +431,69 @@ function cleanHtml(html) {
     return text;
 }
 
+// -------------------- Utils ----------------------------------- //
+/**
+ * Send a new email (not a reply)
+ */
+async function sendMailUtils(toRecipients = [], subject = '', bodyHtml = '', attachments = []) {
+  const token = await getAccessToken();
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+
+  //
+  // 1. Créer le message
+  //
+  const createResponse = await axios.post(
+    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages`,
+    {
+      subject,
+      body: { contentType: 'HTML', content: bodyHtml },
+      toRecipients: toRecipients.map(email => ({
+        emailAddress: { address: email }
+      })),
+    },
+    { headers }
+  );
+
+  const messageId = createResponse.data.id;
+
+  //
+  // 2. Ajouter les pièces jointes (si présentes)
+  //
+  for (const att of attachments) {
+    await axios.post(
+      `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}/attachments`,
+      {
+        '@odata.type': '#microsoft.graph.fileAttachment',
+        name:         att.filename,
+        contentType:  att.mimeType || 'application/octet-stream',
+        contentBytes: att.contentBase64.replace(/^data:.*;base64,/, ''),
+      },
+      { headers }
+    );
+  }
+
+  //
+  // 3. Envoyer
+  //
+  await axios.post(
+    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}/send`,
+    {},
+    { headers }
+  );
+
+  console.log(`✅ Mail envoyé à : ${toRecipients.join(', ')}`);
+}
+
 module.exports = { 
   getConversationThreads,
   replyToMessage,
   replyToMessage2,
   getMessageDetailByMessageId,
-  getAllMessage
+  getAllMessage,
+
+  sendMailUtils
 };
