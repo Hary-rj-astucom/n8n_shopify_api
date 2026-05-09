@@ -444,7 +444,7 @@ async function extractOrderDigiparfRepport(dateDebutMoisDernier, dateDebutMoisAc
     { name: 'Reducce',     api: apiUrlReducce     },
   ];
  
-  toRecipients = [process.env.ACCOUNTANT_EMAIL, process.env.ACCOUNTANT_EMAIL2, process.env.JULIENNOYER_EMAIL]; 
+  toRecipients = [process.env.ACCOUNTANT_EMAIL, process.env.ACCOUNTANT_EMAIL2, process.env.JULIENNOYER_EMAIL, process.env.SUPERVISOR_EMAIL]; 
   subject = `Commande expédiée ${dateDebutMoisDernier} - ${dateFinMoisDernier}`;
   bodyHtml = `<html>
                   <p>Bonjour,</p>
