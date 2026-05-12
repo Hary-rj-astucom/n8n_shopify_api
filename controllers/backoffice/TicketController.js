@@ -419,6 +419,11 @@ const createTicket = async (req, res) => {
     const lastId = await Ticket.max('id');
     req.body.num_ticket = project.code + "-" + (lastId + 1);
     const ticket = await Ticket.create(req.body);
+
+    // assurer le numero du ticket est unique
+    ticket.num_ticket = `${project.code}-${ticket.id}`;
+    await ticket.save();
+
     res.status(201).json(ticket);
   } catch (err) {
     res.status(400).json({ error: err.message });
