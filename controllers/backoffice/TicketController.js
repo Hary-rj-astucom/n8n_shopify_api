@@ -106,7 +106,7 @@ const getTickets = async (req, res) => {
         label.name as label,
         project.name as project_name,
         need_attention,
-        DATE_FORMAT(ticket.created_at, '%d/%m/%Y %H:%i:%s') as created_at
+        DATE_FORMAT(ticket.created_at, '%Y-%m-%d %H:%i:%s') as created_at
       FROM ticket
       JOIN label ON label.id = ticket.label_id 
       JOIN project ON project.id = ticket.project_id
