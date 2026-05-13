@@ -146,7 +146,78 @@ async formatTextToHtml(text) {
 
       return response.output_text ?? '';
     }
-  
+
+ /**
+ * Corriger et ameliorer le text que l'on a ecrit
+ * @param {string} text - Texte brut 
+ * @returns {Promise<string>} - text 
+ */
+  async textCorrection(text, options = {
+    formality : 'courtois', // "formal" | "informal" | "neutral" | "courtois"
+    domain : null,
+    preserve : ['markdown', 'html', 'placeholders'],
+    glossary : {},
+  })
+  {
+
+    const preserveHints = {
+      markdown: 'Préserve **strictement** la structure Markdown.',
+      html: 'Préserve **strictement** les balises HTML et attributs.',
+      placeholders: 'Préserve les variables/placeholder ({{name}}, %s, etc.).',
+    };
+
+    const preserveText = options.preserve
+      .filter(k => preserveHints[k])
+      .map(k => `- ${preserveHints[k]}`)
+      .join('\n');
+
+    const glossaryLines = Object.entries(options.glossary)
+      .map(([src, tgt]) => `- "${src}" → "${tgt}"`)
+      .join('\n') || '- (aucun)';
+
+    // Ajustement pour la "courtoisie"
+    let formalityText;
+    switch (options.formality) {
+      case 'formal':
+        formalityText = 'Langage formel, professionnel.';
+        break;
+      case 'informal':
+        formalityText = 'Langage informel, amical.';
+        break;
+      case 'courtois':
+        formalityText = 'Langage courtois, poli et respectueux (comme dans une correspondance professionnelle soignée).';
+        break;
+      default:
+        formalityText = 'Langage neutre.';
+    }
+
+    const domainNote = options.domain
+      ? `Adapte la terminologie au domaine: **${options.domain}**.`
+      : 'Adapte la terminologie au contexte général.';
+
+    const instructions = `
+        Tu es un correcteur de grammaire professionnel.
+        - Détecte automatiquement la langue source.
+        - Corriger les fautes d'orthographe.
+        - Modifier le message et suggerer un message plus convenable si possible
+        - Niveau de langage: **${formalityText}**
+        - ${domainNote}
+        - Préservation de format :
+        ${preserveText || '- (aucune)'}
+        - Glossaire :
+        ${glossaryLines}
+      `.trim();
+
+    const response = await this.client.responses.create({
+      model: this.model,
+      instructions,
+      input: [{ role: 'user', content: text }],
+    });
+
+    return response.output_text ?? '';
+
+  }
+
 }
 
 module.exports = OpenAiService;
