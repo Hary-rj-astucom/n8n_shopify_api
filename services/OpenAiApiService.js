@@ -200,6 +200,7 @@ async formatTextToHtml(text) {
         - Détecte automatiquement la langue source.
         - Corriger les fautes d'orthographe.
         - Modifier le message et suggerer un message plus convenable si possible
+        - Ne donner qu'une seule suggestion
         - Niveau de langage: **${formalityText}**
         - ${domainNote}
         - Préservation de format :
