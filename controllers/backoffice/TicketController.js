@@ -422,7 +422,7 @@ const createTicket = async (req, res) => {
     if(!req.body.status){
       req.body.status = 'en attente';
     }
-    
+
     req.body.num_ticket = project.code + "-" + (lastId + 1);
     const ticket = await Ticket.create(req.body);
 
@@ -441,10 +441,12 @@ const updateTicketDetails = async (req, res) => {
     
     // Ajouter la date de mise à jour au body
     req.body.updated_at = new Date();
-    
+
+    const actual_ticket = await Ticket.findOne({ where: { id: req.params.id } });
     const [updated] = await Ticket.update(req.body, { where: { id: req.params.id } });
     if(updated){
       const user = await User.findByPk(req.user.id);
+      await TicketHistoricalComment.create({ ticket_id: req.params.id, user_id: 1, comment: `Transition [${actual_ticket.status} -> ${req.body.status ? `${req.body.status}]` : ' inconnu]'}` });  
       await TicketHistoricalComment.create({ ticket_id: req.params.id, user_id: req.user.id, comment: `[ACTION] Ticket mis à jour par ${user.name} ${req.body.status ? `[${req.body.status}]` : ''}` });
       res.json({ message: "Ticket updated" })
     }else{
