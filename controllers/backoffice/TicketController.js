@@ -417,13 +417,14 @@ const createTicket = async (req, res) => {
   try {
     const project = await Project.findByPk(req.body.project_id);
     const lastId = await Ticket.max('id');
+
+    // si on a pas de status
+    if(!req.body.status){
+      req.body.status = 'en attente';
+    }
+    
     req.body.num_ticket = project.code + "-" + (lastId + 1);
     const ticket = await Ticket.create(req.body);
-
-    //si on a pas de status
-    if(!req.body.status){
-      ticket.status =  'en attente';
-    }
 
     // assurer le numero du ticket est unique
     ticket.num_ticket = `${project.code}-${ticket.id}`;
