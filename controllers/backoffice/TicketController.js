@@ -446,7 +446,7 @@ const updateTicketDetails = async (req, res) => {
     const [updated] = await Ticket.update(req.body, { where: { id: req.params.id } });
     if(updated){
       const user = await User.findByPk(req.user.id);
-      await TicketHistoricalComment.create({ ticket_id: req.params.id, user_id: 1, comment: `Transition [${actual_ticket.status} -> ${req.body.status ? `${req.body.status}]` : ' inconnu]'}` });  
+      await TicketHistoricalComment.create({ ticket_id: req.params.id, user_id: 1, comment: `[ETAT] Transition de status ticket [${actual_ticket.status} vers ${req.body.status ? `${req.body.status}]` : ' inconnu]'}` });  
       await TicketHistoricalComment.create({ ticket_id: req.params.id, user_id: req.user.id, comment: `[ACTION] Ticket mis à jour par ${user.name} ${req.body.status ? `[${req.body.status}]` : ''}` });
       res.json({ message: "Ticket updated" })
     }else{
