@@ -56,12 +56,15 @@ function convertInvoiceItems(invoiceItems) {
 
   // 2️⃣ Associer les enfants à leur parent (même SKU)
   const merged = Object.values(parents).map(parent => {
-    // trouver le child avec même sku
+    // trouver le child avec même sku (peut être absent maintenant)
     const child = Object.values(children).find(c => c.sku === parent.sku);
 
     const finalName = parent.name;
 
-    const variation = `${child.name.replace(parent.name, "").trim()}`;
+    // Pas de child trouvé => pas de variation à extraire
+    const variation = child
+      ? child.name.replace(parent.name, "").trim()
+      : "";
 
     // 3️⃣ Calcul TVA%
     const taxPercent =
@@ -72,7 +75,7 @@ function convertInvoiceItems(invoiceItems) {
     return {
       sku: parent.sku,
       name: finalName.replace(/\s+/g, " ").trim(),
-      variation : variation,
+      variation,
       qty: parent.qty,
       unit_price_ht: parent.base_price,
       unit_price_ttc: parent.base_price_incl_tax || parent.price_incl_tax,
@@ -461,6 +464,7 @@ async function getInvoicePDF(orderNumber, langue, baseUrl = "https://dev-ia.astu
     // Générer PDF normal
     const browser = await puppeteer.launch({
         headless: "new",
+        //executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
 
