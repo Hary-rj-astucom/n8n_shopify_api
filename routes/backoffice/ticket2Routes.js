@@ -5,7 +5,6 @@ const router = express.Router();
 router.post("/", ticketController.createTicket);
 router.post("/verifconv", ticketController.getTicketsbyConvId);
 router.post("/verifsimilarticket", ticketController.getSimilarTicket);
-
 router.post("/markasunread", ticketController.markAsUnread);
 
 module.exports = router;
