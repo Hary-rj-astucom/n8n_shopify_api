@@ -503,8 +503,12 @@ const markAsUnread = async (req, res) => {
 
       if (count2 > 0) {
         // on trouver un ticket correspondant
+        const RelatedConversationObj = await RelatedConversation.findOne({
+          where: {conversation_email_id: req.body.conversation_email_id}
+        });
+
         const ticket2 = await Ticket.findOne({
-          where: { conversation_email_id: req.body.conversation_email_id }
+          where: { id: RelatedConversationObj.ticket_id }
         });
         ticket2.status = "en cours";
         ticket2.need_attention = 1;
