@@ -475,6 +475,70 @@ const addTicketComment = async (req, res) => {
   }
 }
 
+// mark ticket as unread
+const markAsUnread = async (req, res) => {
+  try {
+
+    // verification si le ticket existe deja
+    const count = await Ticket.count({
+      where: { conversation_email_id: req.body.conversation_email_id }
+    });
+
+    if (count > 0) {
+      // on trouver un ticket correspondant
+      const ticket1 = await Ticket.findOne({
+        where: { conversation_email_id: req.body.conversation_email_id }
+      });
+      ticket1.status = "en cours";
+      ticket1.need_attention = 1;
+      await ticket1.save();
+
+      res.json({ found: 1, ticket1 });
+
+    } else {
+      // verification des conversation relative
+      const count2 = await RelatedConversation.count({
+        where: { conversation_email_id: req.body.conversation_email_id }
+      });
+
+      if (count2 > 0) {
+        // on trouver un ticket correspondant
+        const ticket2 = await Ticket.findOne({
+          where: { conversation_email_id: req.body.conversation_email_id }
+        });
+        ticket2.status = "en cours";
+        ticket2.need_attention = 1;
+        await ticket2.save();
+
+        res.json({ found: 1, ticket2 });
+
+      } else {
+        // ------------------------- On ne trouve pas ticket pour cette convesarion ----------------------- //
+        const project = await Project.findByPk(req.body.project_id);
+        const lastId = await Ticket.max('id');
+
+        // si on a pas de status
+        if(!req.body.status){
+          req.body.status = 'en cours';
+          req.body.need_attention = 1;
+        }
+
+        req.body.num_ticket = project.code + "-" + (lastId + 1);
+        const ticket = await Ticket.create(req.body);
+
+        // assurer le numero du ticket est unique
+        ticket.num_ticket = `${project.code}-${ticket.id}`;
+        await ticket.save();
+
+        res.status(201).json(ticket);
+      }
+    }
+
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+}
+
 // verify ticket a mark attention by conversationId
 const getTicketsbyConvId = async (req, res) => {
   try {
@@ -849,5 +913,6 @@ module.exports = {
   getConversationOutlookDigiparfThreads,
 
   getTicketSet,
-  getSimilarTicket
+  getSimilarTicket,
+  markAsUnread
 };

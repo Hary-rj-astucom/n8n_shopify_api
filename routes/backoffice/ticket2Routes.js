@@ -6,4 +6,6 @@ router.post("/", ticketController.createTicket);
 router.post("/verifconv", ticketController.getTicketsbyConvId);
 router.post("/verifsimilarticket", ticketController.getSimilarTicket);
 
+router.post("/markAsUnread", ticketController.markAsUnread);
+
 module.exports = router;
