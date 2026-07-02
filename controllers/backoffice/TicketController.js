@@ -518,10 +518,8 @@ const markAsUnread = async (req, res) => {
         const lastId = await Ticket.max('id');
 
         // si on a pas de status
-        if(!req.body.status){
-          req.body.status = 'en cours';
-          req.body.need_attention = 1;
-        }
+        req.body.status = 'en cours';
+        req.body.need_attention = 1;
 
         req.body.num_ticket = project.code + "-" + (lastId + 1);
         const ticket = await Ticket.create(req.body);
