@@ -1,0 +1,30 @@
+version: "3.9"
+
+networks:
+  traefik-public:
+    external: true
+
+services:
+  export-magento:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: export_magento_database
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - TZ=Europe/Paris
+    networks:
+      - traefik-public
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+
+      # Router HTTPS
+      - traefik.http.routers.export-magento.rule=Host(`api-n8n.astucom.com`)
+      - traefik.http.routers.export-magento.entrypoints=websecure
+      - traefik.http.routers.export-magento.tls.certresolver=letsencrypt
+
+      # Port interne exposé par l'app
+      - traefik.http.services.export-magento.loadbalancer.server.port=3000
