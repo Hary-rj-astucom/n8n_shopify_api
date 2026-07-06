@@ -3,28 +3,71 @@ version: "3.9"
 networks:
   traefik-public:
     external: true
+  api-cosmia-internal:
+    driver: bridge
+  api-cosmia-net:
+    driver: bridge
+    name: api-cosmia-net
+
+volumes:
+  api-cosmia-db-data:
 
 services:
-  export-magento:
+  api-cosmia-app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: export_magento_database
+    container_name: api-cosmia
     restart: unless-stopped
     env_file:
       - .env
     environment:
       - TZ=Europe/Paris
+    depends_on:
+      mysql-api-cosmia:
+        condition: service_healthy
     networks:
       - traefik-public
+      - api-cosmia-internal
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik-public
+      - traefik.http.routers.api-cosmia.rule=Host(`api-n8n.astucom.com`)
+      - traefik.http.routers.api-cosmia.entrypoints=websecure
+      - traefik.http.routers.api-cosmia.tls.certresolver=letsencrypt
+      - traefik.http.services.api-cosmia.loadbalancer.server.port=3001
+      - traefik.http.routers.api-cosmia-http.rule=Host(`api-n8n.astucom.com`)
+      - traefik.http.routers.api-cosmia-http.entrypoints=web
+      - traefik.http.routers.api-cosmia-http.middlewares=redirect-to-https
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
 
-      # Router HTTPS
-      - traefik.http.routers.export-magento.rule=Host(`api-n8n.astucom.com`)
-      - traefik.http.routers.export-magento.entrypoints=websecure
-      - traefik.http.routers.export-magento.tls.certresolver=letsencrypt
-
-      # Port interne exposé par l'app
-      - traefik.http.services.export-magento.loadbalancer.server.port=3000
+  mysql-api-cosmia:
+    image: mysql:8.0
+    container_name: mysql-api-cosmia
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Paris
+      - MYSQL_DATABASE=${DATABASE_NAME}
+      - MYSQL_USER=${DATABASE_USER}
+      - MYSQL_PASSWORD=${DATABASE_PWD}
+      - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PWD}
+    volumes:
+      - api-cosmia-db-data:/var/lib/mysql
+    networks:
+      - api-cosmia-internal
+      - api-cosmia-net
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${DATABASE_ROOT_PWD}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
