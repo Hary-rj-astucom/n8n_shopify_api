@@ -376,7 +376,7 @@ function createHtmlInvoice(data){
 `;
 }
 
-async function getInvoicePDF(orderNumber, langue, baseUrl = "https://dev-ia.astucom.com/n8n_cosmia") {
+async function getInvoicePDF(orderNumber, langue, baseUrl = process.env.BASE_URL_APP) {
   try {
 
     // 1. Rechercher la commande via increment_id

@@ -25,7 +25,7 @@ async function getAccessToken() {
 
 // ----------------- get attachments ----------------------------- //
 
-async function getMessageAttachments(token, messageId, baseUrl = "https://dev-ia.astucom.com/n8n_cosmia") {
+async function getMessageAttachments(token, messageId, baseUrl = process.env.BASE_URL_APP) {
   //const token = await getAccessToken();
 
   const response = await axios.get(

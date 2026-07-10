@@ -61,7 +61,7 @@ async function callback(code){
 }
 
 // ------------------------ get attachment ---------------------------- //
-async function getMessageAttachments(gmail, messageId, parts, baseUrl = "https://dev-ia.astucom.com/n8n_cosmia") {
+async function getMessageAttachments(gmail, messageId, parts, baseUrl = process.env.BASE_URL_APP) {
   const attachments = [];
 
   async function traverse(parts) {
