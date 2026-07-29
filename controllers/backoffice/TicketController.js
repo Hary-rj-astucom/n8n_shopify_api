@@ -184,7 +184,7 @@ const getTicketsDetails = async (req, res) => {
     const project_id = result[0].project_id;
     let result_conv;
 
-    if(result[0].conversation_email_id){
+    if(result[0].conversation_email_id != "none"){
       switch (project_id) {
         case 1:
           // COSMASHOP
