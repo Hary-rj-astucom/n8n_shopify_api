@@ -184,24 +184,28 @@ const getTicketsDetails = async (req, res) => {
     const project_id = result[0].project_id;
     let result_conv;
 
-    switch (project_id) {
-      case 1:
-        // COSMASHOP
-        console.log("consultation messagerie COSMASHOP");
-        result_conv = await OutlookCosmashopApiService.getAllMessage(result[0].conversation_email_id, result[0].id);
-        break;
-      case 2:
-        // COSMA-PARFUMERIE
-        console.log("consultation messagerie COSMA-PARFUMERIE");
-        result_conv = await GmailCosmaparfumerieApiService.getAllMessage(result[0].conversation_email_id, result[0].id);
-        break;
-      case 3:
-        // DIGIPARF
-         console.log("consultation messagerie DIGIPARF");
-        result_conv = await OutlookDigiparfApiService.getAllMessage(result[0].conversation_email_id, result[0].id);
-        break;
-      default:
-        result_conv = [];
+    if(result[0].conversation_email_id){
+      switch (project_id) {
+        case 1:
+          // COSMASHOP
+          console.log("consultation messagerie COSMASHOP");
+          result_conv = await OutlookCosmashopApiService.getAllMessage(result[0].conversation_email_id, result[0].id);
+          break;
+        case 2:
+          // COSMA-PARFUMERIE
+          console.log("consultation messagerie COSMA-PARFUMERIE");
+          result_conv = await GmailCosmaparfumerieApiService.getAllMessage(result[0].conversation_email_id, result[0].id);
+          break;
+        case 3:
+          // DIGIPARF
+          console.log("consultation messagerie DIGIPARF");
+          result_conv = await OutlookDigiparfApiService.getAllMessage(result[0].conversation_email_id, result[0].id);
+          break;
+        default:
+          result_conv = [];
+      }
+    }else{
+      result_conv = [];
     }
 
     return res.json({
