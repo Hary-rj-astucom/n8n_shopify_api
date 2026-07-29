@@ -27,6 +27,7 @@ const projectRoutes = require('./routes/backoffice/projectRoutes');
 const ticketRoutes = require('./routes/backoffice/ticketRoutes');
 const ticketRoutes2 = require('./routes/backoffice/ticket2Routes');
 const dashRoutes = require('./routes/backoffice/dashRoutes');
+const chatbotRoutes = require('./routes/backoffice/chatbotRoutes');
 
 const app = express();
 const port = process.env.PORT;
@@ -69,6 +70,7 @@ app.use(prefix + '/user', authenticateToken, userRoutes);
 app.use(prefix + '/project', authenticateToken, projectRoutes);
 app.use(prefix + '/ticket', authenticateToken, ticketRoutes);
 app.use(prefix + '/dash', authenticateToken, dashRoutes);
+app.use(prefix + '/chatbot', authenticateToken, chatbotRoutes);
 app.use(prefix + '/ticket2', ticketRoutes2);
 
 // Serve everything inside "uploads" under /n8n_cosmia/public/uploads
