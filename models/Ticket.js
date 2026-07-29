@@ -6,6 +6,7 @@ const Ticket = sequelize.define("Ticket", {
   num_ticket: { type: DataTypes.STRING(45), allowNull: false },
   subject_ticket: { type: DataTypes.STRING(45), allowNull: false },
   conversation_email_id: { type: DataTypes.TEXT, allowNull: false },
+  conversation_chat_id: { type: DataTypes.TEXT, allowNull: true },
   to_do: { type: DataTypes.TEXT, allowNull: false },
   original_client_mail: { type: DataTypes.STRING(45), allowNull: false },
   reception_mail: { type: DataTypes.STRING(45), allowNull: false },

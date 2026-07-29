@@ -146,6 +146,7 @@ const getTicketsDetails = async (req, res) => {
         ticket.num_ticket,
         ticket.subject_ticket,
         ticket.conversation_email_id,
+        ticket.conversation_chat_id,
         ticket.to_do,
         ticket.original_client_mail,
         ticket.reception_mail,

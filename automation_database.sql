@@ -114,6 +114,7 @@ CREATE TABLE ticket (
     num_ticket VARCHAR(45) NOT NULL,
     subject_ticket VARCHAR(255) NOT NULL,
     conversation_email_id TEXT NOT NULL,
+    conversation_chat_id INT DEFAULT NULL, -- new colonne
     to_do TEXT NOT NULL,
     original_client_mail VARCHAR(45) NOT NULL,
     reception_mail VARCHAR(45) NOT NULL
