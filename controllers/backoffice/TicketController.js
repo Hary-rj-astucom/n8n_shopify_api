@@ -476,6 +476,7 @@ const sendNewMail = async (req, res) => {
       case 2:
         // COSMA-PARFUMERIE
         console.log("envoie messagerie COSMA-PARFUMERIE");
+        console.log(optionsGmail);
         result_conv = await GmailCosmaparfumerieApiService.sendNewMail(ticket_id, replyText, attachements, optionsGmail);
         break;
       case 3:
