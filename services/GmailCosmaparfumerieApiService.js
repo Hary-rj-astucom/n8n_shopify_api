@@ -1014,7 +1014,7 @@ function makeNewEmailWithMultipleAttachments(to, subject, bodyText, attachments 
 
 async function sendNewMail(ticket_id, bodyText, attachments = [], options = {}) {
   try {
-    const { to, subject, cc = [] } = options;
+    const { to, subjectOverride, cc = [] } = options;
 
     if (!to) {
       throw new Error("TO is required");
@@ -1026,9 +1026,9 @@ async function sendNewMail(ticket_id, bodyText, attachments = [], options = {}) 
     let rawMessage = "";
 
     if (attachments.length === 0) {
-      rawMessage = makeNewEmail(to, subject, bodyText, cc);
+      rawMessage = makeNewEmail(to, subjectOverride, bodyText, cc);
     } else {
-      rawMessage = makeNewEmailWithMultipleAttachments(to, subject, bodyText, attachments, cc);
+      rawMessage = makeNewEmailWithMultipleAttachments(to, subjectOverride, bodyText, attachments, cc);
     }
 
     // Pas de threadId en entrée : Gmail va en créer un nouveau
