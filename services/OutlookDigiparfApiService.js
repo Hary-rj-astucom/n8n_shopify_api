@@ -244,10 +244,12 @@ async function replyToMessage2(messageId, replyText, attachments = [], options =
   console.log("Old conversation ID:", draftConversationId);
   console.log("New conversation ID:", newConversationId);
 
-  await RelatedConversation.create({ 
-    ticket_id: ticket_id,
-    conversation_email_id: newConversationId, 
-  });
+  if(draftConversationId != newConversationId) {
+    await RelatedConversation.create({ 
+      ticket_id: ticket_id,
+      conversation_email_id: newConversationId, 
+    });
+  }
 
   console.log("Reply with attachments sent successfully and stored!");
 }
