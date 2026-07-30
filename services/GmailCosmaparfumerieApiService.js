@@ -6,6 +6,8 @@ const sharp = require("sharp");
 const heicConvert = require('heic-convert');
 const sequelize = require("../config/database");
 
+const Ticket = require("../models/Ticket");
+
 const TOKEN_PATH = path.join(__dirname, 'json_mock/gmail_token.json');
 const client_secret = process.env.GMAIL_CLIENT_SECRET; 
 const client_id = process.env.GMAIL_CLIENT_ID ;
@@ -821,6 +823,8 @@ async function replyConversation2(threadId, replyText, attachments = [], options
   }
 }
 
+// ----------------------- get all message ---------------------- //
+
 async function getAllMessage(threadId, ticket_id){
   let conversations = [];
 
@@ -857,6 +861,200 @@ async function getAllMessage(threadId, ticket_id){
   return result_final;
 }
 
+// ----------------------- send new mail ------------------------ //
+
+function makeNewEmail(to, subject, body, cc = []) {
+  const clean = str => str.trim().replace(/[\r\n]+/g, '');
+
+  const signatureHtml = `
+    <br><br>
+    <div style="font-family: Calibri, sans-serif; font-size: 11pt; color: #000;">
+      <table cellspacing="0" cellpadding="0" style="border: none;">
+        <tr>
+          <td style="vertical-align: middle; padding-right: 12px;">
+            <img src="https://www.cosma-parfumeries.com/media/logo/websites/1/LOGO_1.png"
+                alt="Logo" width="140" style="border: none;">
+          </td>
+          <td style="vertical-align: middle;">
+            <div style="line-height: 1.4;">
+              <strong>cosma-parfumeries</strong><br>
+              ✉️ <a href="mailto:contact@cosma-parfumeries.fr" style="color:#000; text-decoration:none;">
+                contact@cosma-parfumeries.fr
+              </a><br>
+              🌐 <a href="https://www.cosma-parfumeries.com" style="color:#0078D4; text-decoration:none;">
+                https://www.cosma-parfumeries.com
+              </a>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  `;
+
+  const htmlBody = `
+    <div>
+      ${body.replace(/\n/g, "<br>")}
+      <br><br>
+      ${signatureHtml}
+    </div>
+  `;
+
+  const headers = [
+    `To: ${clean(to)}`,
+    cc.length ? `Cc: ${cc.map(clean).join(", ")}` : null,
+    `Subject: ${clean(subject)}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    "MIME-Version: 1.0",
+    "",
+    htmlBody
+  ].filter(Boolean);
+
+  return Buffer.from(headers.join("\n"))
+    .toString("base64")
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+function makeNewEmailWithMultipleAttachments(to, subject, bodyText, attachments = [], cc = []) {
+
+  const boundaryMixed = "mixed_" + Math.random().toString(36).slice(2);
+  const boundaryAlt = "alt_" + Math.random().toString(36).slice(2);
+
+  const signatureHtml = `
+  <div style="font-family: Calibri, sans-serif; font-size: 11pt; color: #000;">
+    <table cellspacing="0" cellpadding="0" style="border: none;">
+      <tr>
+        <td style="vertical-align: middle; padding-right: 12px;">
+          <img src="https://www.cosma-parfumeries.com/media/logo/websites/1/LOGO_1.png"
+               alt="Logo" width="140" style="border:none;">
+        </td>
+        <td style="vertical-align: middle; line-height:1.4;">
+          <strong>cosma-parfumeries</strong><br>
+          ✉️ <a href="mailto:contact@cosma-parfumeries.fr"
+               style="color:#000; text-decoration:none;">
+            contact@cosma-parfumeries.fr
+          </a><br>
+          🌐 <a href="https://www.cosma-parfumeries.com"
+               style="color:#0078D4; text-decoration:none;">
+            https://www.cosma-parfumeries.com
+          </a>
+        </td>
+      </tr>
+    </table>
+  </div>`;
+
+  const bodyHtml = `<div>${bodyText.replace(/\n/g, "<br>")}<br><br>${signatureHtml}</div>`;
+
+  const clean = str => str.trim().replace(/[\r\n]+/g, '');
+
+  // --- HEADERS (pas de In-Reply-To / References : nouveau mail) ---
+  const headerLines = [
+    `To: ${clean(to)}`,
+    cc.length ? `Cc: ${cc.map(clean).join(", ")}` : null,
+    `Subject: ${clean(subject)}`,
+    `MIME-Version: 1.0`,
+    `Content-Type: multipart/mixed; boundary="${boundaryMixed}"`,
+  ].filter(Boolean);
+
+  // --- BODY PART (multipart/alternative) ---
+  const altPart = [
+    `--${boundaryMixed}`,
+    `Content-Type: multipart/alternative; boundary="${boundaryAlt}"`,
+    ``,
+    `--${boundaryAlt}`,
+    `Content-Type: text/plain; charset="UTF-8"`,
+    `Content-Transfer-Encoding: 7bit`,
+    ``,
+    bodyText,
+    ``,
+    `--${boundaryAlt}`,
+    `Content-Type: text/html; charset="UTF-8"`,
+    `Content-Transfer-Encoding: 7bit`,
+    ``,
+    bodyHtml,
+    ``,
+    `--${boundaryAlt}--`,
+  ];
+
+  // --- ATTACHMENTS ---
+  const attachmentParts = [];
+  attachments.forEach(att => {
+    const cleanBase64 = att.contentBase64.replace(/\s+/g, '');
+    const chunked = cleanBase64.match(/.{1,76}/g).join("\r\n");
+
+    attachmentParts.push(
+      `--${boundaryMixed}`,
+      `Content-Type: ${att.mimeType || "application/octet-stream"}; name="${att.filename}"`,
+      `Content-Transfer-Encoding: base64`,
+      `Content-Disposition: attachment; filename="${att.filename}"`,
+      ``,
+      chunked,
+      ``
+    );
+  });
+
+  // --- ASSEMBLAGE FINAL ---
+  const allParts = [
+    ...headerLines,
+    ``,
+    ...altPart,
+    ...attachmentParts,
+    `--${boundaryMixed}--`
+  ];
+
+  const raw = allParts.join("\r\n");
+
+  return Buffer.from(raw)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+async function sendNewMail(ticket_id, bodyText, attachments = [], options = {}) {
+  try {
+    const { to, subject, cc = [] } = options;
+
+    if (!to) {
+      throw new Error("TO is required");
+    }
+
+    const auth = await authorize();
+    const gmail = google.gmail({ version: 'v1', auth });
+
+    let rawMessage = "";
+
+    if (attachments.length === 0) {
+      rawMessage = makeNewEmail(to, subject, bodyText, cc);
+    } else {
+      rawMessage = makeNewEmailWithMultipleAttachments(to, subject, bodyText, attachments, cc);
+    }
+
+    // Pas de threadId en entrée : Gmail va en créer un nouveau
+    const res = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw: rawMessage
+      }
+    });
+
+    // ✅ Le threadId créé par Gmail est disponible dans la réponse
+    const threadId = res.data.threadId;
+
+    await Ticket.update(
+      { conversation_email_id: threadId },
+      { where: { id: ticket_id } }
+    );
+
+    return { success: true, threadId, res };
+
+  } catch (err) {
+    console.error(err);
+    throw new Error("Error sending new mail");
+  }
+}
+
 module.exports = { 
   getConversation,
   replyConversation,
@@ -867,5 +1065,7 @@ module.exports = {
   sendDraft,
   getFullBodyMessage,
 
-  getAllMessage
+  getAllMessage,
+
+  sendNewMail
 };

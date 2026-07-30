@@ -7,6 +7,7 @@ const sequelize = require("../config/database");
 
 const OpenAiApiService = require('../services/OpenAiApiService');
 const RelatedConversation = require("../models/RelatedConversation");
+const Ticket = require("../models/Ticket");
 
 async function getAccessToken() {
   const tokenUrl = `https://login.microsoftonline.com/${process.env.OUTLOOK_DIGIPARF_TENANT_ID}/oauth2/v2.0/token`;
@@ -252,6 +253,101 @@ async function replyToMessage2(messageId, replyText, attachments = [], options =
 }
 
 /**
+ * Reply to a message with correct saving + sending behavior.
+ */
+async function sendNewMail(replyText, attachments = [], options = {}, ticket_id) {
+  const { toRecipients = [], ccRecipients = [], subject } = options;
+
+  if (toRecipients.length === 0) {
+    throw new Error("toRecipients is required for a new mail");
+  }
+
+  const token = await getAccessToken();
+  const openai = new OpenAiApiService();
+  const replyTextHtml = await openai.formatTextToHtml(replyText);
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json"
+  };
+
+  //
+  // 1. Create a brand new draft (pas de createReply, on POST directement sur /messages)
+  //
+  const draftPayload = {
+    subject: subject,
+    body: { contentType: "HTML", content: replyTextHtml },
+    toRecipients: toRecipients.map(email => ({
+      emailAddress: { address: email }
+    }))
+  };
+
+  if (ccRecipients.length > 0) {
+    draftPayload.ccRecipients = ccRecipients.map(email => ({
+      emailAddress: { address: email }
+    }));
+  }
+
+  const draftResponse = await axios.post(
+    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages`,
+    draftPayload,
+    { headers }
+  );
+
+  const draftId = draftResponse.data.id;
+  const internetMessageId = draftResponse.data.internetMessageId;
+  const draftConversationId = draftResponse.data.conversationId;
+
+  //
+  // 2. Add attachments (if any)
+  //
+  for (const att of attachments) {
+    await axios.post(
+      `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}/attachments`,
+      {
+        "@odata.type": "#microsoft.graph.fileAttachment",
+        name: att.filename,
+        contentType: att.mimeType || "application/octet-stream",
+        contentBytes: att.contentBase64.replace(/^data:.*;base64,/, "")
+      },
+      { headers }
+    );
+  }
+
+  //
+  // ✅ 3. FORCE DRAFT TO BE SAVED BEFORE SENDING
+  //
+  await waitUntilMessageExists(process.env.OUTLOOK_DIGIPARF_USER_APP, draftId, token);
+
+  //
+  // 4. Send it
+  //
+  await axios.post(
+    `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${draftId}/send`,
+    {},
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  await new Promise(res => setTimeout(res, 1000));
+
+  const sentMessage = await getSentMessageByInternetMessageId(internetMessageId);
+
+  const newConversationId = sentMessage?.conversationId; // ✅ Le vrai conversationId post-envoi
+  console.log("Old conversation ID:", draftConversationId);
+  console.log("New conversation ID:", newConversationId);
+
+  // sauvegarde du thread 
+  await Ticket.update(
+    { conversation_email_id: newConversationId },
+    { where: { id: ticket_id } }
+  );
+
+  console.log("New mail with attachments sent successfully and stored!");
+
+  return { conversationId: newConversationId, internetMessageId };
+}
+
+/**
  * ✅ Ensures the draft exists in the mailbox before sending
  * Prevents the “message not found in any folder” bug.
  */
@@ -492,6 +588,7 @@ module.exports = {
   getConversationThreads,
   replyToMessage,
   replyToMessage2,
+  sendNewMail,
   getMessageDetailByMessageId,
   getAllMessage,
 
