@@ -37,43 +37,38 @@ async function getMessageAttachments(token, messageId, baseUrl = process.env.BAS
   return response.data.value.map(att => {
     if (att['@odata.type'] === "#microsoft.graph.fileAttachment") {
 
-      // return {
-      //   //id: att.id,
-      //   filename: att.name,
-      //   mimeType: att.contentType,
-      //   size: att.size,
-      //   data: `data:${att.contentType};base64,${att.contentBytes}` // base64 string you can use directly
-      // };
-
       const buffer = Buffer.from(att.contentBytes, 'base64');
-      
-      // Créer le dossier /uploads s’il n’existe pas
+
+      // Créer le dossier /uploads s'il n'existe pas
       const uploadDir = path.join(__dirname, '../public/uploads');
       fs.mkdirSync(uploadDir, { recursive: true });
 
-      // Enregistrer le fichier
-      const filePath = path.join(uploadDir, messageId + "_" + att.name);
+      // Nettoyer le nom de fichier (suppression espaces et caractères à risque)
+      const safeName = att.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
 
-      // Supprimer le fichier s’il existe déjà
+      // Enregistrer le fichier
+      const filePath = path.join(uploadDir, messageId + "_" + safeName);
+
+      // Supprimer le fichier s'il existe déjà
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
-        console.log(`🗑️ Fichier existant supprimé : ${att.name}`);
+        console.log(`🗑️ Fichier existant supprimé : ${safeName}`);
       }
 
       // Écrire le nouveau fichier
       fs.writeFileSync(filePath, buffer);
 
       // Générer le lien public de consultation
-      const fileUrl = `${baseUrl}/public/uploads/${encodeURIComponent(messageId + "_" + att.name)}`;
+      const fileUrl = `${baseUrl}/public/uploads/${encodeURIComponent(messageId + "_" + safeName)}`;
 
       return {
         //id: att.id,
-        filename: att.name,
+        filename: safeName,
         mimeType: att.contentType,
         size: att.size,
-        url: fileUrl 
+        url: fileUrl
       };
-      
+
     }
     if (att['@odata.type'] === "#microsoft.graph.itemAttachment") {
       return {

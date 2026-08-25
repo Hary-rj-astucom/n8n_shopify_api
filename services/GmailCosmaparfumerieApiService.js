@@ -91,13 +91,16 @@ async function getMessageAttachments(gmail, messageId, parts, baseUrl = process.
         const uploadDir = path.join(__dirname, '../public/uploads');
         fs.mkdirSync(uploadDir, { recursive: true });
 
+        // Nettoyer le nom de fichier : suppression des espaces
+        const safeFilename = part.filename.replace(/\s+/g, '_');
+
         // Enregistrer le fichier
-        const filePath = path.join(uploadDir, messageId + "_" + part.filename);
+        const filePath = path.join(uploadDir, messageId + "_" + safeFilename);
 
         // Supprimer le fichier s’il existe déjà
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
-          console.log(`🗑️ Fichier existant supprimé : ${messageId + "_" + part.filename}`);
+          console.log(`🗑️ Fichier existant supprimé : ${messageId + "_" + safeFilename}`);
         }
 
         // Écrire le nouveau fichier
