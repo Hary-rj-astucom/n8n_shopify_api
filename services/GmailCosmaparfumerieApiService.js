@@ -79,25 +79,27 @@ async function getMessageAttachments(gmail, messageId, parts, baseUrl = process.
         // Gmail sends base64url, convert to base64
         const base64 = attachRes.data.data.replace(/-/g, '+').replace(/_/g, '/');
 
-        // attachments.push({
-        //   filename: part.filename,
-        //   mimeType: part.mimeType,
-        //   data: `data:${part.mimeType};base64,${base64}` // 👉 ready to preview on frontend
-        // });
-
         const buffer = Buffer.from(base64, 'base64');
 
-        // Créer le dossier /uploads s’il n’existe pas
+        // Créer le dossier /uploads s'il n'existe pas
         const uploadDir = path.join(__dirname, '../public/uploads');
         fs.mkdirSync(uploadDir, { recursive: true });
 
-        // Nettoyer le nom de fichier : suppression des espaces
-        const safeFilename = part.filename.replace(/\s+/g, '_');
+        // Nettoyer le nom de fichier : suppression des espaces et caractères à risque
+        let safeFilename = part.filename.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+
+        // Détecter si c'est un fichier .eml (message attaché en tant qu'email brut)
+        const isEml = part.mimeType === 'message/rfc822' || safeFilename.toLowerCase().endsWith('.eml');
+
+        // S'assurer que l'extension .eml est bien présente si c'est un eml
+        if (isEml && !safeFilename.toLowerCase().endsWith('.eml')) {
+          safeFilename += '.eml';
+        }
 
         // Enregistrer le fichier
         const filePath = path.join(uploadDir, messageId + "_" + safeFilename);
 
-        // Supprimer le fichier s’il existe déjà
+        // Supprimer le fichier s'il existe déjà
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
           console.log(`🗑️ Fichier existant supprimé : ${messageId + "_" + safeFilename}`);
@@ -106,28 +108,30 @@ async function getMessageAttachments(gmail, messageId, parts, baseUrl = process.
         // Écrire le nouveau fichier
         fs.writeFileSync(filePath, buffer);
 
-        // Générer le lien public de consultation
-        // const fileUrl = `${baseUrl}/public/uploads/${encodeURIComponent(messageId + "_" + part.filename)}`;
+        let finalPath = filePath;
+        let finalFilename = path.basename(filePath);
+        let finalMimeType = part.mimeType;
+        let converted = false;
 
-        // attachments.push({
-        //   filename: part.filename,
-        //   mimeType: part.mimeType,
-        //   url: fileUrl,
-        // });
+        // Ne pas tenter de conversion HEIC sur un .eml
+        if (!isEml) {
+          const result = await convertToJpgIfHeic(filePath);
+          finalPath = result.path;
+          finalFilename = path.basename(finalPath);
+          finalMimeType = result.converted ? 'image/jpeg' : part.mimeType;
+          converted = result.converted;
+        } else {
+          finalMimeType = 'message/rfc822';
+        }
 
-        const result = await convertToJpgIfHeic(filePath);
-
-        const finalPath = result.path;
-        const finalFilename = path.basename(finalPath);
         const finalUrl = `${baseUrl}/public/uploads/${encodeURIComponent(finalFilename)}`;
 
         attachments.push({
           filename: finalFilename,
-          mimeType: result.converted ? 'image/jpeg' : part.mimeType,
+          mimeType: finalMimeType,
           url: finalUrl,
-          converted: result.converted // 👈 flag exposé si tu veux
+          converted
         });
-
       }
 
       // recurse if nested

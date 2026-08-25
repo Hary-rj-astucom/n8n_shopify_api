@@ -27,21 +27,20 @@ async function getAccessToken() {
 // ----------------- get attachments ----------------------------- //
 
 async function getMessageAttachments(token, messageId, baseUrl = process.env.BASE_URL_APP) {
-  //const token = await getAccessToken();
-
   const response = await axios.get(
     `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}/attachments`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
-  return response.data.value.map(att => {
+  const uploadDir = path.join(__dirname, '../public/uploads');
+  fs.mkdirSync(uploadDir, { recursive: true });
+
+  const attachments = [];
+
+  for (const att of response.data.value) {
     if (att['@odata.type'] === "#microsoft.graph.fileAttachment") {
 
       const buffer = Buffer.from(att.contentBytes, 'base64');
-
-      // Créer le dossier /uploads s'il n'existe pas
-      const uploadDir = path.join(__dirname, '../public/uploads');
-      fs.mkdirSync(uploadDir, { recursive: true });
 
       // Nettoyer le nom de fichier (suppression espaces et caractères à risque)
       const safeName = att.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
@@ -61,24 +60,56 @@ async function getMessageAttachments(token, messageId, baseUrl = process.env.BAS
       // Générer le lien public de consultation
       const fileUrl = `${baseUrl}/public/uploads/${encodeURIComponent(messageId + "_" + safeName)}`;
 
-      return {
-        //id: att.id,
+      attachments.push({
         filename: safeName,
         mimeType: att.contentType,
         size: att.size,
         url: fileUrl
-      };
+      });
 
+    } else if (att['@odata.type'] === "#microsoft.graph.itemAttachment") {
+
+      // Un itemAttachment (email attaché) peut être récupéré en MIME brut via /$value
+      const emlRes = await axios.get(
+        `${process.env.OUTLOOK_DIGIPARF_GRAPH_URL}/users/${process.env.OUTLOOK_DIGIPARF_USER_APP}/messages/${messageId}/attachments/${att.id}/$value`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'arraybuffer'
+        }
+      );
+
+      const buffer = Buffer.from(emlRes.data);
+
+      // Nettoyer le nom + s'assurer de l'extension .eml
+      let safeName = (att.name || `email_${att.id}`).replace(/[^a-zA-Z0-9.\-_]/g, '_');
+      if (!safeName.toLowerCase().endsWith('.eml')) {
+        safeName += '.eml';
+      }
+
+      const filePath = path.join(uploadDir, messageId + "_" + safeName);
+
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`🗑️ Fichier existant supprimé : ${safeName}`);
+      }
+
+      fs.writeFileSync(filePath, buffer);
+
+      const fileUrl = `${baseUrl}/public/uploads/${encodeURIComponent(messageId + "_" + safeName)}`;
+
+      attachments.push({
+        filename: safeName,
+        mimeType: "message/rfc822",
+        size: att.size,
+        url: fileUrl
+      });
+
+    } else {
+      attachments.push({ filename: att.name, mimeType: "unknown" });
     }
-    if (att['@odata.type'] === "#microsoft.graph.itemAttachment") {
-      return {
-        //id: att.id,
-        filename: att.name,
-        mimeType: "itemAttachment"
-      };
-    }
-    return { filename: att.name, mimeType: "unknown" };
-  });
+  }
+
+  return attachments;
 }
 
 // --------------------------------------------------------------- //
