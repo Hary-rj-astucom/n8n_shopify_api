@@ -78,10 +78,21 @@ class ShippingboApiService {
       console.log("accessToken : ", this.accessToken);
       console.log("refresh token : ", this.refreshToken);
 
-      // write the data in the JSON 
+      // write the data in the JSON
       const filePath = path.join(__dirname, 'json_mock/shippingbo_token.json');
+
+      let data = {};
+      try {
+        const raw = await fs.readFile(filePath, 'utf8');
+        data = JSON.parse(raw);
+      } catch (readErr) {
+        // file doesn't exist yet or isn't valid JSON — start fresh
+        data = {};
+      }
+
       data.access_token = this.accessToken;
       data.refresh_token = this.refreshToken;
+
       await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
 
       return response.data;
