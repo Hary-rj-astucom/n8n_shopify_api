@@ -72,10 +72,11 @@ class ShippingboApiService {
         }
       );
 
-      console.log(response);
-
       this.accessToken = response.data.access_token;
       this.refreshToken = response.data.refresh_token;
+
+      console.log("accessToken : ", this.accessToken);
+      console.log("refresh token : ", this.refreshToken);
 
       // write the data in the JSON 
       const filePath = path.join(__dirname, 'json_mock/shippingbo_token.json');
