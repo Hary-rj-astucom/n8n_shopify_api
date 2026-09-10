@@ -24,7 +24,7 @@ class ShippingboApiService {
   /**
    * Étape 1 : Générer l’URL d’authentification
    */
-  getAuthUrl(scope = "read write") {
+  getAuthUrl(scope = "orders_read") {
     return `${this.authUrl}?response_type=code&client_id=${
       this.clientId
     }&redirect_uri=${encodeURIComponent(this.redirectUri)}&scope=${scope}`;
@@ -71,6 +71,8 @@ class ShippingboApiService {
           headers: { "Content-Type": "application/json" },
         }
       );
+
+      console.log(response);
 
       this.accessToken = response.data.access_token;
       this.refreshToken = response.data.refresh_token;
