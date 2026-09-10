@@ -80,8 +80,8 @@ class ShippingboApiService {
 
       // write the data in the JSON 
       const filePath = path.join(__dirname, 'json_mock/shippingbo_token.json');
-      data.access_token = response.data.access_token;
-      data.refresh_token = response.data.refresh_token;
+      data.access_token = this.accessToken;
+      data.refresh_token = this.refreshToken;
       await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
 
       return response.data;
