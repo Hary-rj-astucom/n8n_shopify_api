@@ -44,7 +44,7 @@ async function getOrderWithTransactionsByNumber(orderNumber) {
 
     // 2. get shippement info
     const searchCriteria2 = `searchCriteria[filter_groups][0][filters][0][field]=order_id` + 
-        `&searchCriteria[filter_groups][0][filters][0][value]=776972` + 
+        `&searchCriteria[filter_groups][0][filters][0][value]=${order_result.entity_id}` + 
         `&searchCriteria[filter_groups][0][filters][0][condition_type]=eq`
 
     const shippementResponse = await magento.get(`/shipments?${searchCriteria2}`);
