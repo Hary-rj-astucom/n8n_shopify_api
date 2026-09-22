@@ -30,6 +30,18 @@ const apiUrlAmbitioncse = `${shopUrlAmbitioncse}/api/`;
 const apiUrlClubulys = `${shopUrlClubulys}/api/`;
 const apiUrlReducce = `${shopUrlReducce}/api/`;
 
+const TRACKING_URLS = {
+  colissimo: (n) => `https://www.laposte.fr/outils/suivre-vos-envois?code=${encodeURIComponent(n)}`,
+  chronopost: (n) => `https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT=${encodeURIComponent(n)}`,
+  mondialrelay: (n) => `https://www.mondialrelay.fr/suivi-de-colis?numeroExpedition=${encodeURIComponent(n)}`,
+};
+
+function buildTrackingUrl(carrier, track_number) {
+  const code = (carrier.external_module_name || "").toLowerCase();
+  const key = Object.keys(TRACKING_URLS).find((k) => code.includes(k));
+  return key ? TRACKING_URLS[key](track_number) : null;
+}
+
 // Fonction générique pour appeler l'API PrestaShop
 async function callPrestaShopAPI(url) {
   try {
@@ -102,6 +114,47 @@ async function getOrderPayementDetail(apiUrl, order_payment_id) {
   return data.order_payment ?? [];
 }
 
+async function getTracking(apiUrl, orderId) {
+  try {
+    const url = `${apiUrl}order_carriers?filter[id_order]=${orderId}&display=full&output_format=JSON`;
+    const data = await callPrestaShopAPI(url);
+    const orderCarriers = data.order_carriers ?? [];
+
+    const tracks = [];
+    for (const oc of orderCarriers) {
+
+      if(oc.id_carrier){
+
+        const carrier_url = `${apiUrl}carriers/${oc.id_carrier}&output_format=JSON`;
+        const data2 = await callPrestaShopAPI(carrier_url);
+
+        const url = buildTrackingUrl(data2.carrier, oc.tracking_number);
+
+        tracks.push({
+          id_carrier: oc.id_carrier,
+          tracking_number: oc.tracking_number,
+          tracking_url: url
+        });
+
+      }
+      else {
+        tracks.push({
+          id_carrier: null,
+          tracking_number: null,
+          tracking_url: null
+        });
+      }
+      
+    }
+
+    return { tracks };
+
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 
 // Recuperation de l'order selon la reference du client
 async function getOrderByReferenceNum(apiUrl, reference) {
@@ -139,20 +192,23 @@ async function getOrderByReference(reference, apiUrl = apiUrlDigiparf, boutique 
     let customer = null;
     if (order.id_customer) {
       customer = await getCustomerById(apiUrl, order.id_customer);
-      console.log(customer ? "✓ Informations client récupérées !" : "⚠️ Impossible de récupérer les infos client");
+      console.log(customer ? "Informations client récupérées !" : "Impossible de récupérer les infos client");
     }
 
     let orderState = null;
     if (order.current_state) {
       orderState = await getOrderStateById(apiUrl, order.current_state);
-      console.log(orderState ? "✓ Statut récupéré !" : "⚠️ Impossible de récupérer le statut");
+      console.log(orderState ? "Statut récupéré !" : "Impossible de récupérer le statut");
     }
 
     const orderDetails = await getOrderDetails(apiUrl, order_id);
-    console.log(orderDetails.length > 0 ? `✓ ${orderDetails.length} produit(s) récupéré(s)` : "⚠️ Aucun produit trouvé");
+    console.log(orderDetails.length > 0 ? `${orderDetails.length} produit(s) récupéré(s)` : "Aucun produit trouvé");
 
     const transaction_details = await getOrderPayement(apiUrl, reference);
-    console.log(transaction_details ? "✓ detail payment récupéré !" : "⚠️ Impossible de récupérer le detail payment");
+    console.log(transaction_details ? "detail payment récupéré !" : "Impossible de récupérer le detail payment");
+
+    const tracking = await getTracking(apiUrl, order_id);
+    console.log(tracking ? "detail tracking récupéré !" : "Impossible de récupérer le detail payment");
 
     return {
       boutique,
@@ -160,7 +216,8 @@ async function getOrderByReference(reference, apiUrl = apiUrlDigiparf, boutique 
       customer,
       orderState,
       orderDetails,
-      transaction_details
+      transaction_details,
+      tracking
     }
     
   } catch (err) {

@@ -1,15 +1,13 @@
 require('dotenv').config();
 const ShippingboApiService = require('../../services/ShippingboApiService');
+const PrestashopApiService = require('../../services/PrestashopApiService');
+const MagentoApiService = require('../../services/MagentoApiService');
 
 const showOrder = async (req, res) => {
   try {
     const shippingbo = new ShippingboApiService();
-
-    // Génère l’URL d’authentification (va dans le navigateur)
-    // console.log("👉 Connecte-toi ici :", shippingbo.getAuthUrl());
-    
-    const order = await shippingbo.getOrderById(req.body.order_id);
-
+    let order = await shippingbo.getOrderById(req.body.order_id);
+    // retourne si il y a des donnees
     res.status(200).send(order);
 
   } catch (error) {
@@ -20,13 +18,36 @@ const showOrder = async (req, res) => {
 
 const showOrderByOriginRef = async (req, res) => {
   try {
-    const shippingbo = new ShippingboApiService();
+    try {
+      console.log(`consultation shippingbo`);
+      const shippingbo = new ShippingboApiService();
+      // Exemple : chercher une commande par référence
+      let order = await shippingbo.getOrderByReference(req.body.origin_ref);
+      if(Array.isArray(order)){
+        // tableau vide
+        throw new Error(`non data in shippingbo`);
+      }
+      // retourne si il y a des donnees (donnees shippingbo)
+      res.status(200).send(order);
+    } catch(err) {
+      try {
+        console.log(`consultation magento`);
+        order = await MagentoApiService.getOrderWithTransactionsByNumber(req.body.origin_ref);
 
-    // Exemple : chercher une commande par référence
-    const order = await shippingbo.getOrderByReference(req.body.origin_ref);
-
-    res.status(200).send(order);
-
+        // retourne si il y a des donnees (donnees magento)
+        res.status(200).send(order);
+      } catch(err) {
+        try {
+          console.log(`consultation prestashop`);
+          order = await PrestashopApiService.getOrderByReference(req.body.origin_ref);
+          // retourne si il y a des donnees (donnees prestashop)
+          res.status(200).send(order);
+        } catch(err){
+          console.log(`aucune data trouver`);
+          throw new Error(`non data in all e-commerce app`);
+        }
+      } 
+    }
   } catch (error) {
     console.log('Error consultation shippingbo:', error);
     res.status(200).send(error);

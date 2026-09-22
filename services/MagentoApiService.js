@@ -7,6 +7,12 @@ const { PDFDocument } = require("pdf-lib");
 
 const OpenAiApiService = require('../services/OpenAiApiService');
 
+const TRACKING_URLS = {
+  colissimo: (n) => `https://www.laposte.fr/outils/suivre-vos-envois?code=${encodeURIComponent(n)}`,
+  chronopost: (n) => `https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT=${encodeURIComponent(n)}`,
+  mondialrelay: (n) => `https://www.mondialrelay.fr/suivi-de-colis?numeroExpedition=${encodeURIComponent(n)}`,
+};
+
 const magento = axios.create({
   baseURL: `${process.env.MAGENTO_URL}/rest/V1`,
   headers: {
@@ -14,6 +20,12 @@ const magento = axios.create({
     'Authorization': `Bearer ${process.env.MAGENTO_ACCESS_TOKEN}` // Utiliser un token admin ou integration
   }
 });
+
+function buildTrackingUrl(track) {
+  const code = (track.carrier_code || track.title || "").toLowerCase();
+  const key = Object.keys(TRACKING_URLS).find((k) => code.includes(k));
+  return key ? TRACKING_URLS[key](track.track_number) : null;
+}
 
 async function getOrderWithTransactionsByNumber(orderNumber) {
   try {
@@ -28,7 +40,25 @@ async function getOrderWithTransactionsByNumber(orderNumber) {
     if (!orderResponse.data.items || orderResponse.data.items.length === 0) {
       throw new Error(`Commande ${orderNumber} introuvable`);
     }
-    const order = orderResponse.data.items[0];
+    const order_result = orderResponse.data.items[0];
+
+    // 2. get shippement info
+    const searchCriteria2 = `searchCriteria[filter_groups][0][filters][0][field]=order_id` + 
+        `&searchCriteria[filter_groups][0][filters][0][value]=776972` + 
+        `&searchCriteria[filter_groups][0][filters][0][condition_type]=eq`
+
+    const shippementResponse = await magento.get(`/shipments?${searchCriteria2}`);
+    const trackData = shippementResponse.data.items[0].tracks[0];
+
+    const tracks = { 
+    ...trackData, 
+    trackingUrl: buildTrackingUrl(trackData) // Key assigned explicitly
+    };
+
+    const order = {
+        ...order_result, 
+        tracks
+    };
 
     return {
       order
