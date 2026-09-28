@@ -21,7 +21,7 @@ const getTickets = async (req, res) => {
     let paramsTotal = [];
     let params = [];
 
-    // 🔍 Global search
+    // Global search
     if (req.query.search) {
       const search = `%${req.query.search}%`;
       subQuery += ` AND (
@@ -40,7 +40,15 @@ const getTickets = async (req, res) => {
       params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
     }
 
-    // 🔍 Multi-criteria filters
+    // les tickets d'un utilisateur specifique 
+    if (req.query.user_id) {
+      const user_id_value = `${req.query.user_id}`;
+      subQuery += ` AND user_id LIKE ?`;
+      paramsTotal.push(user_id_value);
+      params.push(user_id_value);
+    }
+
+    // Multi-criteria filters
     const multiFields = [
       "num_ticket",
       "subject_ticket",
@@ -106,10 +114,13 @@ const getTickets = async (req, res) => {
         label.name as label,
         project.name as project_name,
         need_attention,
-        DATE_FORMAT(ticket.created_at, '%Y-%m-%d %H:%i:%s') as created_at
+        DATE_FORMAT(ticket.created_at, '%Y-%m-%d %H:%i:%s') as created_at,
+        user_id,
+        user.name as affected_to
       FROM ticket
       JOIN label ON label.id = ticket.label_id 
       JOIN project ON project.id = ticket.project_id
+      LEFT JOIN user ON user.id = ticket.user_id 
       WHERE ticket.state=1 ${subQuery} ORDER BY need_attention DESC ${order_by} 
       LIMIT ? OFFSET ? 
     `;
@@ -536,6 +547,32 @@ const createTicket = async (req, res) => {
     // assurer le numero du ticket est unique
     ticket.num_ticket = `${project.code}-${ticket.id}`;
     await ticket.save();
+
+    // ----------------------------------- //
+    // assignation automatique de ticket   //
+    // ----------------------------------- //
+
+    if(ticket.user_id == null){
+      // compter le nombre de ticket (en attente, ou en cours) asigner a un user
+      const request = `
+        SELECT COUNT(ticket.id) AS nb, user.id AS user_id, user.name
+        FROM user
+        LEFT JOIN ticket
+          ON ticket.user_id = user.id
+          AND ticket.status IN ('en attente', 'en cours')
+        WHERE user.treating = 1 AND user.state = 1
+        GROUP BY user.id, user.name
+        ORDER BY nb ASC LIMIT 1
+      `;
+
+      const result = await sequelize.query(request, {
+        type: sequelize.QueryTypes.SELECT
+      });
+
+      // assigner a l'utilisateur
+      ticket.user_id = result[0].user_id;
+      await ticket.save();
+    }
 
     res.status(201).json(ticket);
   } catch (err) {

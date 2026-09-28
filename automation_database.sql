@@ -104,6 +104,7 @@ CREATE TABLE user (
     email VARCHAR(45) NOT NULL,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL,
+    treating INT NOT NULL DEFAULT 1, 
     state INT NOT NULL DEFAULT 1
 );
 
@@ -125,6 +126,7 @@ CREATE TABLE ticket (
     created_at DATETIME NOT NULL DEFAULT NOW(),
     status ENUM ('en attente', 'en cours', 'cloture') DEFAULT 'en attente',
     need_attention TINYINT NOT NULL DEFAULT 0 ; 
+    user_id INT DEFAULT NULL ;
     state INT NOT NULL DEFAULT 1
 );
 
