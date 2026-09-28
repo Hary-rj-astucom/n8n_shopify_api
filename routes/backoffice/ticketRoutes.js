@@ -24,4 +24,8 @@ router.post("/getConversationOutlookDigiparfThreads", ticketController.getConver
 
 router.post("/getTicketSet", ticketController.getTicketSet);
 
+router.get("/getNote/:id", ticketController.getNote);
+router.post("/addNote", ticketController.addNote);
+router.put("/updateNote/:id", ticketController.updateNote);
+
 module.exports = router;

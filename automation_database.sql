@@ -104,7 +104,7 @@ CREATE TABLE user (
     email VARCHAR(45) NOT NULL,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL,
-    treating INT NOT NULL DEFAULT 1, 
+    treating INT NOT NULL DEFAULT 1, -- new
     state INT NOT NULL DEFAULT 1
 );
 
@@ -115,7 +115,7 @@ CREATE TABLE ticket (
     num_ticket VARCHAR(45) NOT NULL,
     subject_ticket VARCHAR(255) NOT NULL,
     conversation_email_id TEXT NOT NULL,
-    conversation_chat_id INT DEFAULT NULL, -- new colonne
+    conversation_chat_id INT DEFAULT NULL,
     to_do TEXT NOT NULL,
     original_client_mail VARCHAR(45) NOT NULL,
     reception_mail VARCHAR(45) NOT NULL
@@ -126,7 +126,7 @@ CREATE TABLE ticket (
     created_at DATETIME NOT NULL DEFAULT NOW(),
     status ENUM ('en attente', 'en cours', 'cloture') DEFAULT 'en attente',
     need_attention TINYINT NOT NULL DEFAULT 0 ; 
-    user_id INT DEFAULT NULL ;
+    user_id INT DEFAULT NULL ; -- new 
     state INT NOT NULL DEFAULT 1
 );
 
@@ -193,4 +193,14 @@ CREATE TABLE message_chat(
     type_message VARCHAR(25) DEFAULT "text"
     date_created DATETIME NOT NULL DEFAULT NOW(),
     FOREIGN KEY (conversation_chat_id) REFERENCES conversation_chat(id)
+);
+
+-- new table
+DROP TABLE IF EXISTS note;
+CREATE TABLE note(
+    id INT PRIMARY KEY auto_increment,
+    ticket_id INT not NULL,
+    note JSON DEFAULT NULL,
+    user_created INT NOT NULL,
+    state INT NOT NULL DEFAULT 1
 );

@@ -10,6 +10,8 @@ const RelatedConversation = require("../../models/RelatedConversation.js");
 const User = require("../../models/User.js");
 const TicketHistoricalComment = require("../../models/TicketHistoricalComment.js");
 const Project = require("../../models/Project.js");
+const { where } = require("sequelize");
+const Note = require('../../models/Note.js');
 
 const getTickets = async (req, res) => {
   try {
@@ -1041,6 +1043,61 @@ const getSimilarTicket = async (req, res) => {
   }
 }
 
+// avoir les note de ticket
+const getNote = async (req, res) => {
+  try {
+
+    const note = await Note.findOne({ where: { ticket_id: req.params.id} });
+    res.json({ note });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// ajouter note 
+const addNote = async (req, res) => {
+  try {
+
+    const user = await User.findByPk(req.user.id);
+    await TicketHistoricalComment.create({ ticket_id: req.body.ticket_id, user_id: req.user.id, comment: `[ACTION] Note ecrit par ${user.name} ${req.body.status ? `[${req.body.status}]` : ''}` });
+
+    const note = await Note.create(
+      {
+        ticket_id: req.body.ticket_id,
+        note: req.body.note,
+        user_created: req.user.id,
+      }
+    );
+
+    res.json({ note });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// modifier note 
+const updateNote = async (req, res) => {
+  try {
+
+    const user = await User.findByPk(req.user.id);
+    await TicketHistoricalComment.create({ ticket_id: req.params.id, user_id: req.user.id, comment: `[ACTION] Note modifier par ${user.name} ${req.body.status ? `[${req.body.status}]` : ''}` });
+
+    let note = await Note.findOne({ where: { ticket_id: req.params.id} });
+    note.note = req.body.note;
+    note.save();
+
+    res.json({ note });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   getTickets,
   getTicketsDetails,
@@ -1061,5 +1118,9 @@ module.exports = {
 
   getTicketSet,
   getSimilarTicket,
-  markAsUnread
+  markAsUnread,
+
+  getNote,
+  addNote,
+  updateNote,
 };
