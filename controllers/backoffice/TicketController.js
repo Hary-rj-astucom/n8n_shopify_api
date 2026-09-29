@@ -1063,15 +1063,21 @@ const addNote = async (req, res) => {
     const user = await User.findByPk(req.user.id);
     await TicketHistoricalComment.create({ ticket_id: req.body.ticket_id, user_id: req.user.id, comment: `[ACTION] Note ecrit par ${user.name} ${req.body.status ? `[${req.body.status}]` : ''}` });
 
-    const note = await Note.create(
-      {
-        ticket_id: req.body.ticket_id,
-        note: req.body.note,
-        user_created: req.user.id,
-      }
-    );
+    const verif = await Note.findOne({ where: { ticket_id: req.body.ticket_id} });
 
-    res.json({ note });
+    if(!verif){
+      const note = await Note.create(
+        {
+          ticket_id: req.body.ticket_id,
+          note: req.body.note,
+          user_created: req.user.id,
+        }
+      );
+      res.json({ note });
+    } 
+    else{
+      res.json({ verif });
+    }
 
   } catch (err) {
     console.error(err);
