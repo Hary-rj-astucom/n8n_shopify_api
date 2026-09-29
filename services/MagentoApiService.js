@@ -48,12 +48,13 @@ async function getOrderWithTransactionsByNumber(orderNumber) {
         `&searchCriteria[filter_groups][0][filters][0][condition_type]=eq`
 
     const shippementResponse = await magento.get(`/shipments?${searchCriteria2}`);
-    const trackData = shippementResponse.data.items[0].tracks[0];
+    const trackData = shippementResponse.data.items
+    ?.flatMap(s => s.tracks || [])
+    .find(Boolean);
 
-    const tracks = { 
-    ...trackData, 
-    trackingUrl: buildTrackingUrl(trackData) // Key assigned explicitly
-    };
+    const tracks = trackData
+    ? { ...trackData, trackingUrl: buildTrackingUrl(trackData) }
+    : null;
 
     const order = {
         ...order_result, 
@@ -65,6 +66,7 @@ async function getOrderWithTransactionsByNumber(orderNumber) {
     };
 
   } catch (error) {
+    console.log(error);
     console.error('Erreur_Magento:', error.response?.data || error.message);
     throw error;
   }

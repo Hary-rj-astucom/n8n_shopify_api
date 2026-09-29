@@ -571,7 +571,7 @@ const createTicket = async (req, res) => {
         type: sequelize.QueryTypes.SELECT
       });
 
-      if(result[0].user_id){
+      if(result.length > 0){
         // assigner a l'utilisateur
         ticket.user_id = result[0].user_id;
         await ticket.save();
