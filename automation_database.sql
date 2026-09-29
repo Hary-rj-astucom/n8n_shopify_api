@@ -204,3 +204,11 @@ CREATE TABLE note(
     user_created INT NOT NULL,
     state INT NOT NULL DEFAULT 1
 );
+
+-- new table
+DROP TABLE IF EXISTS user_project;
+CREATE TABLE user_project(
+    id INT PRIMARY KEY auto_increment,
+    user_id INT NOT NULL,
+    project_id INT NOT NULL
+);

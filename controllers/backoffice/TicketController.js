@@ -562,7 +562,7 @@ const createTicket = async (req, res) => {
         LEFT JOIN ticket
           ON ticket.user_id = user.id
           AND ticket.status IN ('en attente', 'en cours')
-        WHERE user.treating = 1 AND user.state = 1
+        WHERE user.treating = 1 AND user.state = 1 AND user.id IN (SELECT user_id FROM user_project WHERE project_id = ${ticket.project_id})
         GROUP BY user.id, user.name
         ORDER BY nb ASC LIMIT 1
       `;
@@ -571,9 +571,11 @@ const createTicket = async (req, res) => {
         type: sequelize.QueryTypes.SELECT
       });
 
-      // assigner a l'utilisateur
-      ticket.user_id = result[0].user_id;
-      await ticket.save();
+      if(result[0].user_id){
+        // assigner a l'utilisateur
+        ticket.user_id = result[0].user_id;
+        await ticket.save();
+      }
     }
 
     res.status(201).json(ticket);

@@ -1,4 +1,6 @@
 const User = require("../../models/User.js");
+const sequelize = require("../../config/database.js");
+const UserProject = require("../../models/UserProject.js");
 const bcrypt = require("bcryptjs");
 const uniqid = require('uniqid');
 
@@ -66,11 +68,62 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// get assignation project
+const getProjectUserAssignation = async (req, res) => {
+  try {
+
+    const dataQueryComment = `
+      SELECT user_project.id as user_project_id, user_id, project_id, project.name as project_name 
+      FROM user_project 
+      JOIN project ON project.id = user_project.project_id 
+      WHERE user_id = ? ORDER BY user_project.id ASC
+    `;
+    let params = [req.params.user_id]
+    const result = await sequelize.query(dataQueryComment, {
+      replacements: params,
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    res.status(200).json({result});
+
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+}
+
+// affect user to a project
+const affectUserToProject = async (req, res) => {
+  try {
+
+    let userproject = await UserProject.create(req.body);
+    res.status(201).json({user_project: userproject});
+
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+}
+
+// delete project affectation 
+const retireUserFromProject = async (req, res) => {
+  try {
+
+    const deleted = await UserProject.destroy({ where: { id: req.params.userprojectid } });
+    deleted ? res.json({ message: "Assignation deleted" }) : res.status(404).json({ error: "Assignation not found" });    
+
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+}
+
 module.exports = {
   createUser,
   getUsers,
   getUser,
   updateUser,
   deleteUser,
-  regeneratePassword
+  regeneratePassword,
+
+  getProjectUserAssignation,
+  affectUserToProject,
+  retireUserFromProject
 };
