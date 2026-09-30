@@ -12,8 +12,8 @@ const authenticateToken = (req, res, next) => {
     req.user = user;
 
     // exeption pass (get affectation pour les simple user)
-    if(req.url.includes("/userproject") && req.method == "GET") {
-      next();
+    if(req.originalUrl.includes("/userproject") && req.method === "GET") {
+      return next();
     }
 
     // Restrict: only admins allowed for /user paths
