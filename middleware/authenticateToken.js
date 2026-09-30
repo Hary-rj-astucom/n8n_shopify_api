@@ -12,7 +12,7 @@ const authenticateToken = (req, res, next) => {
     req.user = user;
 
     // exeption pass (get affectation pour les simple user)
-    if(req.baseUrl.includes("/user/userproject") && req.method == "GET") {
+    if(req.url.includes("/userproject") && req.method == "GET") {
       next();
     }
 
