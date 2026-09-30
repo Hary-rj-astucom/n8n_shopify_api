@@ -1,6 +1,13 @@
 require('dotenv').config();
 const axios = require('axios');
 const qs = require('qs');
+const path = require('path');
+const fs = require('fs');
+const sequelize = require("../config/database");
+
+const OpenAiApiService = require('../services/OpenAiApiService');
+const RelatedConversation = require("../models/RelatedConversation");
+const Ticket = require("../models/Ticket");
 
 async function getAccessToken() {
   const tokenUrl = `https://login.microsoftonline.com/${process.env.OUTLOOK_TENANT_ID}/oauth2/v2.0/token`;
@@ -17,95 +24,601 @@ async function getAccessToken() {
   return response.data.access_token;
 }
 
-async function getConversationThreads(conversationId, user_email = process.env.OUTLOOK_USER_APP) {
-  const token = await getAccessToken();
-   const response = await axios.get(
-    `${process.env.OUTLOOK_GRAPH_URL}/users/${user_email}/messages?$filter=conversationId eq '${conversationId}'&$top=100`,
+// ----------------- get attachments ----------------------------- //
+
+async function getMessageAttachments(token, messageId, baseUrl = process.env.BASE_URL_APP) {
+  const response = await axios.get(
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${messageId}/attachments`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
-  return response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime));
+
+  const uploadDir = path.join(__dirname, '../public/uploads');
+  fs.mkdirSync(uploadDir, { recursive: true });
+
+  const attachments = [];
+
+  for (const att of response.data.value) {
+    if (att['@odata.type'] === "#microsoft.graph.fileAttachment") {
+
+      const buffer = Buffer.from(att.contentBytes, 'base64');
+
+      // Nettoyer le nom de fichier (suppression espaces et caractères à risque)
+      const safeName = att.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+
+      // Enregistrer le fichier
+      const filePath = path.join(uploadDir, messageId + "_" + safeName);
+
+      // Supprimer le fichier s'il existe déjà
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`🗑️ Fichier existant supprimé : ${safeName}`);
+      }
+
+      // Écrire le nouveau fichier
+      fs.writeFileSync(filePath, buffer);
+
+      // Générer le lien public de consultation
+      const fileUrl = `${baseUrl}/public/uploads/${encodeURIComponent(messageId + "_" + safeName)}`;
+
+      attachments.push({
+        filename: safeName,
+        mimeType: att.contentType,
+        size: att.size,
+        url: fileUrl
+      });
+
+    } else if (att['@odata.type'] === "#microsoft.graph.itemAttachment") {
+
+      // Un itemAttachment (email attaché) peut être récupéré en MIME brut via /$value
+      const emlRes = await axios.get(
+        `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${messageId}/attachments/${att.id}/$value`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'arraybuffer'
+        }
+      );
+
+      const buffer = Buffer.from(emlRes.data);
+
+      // Nettoyer le nom + s'assurer de l'extension .eml
+      let safeName = (att.name || `email_${att.id}`).replace(/[^a-zA-Z0-9.\-_]/g, '_');
+      if (!safeName.toLowerCase().endsWith('.eml')) {
+        safeName += '.eml';
+      }
+
+      const filePath = path.join(uploadDir, messageId + "_" + safeName);
+
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`🗑️ Fichier existant supprimé : ${safeName}`);
+      }
+
+      fs.writeFileSync(filePath, buffer);
+
+      const fileUrl = `${baseUrl}/public/uploads/${encodeURIComponent(messageId + "_" + safeName)}`;
+
+      attachments.push({
+        filename: safeName,
+        mimeType: "message/rfc822",
+        size: att.size,
+        url: fileUrl
+      });
+
+    } else {
+      attachments.push({ filename: att.name, mimeType: "unknown" });
+    }
+  }
+
+  return attachments;
 }
 
-async function replyToMessage(messageId, conversation_id, replyText, destinataire) {
+// --------------------------------------------------------------- //
+
+async function getConversationThreads(conversationId) {
   const token = await getAccessToken();
-
-  /* methode 1 */
-  // 1. Create the reply draft
-  await axios.post(
-    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${messageId}/reply`,
-    { 
-      "comment": replyText,
-      "toRecipients": [
-        {
-          "emailAddress": {
-            "address": destinataire
-          }
-        }
-      ]
-    },
-    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': `application/json` } }
-  );
-
-  // 2. get le broillon (`${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/mailFolders/Drafts/messages?$filter=conversationId eq '${conversation_id}' and startswith(subject,'Re:')&$orderby=createdDateTime desc&$top=1`)
-  const response_daft = await axios.get(
-    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/mailFolders/Drafts/messages?$filter=conversationId eq '${conversation_id}' and startswith(subject,'Re:')&$top=1`,
+   const response = await axios.get(
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages?$filter=conversationId eq '${conversationId}'&$top=100`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
-  const draft_id = response_daft.data.value[0].id;
-  //console.dir(draft_id);
+  return formatConversation( token, response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime)) );
+}
 
-  // 3. remettre le recipients
-  await axios.patch(
-    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${draft_id}`,
-    { 
-      "toRecipients": [
-        {
-          "emailAddress": {
-            "address": destinataire
-          }
-        }
-      ]
-    },
-    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': `application/json` } }
-  );
+async function replyToMessage(messageId, replyText, attachments = []) {
+  const token = await getAccessToken();
 
-  // 4. Send the draft
-  await axios.post(
-    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${draft_id}/send`,
+  //text to HTML
+  const openai = new OpenAiApiService();
+  const replyTextHtml = await openai.formatTextToHtml(replyText);
+
+  // 1. Create draft reply
+  const draftResponse = await axios.post(
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${messageId}/createReply`,
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
-  console.log('Reply sent successfully!');
+  const draftId = draftResponse.data.id;
+
+  // 2. Update body
+  await axios.patch(
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${draftId}`,
+    {
+      body: {
+        contentType: "HTML",
+        content: replyTextHtml
+      }
+    },
+    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+  );
+
+  // 3. Add attachments if any
+  for (const att of attachments) {
+    await axios.post(
+      `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${draftId}/attachments`,
+      {
+        "@odata.type": "#microsoft.graph.fileAttachment",
+        name: att.filename,
+        contentType: att.mimeType || "application/octet-stream",
+        contentBytes: att.contentBase64.replace(/^data:.*;base64,/, "") // remove data URI prefix
+      },
+      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // 4. Send the draft
+  await axios.post(
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${draftId}/send`,
+    {},
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  console.log("Reply with attachments sent successfully!");
 }
 
-async function testPolicy(){
+// --------------------------------------------------------------- //
+
+/**
+ * Reply to a message with correct saving + sending behavior.
+ */
+async function replyToMessage2(messageId, replyText, attachments = [], options = {}, ticket_id) {
+  const { toRecipients = [], ccRecipients = [], subject = null } = options;
+
   const token = await getAccessToken();
-  await axios.post(
-    `https://graph.microsoft.com/v1.0/users/mphrygien@astucom.com/sendMail`,
-    { 
-      "message": {
-        "subject": "Test",
-        "body": {
-          "contentType": "Text",
-          "content": "Ceci est un test"
-        },
-        "toRecipients": [
-          {
-            "emailAddress": {
-              "address": "hrajaonah@astucom.com"
-            }
-          }
-        ]
-      },
-      "saveToSentItems": "true" 
-    },
-    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': `application/json` } }
+  const openai = new OpenAiApiService();
+  const replyTextHtml = await openai.formatTextToHtml(replyText);
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json"
+  };
+
+  //
+  // 1. Create reply draft
+  //
+  const draftResponse = await axios.post(
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${messageId}/createReply`,
+    {},
+    { headers }
   );
+
+  const draftId = draftResponse.data.id;
+  const internetMessageId = draftResponse.data.internetMessageId;
+  const draftConversationId = draftResponse.data.conversationId;
+
+  //
+  // 2. Update body + recipients + subject
+  //
+  const updatePayload = {
+    body: { contentType: "HTML", content: replyTextHtml }
+  };
+
+  if (toRecipients.length > 0) {
+    updatePayload.toRecipients = toRecipients.map(email => ({
+      emailAddress: { address: email }
+    }));
+  }
+
+  if (ccRecipients.length > 0) {
+    updatePayload.ccRecipients = ccRecipients.map(email => ({
+      emailAddress: { address: email }
+    }));
+  }
+
+  if (subject) updatePayload.subject = subject;
+
+  await axios.patch(
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${draftId}`,
+    updatePayload,
+    { headers }
+  );
+
+  //
+  // 3. Add attachments (if any)
+  //
+  for (const att of attachments) {
+    await axios.post(
+      `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${draftId}/attachments`,
+      {
+        "@odata.type": "#microsoft.graph.fileAttachment",
+        name: att.filename,
+        contentType: att.mimeType || "application/octet-stream",
+        contentBytes: att.contentBase64.replace(/^data:.*;base64,/, "")
+      },
+      { headers }
+    );
+  }
+
+  //
+  // ✅ 4. FORCE DRAFT TO BE SAVED BEFORE SENDING
+  //
+  await waitUntilMessageExists(process.env.OUTLOOK_USER_APP, draftId, token);
+
+  //
+  // 5. Send it
+  //
+  await axios.post(
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${draftId}/send`,
+    {},
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  await new Promise(res => setTimeout(res, 1000));
+
+  const sentMessage = await getSentMessageByInternetMessageId(internetMessageId);
+
+  const newConversationId = sentMessage?.conversationId; // ✅ The real post-send conversationId
+  console.log("Old conversation ID:", draftConversationId);
+  console.log("New conversation ID:", newConversationId);
+
+  if(draftConversationId != newConversationId) {
+    await RelatedConversation.create({ 
+      ticket_id: ticket_id,
+      conversation_email_id: newConversationId, 
+    });
+  }
+
+  console.log("Reply with attachments sent successfully and stored!");
+}
+
+/**
+ * Reply to a message with correct saving + sending behavior.
+ */
+async function sendNewMail(replyText, attachments = [], options = {}, ticket_id) {
+  const { toRecipients = [], ccRecipients = [], subject } = options;
+
+  if (toRecipients.length === 0) {
+    throw new Error("toRecipients is required for a new mail");
+  }
+
+  const token = await getAccessToken();
+  const openai = new OpenAiApiService();
+  const replyTextHtml = await openai.formatTextToHtml(replyText);
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json"
+  };
+
+  //
+  // 1. Create a brand new draft (pas de createReply, on POST directement sur /messages)
+  //
+  const draftPayload = {
+    subject: subject,
+    body: { contentType: "HTML", content: replyTextHtml },
+    toRecipients: toRecipients.map(email => ({
+      emailAddress: { address: email }
+    }))
+  };
+
+  if (ccRecipients.length > 0) {
+    draftPayload.ccRecipients = ccRecipients.map(email => ({
+      emailAddress: { address: email }
+    }));
+  }
+
+  const draftResponse = await axios.post(
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages`,
+    draftPayload,
+    { headers }
+  );
+
+  const draftId = draftResponse.data.id;
+  const internetMessageId = draftResponse.data.internetMessageId;
+  const draftConversationId = draftResponse.data.conversationId;
+
+  //
+  // 2. Add attachments (if any)
+  //
+  for (const att of attachments) {
+    await axios.post(
+      `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${draftId}/attachments`,
+      {
+        "@odata.type": "#microsoft.graph.fileAttachment",
+        name: att.filename,
+        contentType: att.mimeType || "application/octet-stream",
+        contentBytes: att.contentBase64.replace(/^data:.*;base64,/, "")
+      },
+      { headers }
+    );
+  }
+
+  //
+  // ✅ 3. FORCE DRAFT TO BE SAVED BEFORE SENDING
+  //
+  await waitUntilMessageExists(process.env.OUTLOOK_USER_APP, draftId, token);
+
+  //
+  // 4. Send it
+  //
+  await axios.post(
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${draftId}/send`,
+    {},
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  await new Promise(res => setTimeout(res, 1000));
+
+  const sentMessage = await getSentMessageByInternetMessageId(internetMessageId);
+
+  const newConversationId = sentMessage?.conversationId; // ✅ Le vrai conversationId post-envoi
+  console.log("Old conversation ID:", draftConversationId);
+  console.log("New conversation ID:", newConversationId);
+
+  // sauvegarde du thread 
+  await Ticket.update(
+    { conversation_email_id: newConversationId },
+    { where: { id: ticket_id } }
+  );
+
+  console.log("New mail with attachments sent successfully and stored!");
+
+  return { conversationId: newConversationId, internetMessageId };
+}
+
+/**
+ * ✅ Ensures the draft exists in the mailbox before sending
+ * Prevents the “message not found in any folder” bug.
+ */
+async function waitUntilMessageExists(user, messageId, token) {
+  const headers = { Authorization: `Bearer ${token}` };
+
+  for (let attempt = 0; attempt < 10; attempt++) {
+    try {
+      let res = await axios.get(
+        `${process.env.OUTLOOK_GRAPH_URL}/users/${user}/messages/${encodeURIComponent(messageId)}`,
+        { headers }
+      );
+      console.log("email draft safe : ", res.data);
+      return; // ✅ Exists, safe to send
+    } catch (e) {
+      await new Promise(res => res(200)); // Wait 200ms and retry
+    }
+  }
+
+  console.warn("Warning: draft was never confirmed saved, sending anyway.");
+}
+
+async function getSentMessageByInternetMessageId(internetMessageId) {
+  const token = await getAccessToken();
+
+  const response = await axios.get(
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      params: {
+        $filter: `internetMessageId eq '${internetMessageId}'`,
+        $top: 1
+      }
+    }
+  );
+
+  return response.data.value[0] ?? null;
+}
+
+// --------------------------------------------------------------- //
+
+/**
+ * get the conversation and conversation related 
+ * In outlook, the conversation Id change when we send the mail
+*/
+async function getAllMessage(first_conversation_id, ticket_id){
+  let conversations = [];
+
+  // get the first thread
+  conversations.push(await getConversationThreads(first_conversation_id));
+
+  // get all related conversation
+  const dataQuery = `
+    SELECT id, ticket_id, conversation_email_id FROM related_conversation WHERE ticket_id = ?
+  `;
+  const result = await sequelize.query(dataQuery, {
+    replacements: [ticket_id],
+    type: sequelize.QueryTypes.SELECT
+  });
+
+  for (const element of result) {
+    const data = await getConversationThreads(element.conversation_email_id);
+    conversations.push(data);
+  }
+
+  const result_final = {
+    source_app: conversations[0]?.source_app || null,
+    conversation_id: conversations[0]?.conversation_id || null,
+    messages: await conversations.reduce((acc, conv) => {
+      if (Array.isArray(conv.messages)) {
+        acc.push(...conv.messages);
+      }
+      return acc;
+    }, [])
+  };
+
+  await result_final.messages.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  return result_final;
+
+}
+
+// --------------------------------------------------------------- //
+
+async function getMessageDetailByMessageId(messageId) {
+
+  const user = process.env.OUTLOOK_USER_APP
+  const token = await getAccessToken();
+
+  const headers = { Authorization: `Bearer ${token}` };
+
+  for (let attempt = 0; attempt < 10; attempt++) {
+    try {
+      let res = await axios.get(
+        `${process.env.OUTLOOK_GRAPH_URL}/users/${user}/messages/${encodeURIComponent(messageId)}`,
+        { headers }
+      );
+      console.log("email safe : ", res);
+      return res.data; // ✅ Exists, safe to send
+    } catch (e) {
+      await new Promise(res => res(200)); // Wait 200ms and retry
+    }
+  }
+  return null;
+}
+
+// -------------------- format message --------------------------- //
+
+async function formatConversation(token, messages) {
+  if (!Array.isArray(messages) || messages.length === 0) return null;
+
+  const formattedMessages = [];
+  for (const msg of messages) {
+    let content = msg.body && msg.body.content ? msg.body.content : '';
+    if (msg.body && msg.body.contentType === 'html') {
+      content = cleanHtml(content);
+    }
+
+    // Fetch attachments for this message
+    const attachments = await getMessageAttachments(token, msg.id);
+
+    formattedMessages.push({
+      message_id: msg.id,
+      from: msg.from?.emailAddress
+        ? `${msg.from.emailAddress.name || ''} <${msg.from.emailAddress.address}>`.trim()
+        : '',
+      to: (msg.toRecipients || [])
+        .map(r => `${r.emailAddress.name || ''} <${r.emailAddress.address}>`.trim())
+        .join(', '),
+      subject: msg.subject || '',
+      message: content,
+      date: msg.receivedDateTime || msg.sentDateTime || null,
+      attachments // <= added here
+    });
+  }
+
+  return {
+    source_app: "Outlook",
+    conversation_id: messages[0].conversationId,
+    messages: formattedMessages
+  };
+}
+
+function cleanHtml(html) {
+    if (!html) return '';
+
+    // Supprimer les balises <style>...</style>
+    html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+
+    // Remplacer les balises <br>, </p> et </div> par des sauts de ligne
+    let text = html.replace(/<br\s*\/?>/gi, '\n');
+    text = text.replace(/<\/p>/gi, '\n');
+    text = text.replace(/<\/div>/gi, '\n');
+
+    // Supprimer toutes les balises sauf <a href="...">...</a>
+    text = text.replace(/<(?!\/?a\b[^>]*>)[^>]+>/gi, '');
+
+    // Nettoyer les attributs de <a> pour ne garder que href
+    text = text.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
+        const hrefMatch = attrs.match(/href\s*=\s*(['"])(.*?)\1/i);
+        const href = hrefMatch ? hrefMatch[2] : '#';
+        return `<a href="${href}">`;
+    });
+
+    // Décoder les entités HTML courantes
+    text = text.replace(/&nbsp;/gi, ' ')
+               .replace(/&amp;/gi, '&')
+               .replace(/&lt;/gi, '<')
+               .replace(/&gt;/gi, '>')
+               .replace(/&quot;/gi, '"')
+               .replace(/&apos;/gi, "'")
+               .replace(/&ntilde;/gi, 'ñ');
+
+    // Supprimer les espaces et lignes vides multiples
+    text = text.replace(/\n\s*\n/g, '\n\n').trim();
+
+    return text;
+}
+
+// -------------------- Utils ----------------------------------- //
+/**
+ * Send a new email (not a reply)
+ */
+async function sendMailUtils(toRecipients = [], subject = '', bodyHtml = '', attachments = []) {
+  const token = await getAccessToken();
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+
+  //
+  // 1. Créer le message
+  //
+  const createResponse = await axios.post(
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages`,
+    {
+      subject,
+      body: { contentType: 'HTML', content: bodyHtml },
+      toRecipients: toRecipients.map(email => ({
+        emailAddress: { address: email }
+      })),
+    },
+    { headers }
+  );
+
+  const messageId = createResponse.data.id;
+
+  //
+  // 2. Ajouter les pièces jointes (si présentes)
+  //
+  for (const att of attachments) {
+    await axios.post(
+      `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${messageId}/attachments`,
+      {
+        '@odata.type': '#microsoft.graph.fileAttachment',
+        name:         att.filename,
+        contentType:  att.mimeType || 'application/octet-stream',
+        contentBytes: att.contentBase64.replace(/^data:.*;base64,/, ''),
+      },
+      { headers }
+    );
+  }
+
+  //
+  // 3. Envoyer
+  //
+  await axios.post(
+    `${process.env.OUTLOOK_GRAPH_URL}/users/${process.env.OUTLOOK_USER_APP}/messages/${messageId}/send`,
+    {},
+    { headers }
+  );
+
+  console.log(`✅ Mail envoyé à : ${toRecipients.join(', ')}`);
 }
 
 module.exports = { 
   getConversationThreads,
   replyToMessage,
-  testPolicy
+  replyToMessage2,
+  sendNewMail,
+  getMessageDetailByMessageId,
+  getAllMessage,
+
+  sendMailUtils
 };

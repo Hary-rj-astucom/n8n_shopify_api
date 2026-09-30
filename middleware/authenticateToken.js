@@ -10,6 +10,12 @@ const authenticateToken = (req, res, next) => {
     if (err) return res.status(403).json({ error: "Invalid token" });
 
     req.user = user;
+
+    // exeption pass (get affectation pour les simple user)
+    if(req.baseUrl.includes("/user/userproject") && req.method == "GET") {
+      next();
+    }
+
     // Restrict: only admins allowed for /user paths
     if (req.baseUrl.includes("/user") && req.user.role != "admin" && req.user.role != "super_admin") {
       return res.status(403).json({ error: "Access denied: Admins only" });
