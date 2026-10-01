@@ -330,7 +330,7 @@ async function getUserPivot(month, year) {
       ) AS pivot_columns
       FROM (
         SELECT user.name 
-        FROM user WHERE email NOT IN ('hrajaonah@astucom.com', 'mphrygien@astucom.com', 'adv@cosma-parfumeries.fr', 'gpa@techmode-group.com', 'jpanier@techmode-group.com')
+        FROM user WHERE email NOT IN ('hrajaonah@astucom.com', 'mphrygien@astucom.com', 'adv@cosma-parfumeries.fr', 'gpa@techmode-group.com', 'jpanier@techmode-group.com') AND user.state = 1
       ) AS base
     `);
 
@@ -477,7 +477,7 @@ const getUserActivitySummary2 = async (req, res) => {
           'adv@cosma-parfumeries.fr',
           'gpa@techmode-group.com',
           'jpanier@techmode-group.com'
-      )
+      ) AND u.state = 1
 
       GROUP BY d.date, u.id, u.name
 

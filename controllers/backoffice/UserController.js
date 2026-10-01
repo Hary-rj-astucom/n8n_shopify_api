@@ -30,7 +30,8 @@ const regeneratePassword = async (req, res) => {
 const getUsers = async (req, res) => {
   try {
     const users = await User.findAll({
-      attributes: { exclude: ["password"] }
+      attributes: { exclude: ["password"] },
+      where: { state: 1}
     });
     res.json(users);
   } catch (err) {

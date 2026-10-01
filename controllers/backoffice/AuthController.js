@@ -7,7 +7,7 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     // 1. Check user existence
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ where: { email, state: 1 } });
     if (!user) return res.status(404).json({ error: "User not found" });
 
     // 2. Validate password
