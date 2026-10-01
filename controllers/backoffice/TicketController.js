@@ -3,6 +3,7 @@ const OutlookApiService = require('../../services/OutlookApiService');
 
 const OutlookCosmashopApiService = require('../../services/OutlookCosmashopApiService');
 const OutlookDigiparfApiService = require('../../services/OutlookDigiparfApiService');
+const OutlookKalistaApiService = require('../../services/OutlookKalistaApiService');
 const GmailCosmaparfumerieApiService = require('../../services/GmailCosmaparfumerieApiService');
 
 const Ticket = require("../../models/Ticket.js");
@@ -215,6 +216,11 @@ const getTicketsDetails = async (req, res) => {
           console.log("consultation messagerie DIGIPARF");
           result_conv = await OutlookDigiparfApiService.getAllMessage(result[0].conversation_email_id, result[0].id);
           break;
+        case 4:
+          // KALISTA
+          console.log("consultation messagerie KALISTA");
+          result_conv = await OutlookKalistaApiService.getAllMessage(result[0].conversation_email_id, result[0].id);
+          break;
         default:
           result_conv = [];
       }
@@ -279,6 +285,11 @@ const respondMail = async (req, res) => {
         // DIGIPARF
         console.log("envoie messagerie DIGIPARF");
         result_conv = await OutlookDigiparfApiService.replyToMessage(messageId, replyText, attachements);
+        break;
+      case 4:
+        // KALISTA
+        console.log("envoie messagerie KALISTA");
+        result_conv = await OutlookKalistaApiService.replyToMessage(messageId, replyText, attachements);
         break;
       default:
         result_conv = [];
@@ -392,6 +403,11 @@ const respondMail2 = async (req, res) => {
         console.log("envoie messagerie DIGIPARF");
         result_conv = await OutlookDigiparfApiService.replyToMessage2(messageId, replyText, attachements, optionsOutlook, ticket_id);
         break;
+      case 4:
+        // KALISTA
+        console.log("envoie messagerie KALISTA");
+        result_conv = await OutlookKalistaApiService.replyToMessage2(messageId, replyText, attachements, optionsOutlook, ticket_id);
+        break;
       default:
         result_conv = [];
     }
@@ -495,6 +511,11 @@ const sendNewMail = async (req, res) => {
         // DIGIPARF
         console.log("envoie messagerie DIGIPARF");
         result_conv = await OutlookDigiparfApiService.sendNewMail(replyText, attachements, optionsOutlook, ticket_id);
+        break;
+      case 4:
+        // KALISTA
+        console.log("envoie messagerie KALISTA");
+        result_conv = await OutlookKalistaApiService.sendNewMail(replyText, attachements, optionsOutlook, ticket_id);
         break;
       default:
         result_conv = [];
