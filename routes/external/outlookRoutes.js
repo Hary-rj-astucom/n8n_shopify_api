@@ -7,5 +7,6 @@ router.post('/getConversation', outlookController.getConversationThreads);
 router.post('/replayMessage', outlookController.getReplayMessage);
 
 router.post('/digiparf/getFullBodyMessage', outlookController.getFullMessageMailDigiparf);
+router.post('/kalista/getFullBodyMessage', outlookController.getFullMessageMailKalista);
 
 module.exports = router;

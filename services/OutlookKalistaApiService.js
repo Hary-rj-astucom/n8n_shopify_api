@@ -7,12 +7,13 @@ const sequelize = require("../config/database");
 
 const OpenAiApiService = require('../services/OpenAiApiService');
 const RelatedConversation = require("../models/RelatedConversation");
+const Ticket = require("../models/Ticket");
 
 async function getAccessToken() {
-  const tokenUrl = `https://login.microsoftonline.com/${process.env.OUTLOOK_COSMASHOP_TENANT_ID}/oauth2/v2.0/token`;
+  const tokenUrl = `https://login.microsoftonline.com/${process.env.OUTLOOK_KALISTA_TENANT_ID}/oauth2/v2.0/token`;
   const data = {
-    client_id: process.env.OUTLOOK_COSMASHOP_CLIENT_ID,
-    client_secret: process.env.OUTLOOK_COSMASHOP_CLIENT_SECRET,
+    client_id: process.env.OUTLOOK_KALISTA_CLIENT_ID,
+    client_secret: process.env.OUTLOOK_KALISTA_CLIENT_SECRET,
     scope: 'https://graph.microsoft.com/.default',
     grant_type: 'client_credentials'
   };
@@ -27,7 +28,7 @@ async function getAccessToken() {
 
 async function getMessageAttachments(token, messageId, baseUrl = process.env.BASE_URL_APP) {
   const response = await axios.get(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${messageId}/attachments`,
+    `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages/${messageId}/attachments`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
@@ -70,7 +71,7 @@ async function getMessageAttachments(token, messageId, baseUrl = process.env.BAS
 
       // Un itemAttachment (email attaché) peut être récupéré en MIME brut via /$value
       const emlRes = await axios.get(
-        `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${messageId}/attachments/${att.id}/$value`,
+        `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages/${messageId}/attachments/${att.id}/$value`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'arraybuffer'
@@ -116,7 +117,7 @@ async function getMessageAttachments(token, messageId, baseUrl = process.env.BAS
 async function getConversationThreads(conversationId) {
   const token = await getAccessToken();
    const response = await axios.get(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages?$filter=conversationId eq '${conversationId}'&$top=100`,
+    `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages?$filter=conversationId eq '${conversationId}'&$top=100`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
   return formatConversation( token, response.data.value.sort((a, b) => new Date(a.receivedDateTime) - new Date(b.receivedDateTime)) );
@@ -131,7 +132,7 @@ async function replyToMessage(messageId, replyText, attachments = []) {
 
   // 1. Create draft reply
   const draftResponse = await axios.post(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${messageId}/createReply`,
+    `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages/${messageId}/createReply`,
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
@@ -140,7 +141,7 @@ async function replyToMessage(messageId, replyText, attachments = []) {
 
   // 2. Update body
   await axios.patch(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}`,
+    `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages/${draftId}`,
     {
       body: {
         contentType: "HTML",
@@ -153,7 +154,7 @@ async function replyToMessage(messageId, replyText, attachments = []) {
   // 3. Add attachments if any
   for (const att of attachments) {
     await axios.post(
-      `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}/attachments`,
+      `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages/${draftId}/attachments`,
       {
         "@odata.type": "#microsoft.graph.fileAttachment",
         name: att.filename,
@@ -166,7 +167,7 @@ async function replyToMessage(messageId, replyText, attachments = []) {
 
   // 4. Send the draft
   await axios.post(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}/send`,
+    `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages/${draftId}/send`,
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
@@ -195,7 +196,7 @@ async function replyToMessage2(messageId, replyText, attachments = [], options =
   // 1. Create reply draft
   //
   const draftResponse = await axios.post(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${messageId}/createReply`,
+    `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages/${messageId}/createReply`,
     {},
     { headers }
   );
@@ -226,7 +227,7 @@ async function replyToMessage2(messageId, replyText, attachments = [], options =
   if (subject) updatePayload.subject = subject;
 
   await axios.patch(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}`,
+    `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages/${draftId}`,
     updatePayload,
     { headers }
   );
@@ -236,7 +237,7 @@ async function replyToMessage2(messageId, replyText, attachments = [], options =
   //
   for (const att of attachments) {
     await axios.post(
-      `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}/attachments`,
+      `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages/${draftId}/attachments`,
       {
         "@odata.type": "#microsoft.graph.fileAttachment",
         name: att.filename,
@@ -250,13 +251,13 @@ async function replyToMessage2(messageId, replyText, attachments = [], options =
   //
   // ✅ 4. FORCE DRAFT TO BE SAVED BEFORE SENDING
   //
-  await waitUntilMessageExists(process.env.OUTLOOK_COSMASHOP_USER_APP, draftId, token);
+  await waitUntilMessageExists(process.env.OUTLOOK_KALISTA_USER_APP, draftId, token);
 
   //
   // 5. Send it
   //
   await axios.post(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}/send`,
+    `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages/${draftId}/send`,
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
@@ -274,7 +275,7 @@ async function replyToMessage2(messageId, replyText, attachments = [], options =
       ticket_id: ticket_id,
       conversation_email_id: newConversationId, 
     });
-  } 
+  }
 
   console.log("Reply with attachments sent successfully and stored!");
 }
@@ -316,7 +317,7 @@ async function sendNewMail(replyText, attachments = [], options = {}, ticket_id)
   }
 
   const draftResponse = await axios.post(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages`,
+    `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages`,
     draftPayload,
     { headers }
   );
@@ -330,7 +331,7 @@ async function sendNewMail(replyText, attachments = [], options = {}, ticket_id)
   //
   for (const att of attachments) {
     await axios.post(
-      `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}/attachments`,
+      `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages/${draftId}/attachments`,
       {
         "@odata.type": "#microsoft.graph.fileAttachment",
         name: att.filename,
@@ -344,13 +345,13 @@ async function sendNewMail(replyText, attachments = [], options = {}, ticket_id)
   //
   // ✅ 3. FORCE DRAFT TO BE SAVED BEFORE SENDING
   //
-  await waitUntilMessageExists(process.env.OUTLOOK_COSMASHOP_USER_APP, draftId, token);
+  await waitUntilMessageExists(process.env.OUTLOOK_KALISTA_USER_APP, draftId, token);
 
   //
   // 4. Send it
   //
   await axios.post(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages/${draftId}/send`,
+    `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages/${draftId}/send`,
     {},
     { headers: { Authorization: `Bearer ${token}` } }
   );
@@ -384,7 +385,7 @@ async function waitUntilMessageExists(user, messageId, token) {
   for (let attempt = 0; attempt < 10; attempt++) {
     try {
       let res = await axios.get(
-        `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${user}/messages/${encodeURIComponent(messageId)}`,
+        `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${user}/messages/${encodeURIComponent(messageId)}`,
         { headers }
       );
       console.log("email draft safe : ", res.data);
@@ -401,7 +402,7 @@ async function getSentMessageByInternetMessageId(internetMessageId) {
   const token = await getAccessToken();
 
   const response = await axios.get(
-    `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${process.env.OUTLOOK_COSMASHOP_USER_APP}/messages`,
+    `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages`,
     {
       headers: { Authorization: `Bearer ${token}` },
       params: {
@@ -461,7 +462,7 @@ async function getAllMessage(first_conversation_id, ticket_id){
 
 async function getMessageDetailByMessageId(messageId) {
 
-  const user = process.env.OUTLOOK_COSMASHOP_USER_APP
+  const user = process.env.OUTLOOK_KALISTA_USER_APP
   const token = await getAccessToken();
 
   const headers = { Authorization: `Bearer ${token}` };
@@ -469,7 +470,7 @@ async function getMessageDetailByMessageId(messageId) {
   for (let attempt = 0; attempt < 10; attempt++) {
     try {
       let res = await axios.get(
-        `${process.env.OUTLOOK_COSMASHOP_GRAPH_URL}/users/${user}/messages/${encodeURIComponent(messageId)}`,
+        `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${user}/messages/${encodeURIComponent(messageId)}`,
         { headers }
       );
       console.log("email safe : ", res);
@@ -554,11 +555,70 @@ function cleanHtml(html) {
     return text;
 }
 
+// -------------------- Utils ----------------------------------- //
+/**
+ * Send a new email (not a reply)
+ */
+async function sendMailUtils(toRecipients = [], subject = '', bodyHtml = '', attachments = []) {
+  const token = await getAccessToken();
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+
+  //
+  // 1. Créer le message
+  //
+  const createResponse = await axios.post(
+    `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages`,
+    {
+      subject,
+      body: { contentType: 'HTML', content: bodyHtml },
+      toRecipients: toRecipients.map(email => ({
+        emailAddress: { address: email }
+      })),
+    },
+    { headers }
+  );
+
+  const messageId = createResponse.data.id;
+
+  //
+  // 2. Ajouter les pièces jointes (si présentes)
+  //
+  for (const att of attachments) {
+    await axios.post(
+      `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages/${messageId}/attachments`,
+      {
+        '@odata.type': '#microsoft.graph.fileAttachment',
+        name:         att.filename,
+        contentType:  att.mimeType || 'application/octet-stream',
+        contentBytes: att.contentBase64.replace(/^data:.*;base64,/, ''),
+      },
+      { headers }
+    );
+  }
+
+  //
+  // 3. Envoyer
+  //
+  await axios.post(
+    `${process.env.OUTLOOK_KALISTA_GRAPH_URL}/users/${process.env.OUTLOOK_KALISTA_USER_APP}/messages/${messageId}/send`,
+    {},
+    { headers }
+  );
+
+  console.log(`✅ Mail envoyé à : ${toRecipients.join(', ')}`);
+}
+
 module.exports = { 
   getConversationThreads,
   replyToMessage,
   replyToMessage2,
   sendNewMail,
   getMessageDetailByMessageId,
-  getAllMessage
+  getAllMessage,
+
+  sendMailUtils
 };

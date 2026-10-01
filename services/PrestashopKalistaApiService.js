@@ -194,6 +194,7 @@ async function getOrderByReference(reference, apiUrl = apiUrlKalista, boutique =
     console.log(tracking ? "detail tracking récupéré !" : "Impossible de récupérer le detail payment");
 
     return {
+      by: "order_number",
       boutique,
       order,
       customer,
@@ -234,9 +235,9 @@ async function getOrdersByCustomerId(customerId, apiUrl = apiUrlKalista, limit =
 }
 
 // Dernières commandes d'un client à partir de son email
-// ancienne boucle multi-boutiques supprimée.
-async function getOrdersByEmail(email, apiUrl = apiUrlKalista, boutique = "Kalista", limit = 1) {
+async function getOrdersByEmail(email, apiUrl = apiUrlKalista, boutique = "Kalista") {
   try {
+    const limit = 1;
     const pageSize = normalizeLimit(limit);
 
     const customerId = await getCustomerIdByEmail(email, apiUrl);
@@ -282,6 +283,7 @@ async function getOrdersByEmail(email, apiUrl = apiUrlKalista, boutique = "Kalis
     console.log(tracking ? "detail tracking récupéré !" : "Impossible de récupérer le detail payment");
 
     return {
+      by: "email",
       boutique,
       order,
       customer,
@@ -313,10 +315,10 @@ async function getOrderByRefOrByEmail(reference, email, apiUrl = apiUrlKalista, 
         return order;
       } catch(error) {
         console.log("switch to email searching : ", error.message);
-        return await getOrdersByEmail(email, apiUrl = apiUrlKalista, boutique = "Kalista", limit = 1);
+        return await getOrdersByEmail(email, apiUrl = apiUrlKalista, boutique = "Kalista");
       }
     }else{
-      return await getOrdersByEmail(email, apiUrl = apiUrlKalista, boutique = "Kalista", limit = 1);
+      return await getOrdersByEmail(email, apiUrl = apiUrlKalista, boutique = "Kalista");
     }
   } catch(error) {
     console.error("Erreur:", error.message);
