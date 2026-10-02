@@ -16,6 +16,11 @@ const authenticateToken = (req, res, next) => {
       return next();
     }
 
+    // execption pass (list user)
+    if(req.baseUrl.includes("/user") && req.method === "GET") {
+      return next();
+    }
+
     // Restrict: only admins allowed for /user paths
     if (req.baseUrl.includes("/user") && req.user.role != "admin" && req.user.role != "super_admin") {
       return res.status(403).json({ error: "Access denied: Admins only" });
