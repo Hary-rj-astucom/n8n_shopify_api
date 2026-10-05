@@ -575,29 +575,29 @@ const createTicket = async (req, res) => {
     // assignation automatique de ticket   //
     // ----------------------------------- //
 
-    if(ticket.user_id == null){
-      // compter le nombre de ticket (en attente, ou en cours) asigner a un user
-      const request = `
-        SELECT COUNT(ticket.id) AS nb, user.id AS user_id, user.name
-        FROM user
-        LEFT JOIN ticket
-          ON ticket.user_id = user.id
-          AND ticket.status IN ('en attente', 'en cours')
-        WHERE user.treating = 1 AND user.state = 1 AND user.id IN (SELECT user_id FROM user_project WHERE project_id = ${ticket.project_id})
-        GROUP BY user.id, user.name
-        ORDER BY nb ASC LIMIT 1
-      `;
+    // if(ticket.user_id == null){
+    //   // compter le nombre de ticket (en attente, ou en cours) asigner a un user
+    //   const request = `
+    //     SELECT COUNT(ticket.id) AS nb, user.id AS user_id, user.name
+    //     FROM user
+    //     LEFT JOIN ticket
+    //       ON ticket.user_id = user.id
+    //       AND ticket.status IN ('en attente', 'en cours')
+    //     WHERE user.treating = 1 AND user.state = 1 AND user.id IN (SELECT user_id FROM user_project WHERE project_id = ${ticket.project_id})
+    //     GROUP BY user.id, user.name
+    //     ORDER BY nb ASC LIMIT 1
+    //   `;
 
-      const result = await sequelize.query(request, {
-        type: sequelize.QueryTypes.SELECT
-      });
+    //   const result = await sequelize.query(request, {
+    //     type: sequelize.QueryTypes.SELECT
+    //   });
 
-      if(result.length > 0){
-        // assigner a l'utilisateur
-        ticket.user_id = result[0].user_id;
-        await ticket.save();
-      }
-    }
+    //   if(result.length > 0){
+    //     // assigner a l'utilisateur
+    //     ticket.user_id = result[0].user_id;
+    //     await ticket.save();
+    //   }
+    // }
 
     res.status(201).json(ticket);
   } catch (err) {
