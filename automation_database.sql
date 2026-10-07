@@ -21,6 +21,12 @@ INSERT INTO label (id, name) VALUES (3, 'Paiement / Facture non recu');
 INSERT INTO label (id, name) VALUES (4, 'Produit defectueux');
 INSERT INTO label (id, name) VALUES (5, 'Retour produit et retractation');
 
+-- new rows
+INSERT INTO label (id, name) VALUES (12, 'saisie de commande');
+INSERT INTO label (id, name) VALUES (13, 'Demande de catalogue');
+INSERT INTO label (id, name) VALUES (14, "Demande d'adhesion");
+INSERT INTO label (id, name) VALUES (15, "Creation de sous compte client");
+
 CREATE TABLE role (
     name VARCHAR(20) PRIMARY KEY,
     state INT NOT NULL DEFAULT 1
