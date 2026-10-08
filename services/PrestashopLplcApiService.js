@@ -649,7 +649,7 @@ async function getInvoice(reference, email, apiUrl = apiUrlLclp, boutique = "Lcl
     // Générer PDF normal
     const browser = await puppeteer.launch({
         headless: "new",
-        executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+        //executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
 
