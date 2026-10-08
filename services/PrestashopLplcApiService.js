@@ -6,10 +6,10 @@ const path = require("path");
 const { PDFDocument } = require("pdf-lib");
 
 // Configuration de l'API PrestaShop
-const apiKey = process.env.PRESTASHOP_KALISTA_API_KEY;
+const apiKey = process.env.PRESTASHOP_LCLP_API_KEY;
 
-const shopUrlKalista = process.env.PRESTASHOP_KALISTA_URL;
-const apiUrlKalista = `${shopUrlKalista}/api/`;
+const shopUrlLclp = process.env.PRESTASHOP_LCLP_URL;
+const apiUrlLclp = `${shopUrlLclp}/api/`;
 
 // Garde-fou pagination, même principe que côté Magento : borne le
 // nombre de résultats entre 1 et 10 (5 par défaut).
@@ -105,7 +105,7 @@ async function getOrderPayement(apiUrl, order_id) {
 
 // Recuperation des data de l'info payement
 async function getOrderPayementDetail(apiUrl, order_payment_id) {
-  const url = `${apiUrl}order_payments/${order_payment_id}?output_format=JSON`;
+  const url = `${apiUrl}order_payments/${order_payment_id}?output_format=JSON&display=full`;
   const data = await callPrestaShopAPI(url);
   return data.order_payment ?? [];
 }
@@ -165,7 +165,7 @@ async function getOrderByReferenceNum(apiUrl, reference) {
 }
 
 //avoir les donnees avec les references
-async function getOrderByReference(reference, apiUrl = apiUrlKalista, boutique = "Kalista"){
+async function getOrderByReference(reference, apiUrl = apiUrlLclp, boutique = "Lclp"){
   try {
     //verification de tout les boutiques
     let order_id = await getOrderByReferenceNum(apiUrl, reference);
@@ -219,7 +219,7 @@ async function getOrderByReference(reference, apiUrl = apiUrlKalista, boutique =
 // ============================================================
 
 // Retrouve l'id client PrestaShop correspondant à un email
-async function getCustomerIdByEmail(email, apiUrl = apiUrlKalista) {
+async function getCustomerIdByEmail(email, apiUrl = apiUrlLclp) {
   const url = `${apiUrl}customers?filter[email]=${encodeURIComponent(email)}&output_format=JSON`;
   const data = await callPrestaShopAPI(url);
   const customers = data.customers || [];
@@ -228,7 +228,7 @@ async function getCustomerIdByEmail(email, apiUrl = apiUrlKalista) {
 
 // Commandes d'un client (déjà identifié par id)
 // plus élevé correspondant à une commande plus récente.
-async function getOrdersByCustomerId(customerId, apiUrl = apiUrlKalista, limit = DEFAULT_PAGE_SIZE) {
+async function getOrdersByCustomerId(customerId, apiUrl = apiUrlLclp, limit = DEFAULT_PAGE_SIZE) {
   const url =
     `${apiUrl}orders?filter[id_customer]=${customerId}` +
     `&sort=id_DESC&limit=0,${limit}` +
@@ -239,7 +239,7 @@ async function getOrdersByCustomerId(customerId, apiUrl = apiUrlKalista, limit =
 }
 
 // Dernières commandes d'un client à partir de son email
-async function getOrdersByEmail(email, apiUrl = apiUrlKalista, boutique = "Kalista") {
+async function getOrdersByEmail(email, apiUrl = apiUrlLclp, boutique = "Lclp") {
   try {
     const limit = 1;
     const pageSize = normalizeLimit(limit);
@@ -250,7 +250,7 @@ async function getOrdersByEmail(email, apiUrl = apiUrlKalista, boutique = "Kalis
     }
 
     const orders = await getOrdersByCustomerId(customerId, apiUrl, pageSize);
-    const results = orders.map((o) => ({ boutique: "KALISTA", ...o }));
+    const results = orders.map((o) => ({ boutique: "LCLP", ...o }));
 
     if (results.length === 0) {
       throw new Error(`Aucune commande trouvée pour l'email "${email}"`);
@@ -307,11 +307,11 @@ async function getOrdersByEmail(email, apiUrl = apiUrlKalista, boutique = "Kalis
 //            Recuperation complete des information               //
 //----------------------------------------------------------------// 
 
-async function getOrderByRefOrByEmail(reference, email, apiUrl = apiUrlKalista, boutique = "Kalista"){
+async function getOrderByRefOrByEmail(reference, email, apiUrl = apiUrlLclp, boutique = "Lclp"){
   try {
     if(reference){
       try{
-        const order = await getOrderByReference(reference, apiUrl = apiUrlKalista, boutique = "Kalista");
+        const order = await getOrderByReference(reference, apiUrl = apiUrlLclp, boutique = "Lclp");
         //verifier le propietaire de la commande 
         if(order.customer.email != email){
           return { "message ": "L’adresse e-mail fournie ne correspond pas à celle associée à la commande." };
@@ -319,10 +319,10 @@ async function getOrderByRefOrByEmail(reference, email, apiUrl = apiUrlKalista, 
         return order;
       } catch(error) {
         console.log("switch to email searching : ", error.message);
-        return await getOrdersByEmail(email, apiUrl = apiUrlKalista, boutique = "Kalista");
+        return await getOrdersByEmail(email, apiUrl = apiUrlLclp, boutique = "Lclp");
       }
     }else{
-      return await getOrdersByEmail(email, apiUrl = apiUrlKalista, boutique = "Kalista");
+      return await getOrdersByEmail(email, apiUrl = apiUrlLclp, boutique = "Lclp");
     }
   } catch(error) {
     console.error("Erreur:", error.message);
@@ -431,17 +431,21 @@ async function createHtmlInvoice(data){
             <body>
             
             <div class="header">
-              <div class="logo">kalista-<span>parfums</span><small>.com</small></div>
+              <div class="logo">Lclp-<span>parfums</span><small>.com</small></div>
               <div class="title">FACTURE<br><span class="sub">${data.invoiceDate}<br>${data.invoiceNumber}</span></div>
             </div>
             
             <div class="addresses">
               <div class="shop">
-                Kalista parfums<br>
-                28 rue Nicéphore Niepce<br>
+                <h4>SAS ADV LES PARFUMS</h4>
+                28 Rue Nicéphore Niepce<br>
                 71400 AUTUN<br>
                 France<br>
-                0385869080
+                E-mail: contact@lesparfumslescapillaires.com<br>
+                Numéro d'immatriculation RCS :<br>
+                42341657700132<br>
+                Numéro de TVA: FR17423416577<br>
+                EORI: FR49763252100025<br>
               </div>
               <div>
                 <h4>Adresse de livraison</h4>
@@ -513,7 +517,7 @@ async function createHtmlInvoice(data){
 }
 
 //recuperation des donnees de facturations via mail ou refererence de commande
-async function getInvoice(reference, email, apiUrl = apiUrlKalista, boutique = "Kalista", baseUrl = process.env.BASE_URL_APP){
+async function getInvoice(reference, email, apiUrl = apiUrlLclp, boutique = "Lclp", baseUrl = process.env.BASE_URL_APP){
   try { 
 
     const order_id = (reference && (await getOrderByReferenceNum(apiUrl, reference))) || (await getLatestOrderIdByEmail(email, apiUrl));

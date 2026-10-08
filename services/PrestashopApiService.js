@@ -97,11 +97,15 @@ async function getOrderPayement(apiUrl, order_id) {
   const url = `${apiUrl}order_payments?filter[order_reference]=${order_id}&output_format=JSON`;
   const data = await callPrestaShopAPI(url);
   let result = [];
-  if(data.order_payments.length > 0){
-    for(let a=0; a<data.order_payments.length; a++){
-      result.push(await getOrderPayementDetail(apiUrl, data.order_payments[0].id)); 
+  if(data.order_payments){
+    if(data.order_payments.length > 0){
+      for(let a=0; a<data.order_payments.length; a++){
+        result.push(await getOrderPayementDetail(apiUrl, data.order_payments[0].id)); 
+      }
+      return result;    
+    }else{
+      return [];
     }
-    return result;    
   }else{
     return [];
   }

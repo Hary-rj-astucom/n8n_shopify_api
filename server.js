@@ -12,6 +12,7 @@ const shopifyRoutes = require('./routes/external/shopifyRoutes');
 const magentoRoutes = require('./routes/external/magentoRoutes');
 const prestashopRoutes = require('./routes/external/prestashopRoutes');
 const prestashopKalistaRoutes = require('./routes/external/prestashopKalistaRoutes');
+const prestashopLplcRoutes = require('./routes/external/prestashopLplcRoutes');
 const colissimoRoutes = require('./routes/external/colissimoRoutes');
 const modialrelayRoutes = require('./routes/external/modialrelayRoutes');
 const landmarkRoutes = require('./routes/external/landmarkRoutes');
@@ -59,6 +60,7 @@ app.use(prefix + '/shopify', shopifyRoutes);
 app.use(prefix + '/magento', magentoRoutes);
 app.use(prefix + '/prestashop', prestashopRoutes);
 app.use(prefix + '/kalista', prestashopKalistaRoutes);
+app.use(prefix + '/lplc', prestashopLplcRoutes);
 app.use(prefix + '/outlook', outlookRoutes);
 app.use(prefix + '/gmail', gmailRoutes);
 
