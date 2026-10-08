@@ -1,6 +1,7 @@
 const OutlookApiService = require('../../services/OutlookApiService');
 const OutlookDigiparfApiService = require('../../services/OutlookDigiparfApiService');
 const OutlookKalistaApiService = require('../../services/OutlookKalistaApiService');
+const OutlookLplcApiService = require('../../services/OutlookLplcApiService');
 const tools = require('../../utils/tools');
 
 const getConversationThreads = async (req, res) => {
@@ -85,6 +86,26 @@ const getFullMessageMailKalista = async (req, res) => {
   }
 }
 
+// ------------ LPLC ----------------------
+
+const getFullMessageMailLplc = async (req, res) => {
+  try {
+
+    let result = await OutlookLplcApiService.getMessageDetailByMessageId(req.body.message_id);
+    const final = {
+      full_message: result ? tools.stripHtmlTags(result.body.content) : ""
+    };
+    res.status(200).send(final);
+
+  } catch (error) {
+
+    console.dir(error);
+
+    //console.error('Error consultation outlook:', error);
+    res.status(500).send('Error consultation outlook');
+  }
+}
+
 module.exports = { 
     getConversationThreads,
     getReplayMessage,
@@ -92,4 +113,5 @@ module.exports = {
 
     getFullMessageMailDigiparf,
     getFullMessageMailKalista,
+    getFullMessageMailLplc,
 };

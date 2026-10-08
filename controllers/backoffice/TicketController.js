@@ -4,6 +4,7 @@ const OutlookApiService = require('../../services/OutlookApiService');
 const OutlookCosmashopApiService = require('../../services/OutlookCosmashopApiService');
 const OutlookDigiparfApiService = require('../../services/OutlookDigiparfApiService');
 const OutlookKalistaApiService = require('../../services/OutlookKalistaApiService');
+const OutlookLplcApiService = require('../../services/OutlookLplcApiService');
 const GmailCosmaparfumerieApiService = require('../../services/GmailCosmaparfumerieApiService');
 
 const Ticket = require("../../models/Ticket.js");
@@ -221,6 +222,11 @@ const getTicketsDetails = async (req, res) => {
           console.log("consultation messagerie KALISTA");
           result_conv = await OutlookKalistaApiService.getAllMessage(result[0].conversation_email_id, result[0].id);
           break;
+        case 5:
+          // LPLC
+          console.log("consultation messagerie LCLP");
+          result_conv = await OutlookLplcApiService.getAllMessage(result[0].conversation_email_id, result[0].id);
+          break;
         default:
           result_conv = [];
       }
@@ -290,6 +296,11 @@ const respondMail = async (req, res) => {
         // KALISTA
         console.log("envoie messagerie KALISTA");
         result_conv = await OutlookKalistaApiService.replyToMessage(messageId, replyText, attachements);
+        break;
+      case 5:
+        // LPLC
+        console.log("envoie messagerie LPLC");
+        result_conv = await OutlookLplcApiService.replyToMessage(messageId, replyText, attachements);
         break;
       default:
         result_conv = [];
@@ -408,6 +419,11 @@ const respondMail2 = async (req, res) => {
         console.log("envoie messagerie KALISTA");
         result_conv = await OutlookKalistaApiService.replyToMessage2(messageId, replyText, attachements, optionsOutlook, ticket_id);
         break;
+      case 5:
+        // LPLC
+        console.log("envoie messagerie LPLC");
+        result_conv = await OutlookLplcApiService.replyToMessage2(messageId, replyText, attachements, optionsOutlook, ticket_id);
+        break;
       default:
         result_conv = [];
     }
@@ -516,6 +532,11 @@ const sendNewMail = async (req, res) => {
         // KALISTA
         console.log("envoie messagerie KALISTA");
         result_conv = await OutlookKalistaApiService.sendNewMail(replyText, attachements, optionsOutlook, ticket_id);
+        break;
+      case 5:
+        // LPLC
+        console.log("envoie messagerie LPLC");
+        result_conv = await OutlookLplcApiService.sendNewMail(replyText, attachements, optionsOutlook, ticket_id);
         break;
       default:
         result_conv = [];

@@ -9,6 +9,11 @@ INSERT INTO project (id, code, name) VALUES (1, 'COSHP', 'COSMASHOP');
 INSERT INTO project (id, code, name) VALUES (2, 'COSPA', 'COSMA-PARFUMERIE');
 INSERT INTO project (id, code, name) VALUES (3, 'DIGIP', 'DIGIPARF');
 
+-- new rows
+INSERT INTO project (id, code, name) VALUES (4, 'KALIS', 'KALISTA');
+INSERT INTO project (id, code, name) VALUES (5, 'LPLC', 'LPLC');
+
+
 CREATE TABLE label (
     id INT PRIMARY KEY auto_increment,
     name VARCHAR(45) NOT NULL,
