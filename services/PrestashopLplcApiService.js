@@ -5,6 +5,11 @@ const fs = require("fs-extra");
 const path = require("path");
 const { PDFDocument } = require("pdf-lib");
 
+// Chargement logo lplc
+const logoPath = path.join(__dirname, "../public/assets/logo-lplc.svg"); // adapte le chemin
+const logoBase64 = fs.readFileSync(logoPath).toString("base64");
+const logoDataUri = `data:image/svg+xml;base64,${logoBase64}`;
+
 // Configuration de l'API PrestaShop
 const apiKey = process.env.PRESTASHOP_LCLP_API_KEY;
 
@@ -345,7 +350,7 @@ async function getAddress(address_id, apiUrl){
 async function getCountryName(country_id, apiUrl){
   const url = `${apiUrl}countries?filter[id]=${country_id}&display=full&output_format=JSON`;
   const data = await callPrestaShopAPI(url);
-  return data.countries[0].name[0].value ?? null;
+  return data.countries[0].name[0].value ?? data.countries[0].name ?? null;
 }
 
 // avoir le dernier order id par mail
@@ -379,7 +384,7 @@ async function createHtmlInvoice(data){
     products += `<tr>
                   <td>${element.reference}</td>
                   <td>${element.name}</td>
-                  <td>${element.taxRate} %</td><td>---</td><td>${element.unitHT}</td><td>---</td><td>${element.qty}</td><td>${element.totalHT}</td>
+                  <td>${element.taxRate} %</td><td>${element.discountPct}</td><td>${element.unitHT}</td><td>${element.discountPrice}</td><td>${element.qty}</td><td>${element.totalHT}</td>
                 </tr>`
   });
 
@@ -431,12 +436,12 @@ async function createHtmlInvoice(data){
             <body>
             
             <div class="header">
-              <div class="logo">Lclp-<span>parfums</span><small>.com</small></div>
+              <div class="logo"><img src="${logoDataUri}"></div>
               <div class="title">FACTURE<br><span class="sub">${data.invoiceDate}<br>${data.invoiceNumber}</span></div>
             </div>
             
             <div class="addresses">
-              <div class="shop">
+              <div style="font-size: x-small;">
                 <h4>SAS ADV LES PARFUMS</h4>
                 28 Rue Nicéphore Niepce<br>
                 71400 AUTUN<br>
@@ -508,10 +513,38 @@ async function createHtmlInvoice(data){
                 <tr><td>Frais d'expédition</td><td>${data.totals.shippingHT}</td></tr>
                 <tr><td>Total (HT)</td><td>${data.totals.totalHT}</td></tr>
                 <tr><td>Total Taxes</td><td>${data.totals.taxTotal}</td></tr>
+                <tr><td>Remise (TTC)</td><td>${data.totals.total_discounts_tax_incl}</td></tr>
                 <tr class="grand"><td>Total</td><td>${data.totals.totalTTC}</td></tr>
               </table>
             </div>
-            
+
+            <br>
+            <div>
+              <p><b>Merci d'ajouter la mention "SAS ADV" en référence de votre virement.</b></p>
+            </div>
+            <br>
+            <div style="display:flex; justify-content: space-between">
+              <div>
+                <b>IBAN:</b> FR7617806005550412702794905
+              </div>
+              <div>
+                <b>Banque:</b> CRCAM CENTRE EST
+              </div>
+              <div>
+                <b>BIC:</b> AGRIFRPP878
+              </div>
+            </div>
+            <br>
+            <div style="font-size: x-small;">
+              Les procédures de conformité exigent que les paiements ne puissent être effectués qu'à partir de comptes bancaires au nom du débiteur. Référence de paiement : dans le 
+              cas d’un virement bancaire, veuillez indiquer le numéro de facture et le numéro de client. Tous les contrats dans le cadre desquels nous agissons en tant que vendeur sont
+              soumis à nos conditions générales de vente, de livraison et de paiement. Tous les contrats dans le cadre desquels nous agissons en tant qu’acheteur sont soumis à nos
+              conditions générales d’achat. Nous vous avons fait parvenir nos conditions générales, elles sont également disponibles sur le site . Ces conditions incluent notamment une
+              clause de choix des lois et de la juridiction applicables. Nous rejetons explicitement l’application de vos conditions générales. Il appartient à l’acheteur de déterminer où les
+              biens achetés seront vendus ; le vendeur n’intervient pas et n’a aucun contrôle en la matière. L’acheteur doit s’assurer personnellement qu’il est autorisé à vendre les
+              marchandises sur le marché. L’acheteur est entièrement responsable en cas de violation et dégage le vendeur de toute responsabilité à cet égard.
+            </div>
+
             </body>
           </html>`;
 }
@@ -551,11 +584,16 @@ async function getInvoice(reference, email, apiUrl = apiUrlLclp, boutique = "Lcl
       unitHT: Number(d.unit_price_tax_excl).toFixed(2) + " €",
       totalHT: Number(d.total_price_tax_excl) + " €",
       discountPct: Number(d.reduction_percent),
+      discountPrice: ((Number(d.unit_price_tax_excl) * Number(d.reduction_percent)) / 100).toFixed(2) + " €",
       taxRate: Math.round((d.unit_price_tax_incl / d.unit_price_tax_excl - 1) * 100),
     }));
 
+    // creation du numero facture
+    const invoiceYear = String(invoiceData[0].date_add).substring(0, 4); // "2026"
+    const invoiceNum = String(invoiceData[0].number).padStart(8, "0");   // "00027359"
+
     const facture = {
-      invoiceNumber: "#P" + invoiceData[0].number,
+      invoiceNumber: `FA${invoiceYear}/${invoiceNum}`,
       invoiceDate: invoiceData[0].date_add,
       orderReference: order.reference,
       orderDate: order.date_add,
@@ -593,6 +631,7 @@ async function getInvoice(reference, email, apiUrl = apiUrlLclp, boutique = "Lcl
         shippingHT: Number(invoiceData[0].total_shipping_tax_excl) + " €",
         totalHT: Number(invoiceData[0].total_paid_tax_excl) + " €",
         totalTTC: Number(invoiceData[0].total_paid_tax_incl) + " €",
+        total_discounts_tax_incl: "- " + Number(order.total_discounts_tax_incl) + " €",
         taxProducts: +(invoiceData[0].total_products_wt - invoiceData[0].total_products).toFixed(2) + " €",
         taxShipping: +(invoiceData[0].total_shipping_tax_incl - invoiceData[0].total_shipping_tax_excl).toFixed(2) + " €",
         taxTotal: +(invoiceData[0].total_paid_tax_incl - invoiceData[0].total_paid_tax_excl).toFixed(2) + " €",
@@ -610,7 +649,7 @@ async function getInvoice(reference, email, apiUrl = apiUrlLclp, boutique = "Lcl
     // Générer PDF normal
     const browser = await puppeteer.launch({
         headless: "new",
-        //executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+        executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
 

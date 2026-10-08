@@ -379,7 +379,7 @@ async function createHtmlInvoice(data){
     products += `<tr>
                   <td>${element.reference}</td>
                   <td>${element.name}</td>
-                  <td>${element.taxRate} %</td><td>---</td><td>${element.unitHT}</td><td>---</td><td>${element.qty}</td><td>${element.totalHT}</td>
+                  <td>${element.taxRate} %</td><td>${element.discountPct}</td><td>${element.unitHT}</td><td>${element.discountPrice}</td><td>${element.qty}</td><td>${element.totalHT}</td>
                 </tr>`
   });
 
@@ -504,6 +504,7 @@ async function createHtmlInvoice(data){
                 <tr><td>Frais d'expédition</td><td>${data.totals.shippingHT}</td></tr>
                 <tr><td>Total (HT)</td><td>${data.totals.totalHT}</td></tr>
                 <tr><td>Total Taxes</td><td>${data.totals.taxTotal}</td></tr>
+                <tr><td>Remise (TTC)</td><td>${data.totals.total_discounts_tax_incl}</td></tr>
                 <tr class="grand"><td>Total</td><td>${data.totals.totalTTC}</td></tr>
               </table>
             </div>
@@ -547,6 +548,7 @@ async function getInvoice(reference, email, apiUrl = apiUrlKalista, boutique = "
       unitHT: Number(d.unit_price_tax_excl).toFixed(2) + " €",
       totalHT: Number(d.total_price_tax_excl) + " €",
       discountPct: Number(d.reduction_percent),
+      discountPrice: ((Number(d.unit_price_tax_excl) * Number(d.reduction_percent)) / 100).toFixed(2) + " €",
       taxRate: Math.round((d.unit_price_tax_incl / d.unit_price_tax_excl - 1) * 100),
     }));
 
@@ -589,6 +591,7 @@ async function getInvoice(reference, email, apiUrl = apiUrlKalista, boutique = "
         shippingHT: Number(invoiceData[0].total_shipping_tax_excl) + " €",
         totalHT: Number(invoiceData[0].total_paid_tax_excl) + " €",
         totalTTC: Number(invoiceData[0].total_paid_tax_incl) + " €",
+        total_discounts_tax_incl: "- " + Number(order.total_discounts_tax_incl) + " €",
         taxProducts: +(invoiceData[0].total_products_wt - invoiceData[0].total_products).toFixed(2) + " €",
         taxShipping: +(invoiceData[0].total_shipping_tax_incl - invoiceData[0].total_shipping_tax_excl).toFixed(2) + " €",
         taxTotal: +(invoiceData[0].total_paid_tax_incl - invoiceData[0].total_paid_tax_excl).toFixed(2) + " €",
