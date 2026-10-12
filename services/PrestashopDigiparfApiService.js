@@ -14,6 +14,11 @@ const path = require("path");
 // PRESTASHOP_API_KEY (comportement actuel).
 const DEFAULT_API_KEY = process.env.PRESTASHOP_API_KEY;
 
+// Chargement logo digiparf
+const logoPath = path.join(__dirname, "../public/assets/logo-digiparf.jpg"); // adapte le chemin
+const logoBase64 = fs.readFileSync(logoPath).toString("base64");
+const logoDataUri = `data:image/svg+xml;base64,${logoBase64}`;
+
 const SHOPS = [
   {
     key: "digiparf",
@@ -365,7 +370,7 @@ function createHtmlInvoice(shop, data) {
 <body>
 
 <div class="header">
-  <div class="logo">${esc(shop.invoice.logo)}</div>
+  <div class="logo"><img src="${logoDataUri}"></div>
   <div class="title">FACTURE<br><span class="sub">${esc(data.invoiceDate)}<br>${esc(data.invoiceNumber)}</span></div>
 </div>
 
