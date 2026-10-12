@@ -17,7 +17,7 @@ const DEFAULT_API_KEY = process.env.PRESTASHOP_API_KEY;
 // Chargement logo digiparf
 const logoPath = path.join(__dirname, "../public/assets/logo-digiparf.jpg"); // adapte le chemin
 const logoBase64 = fs.readFileSync(logoPath).toString("base64");
-const logoDataUri = `data:image/svg+xml;base64,${logoBase64}`;
+const logoDataUri = `data:image/jpeg;base64,${logoBase64}`;
 
 const SHOPS = [
   {
