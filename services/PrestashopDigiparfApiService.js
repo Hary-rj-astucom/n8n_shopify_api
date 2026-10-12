@@ -475,7 +475,7 @@ async function getInvoice(reference, email, baseUrl = process.env.BASE_URL_APP) 
       inv.total_paid_tax_incl - inv.total_paid_tax_excl - (inv.total_shipping_tax_incl - inv.total_shipping_tax_excl);
 
     const facture = {
-      invoiceNumber: "#P" + inv.number,
+      invoiceNumber: "#F" + inv.number.toString().padStart(6, '0'),
       invoiceDate: inv.date_add,
       orderReference: order.reference,
       orderDate: order.date_add,
