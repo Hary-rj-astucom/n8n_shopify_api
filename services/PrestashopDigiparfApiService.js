@@ -21,21 +21,21 @@ const SHOPS = [
     apiUrl: `${process.env.PRESTASHOP_DIGIPARF_URL}/api/`,
     apiKey: process.env.PRESTASHOP_DIGIPARF_API_KEY || DEFAULT_API_KEY,
     // En-tête de facture (à compléter)
-    invoice: { logo: "Digiparf", addressLines: ["<adresse>", "<CP VILLE>", "France", "<téléphone>"] },
+    invoice: { logo: "Digiparf", addressLines: ["17 Route des Boulangers", "79 530 BUC", "France", "01 85 36 00 78"] },
   },
   {
     key: "helfrich",
     name: "Helfrich",
     apiUrl: `${process.env.PRESTASHOP_HELFRICH_URL}/api/`,
     apiKey: process.env.PRESTASHOP_HELFRICH_API_KEY || DEFAULT_API_KEY,
-    invoice: { logo: "Helfrich", addressLines: ["<adresse>", "<CP VILLE>", "France", "<téléphone>"] },
+    invoice: { logo: "Helfrich", addressLines: ["17 Route des Boulangers", "79 530 BUC", "France", "01 85 36 00 78"] },
   },
   {
     key: "universce",
     name: "Universce",
     apiUrl: `${process.env.PRESTASHOP_UNIVERSCSE_URL}/api/`,
     apiKey: process.env.PRESTASHOP_UNIVERSCSE_API_KEY || DEFAULT_API_KEY,
-    invoice: { logo: "Universce", addressLines: ["<adresse>", "<CP VILLE>", "France", "<téléphone>"] },
+    invoice: { logo: "Universce", addressLines: ["17 Route des Boulangers", "79 530 BUC", "France", "01 85 36 00 78"] },
   },
   // Pour inclure les autres boutiques dans la recherche client :
   // { key: "ambitioncse", name: "Ambitioncse", apiUrl: `${process.env.PRESTASHOP_AMBITIONCSE_URL}/api/`, apiKey: ..., invoice: {...} },
