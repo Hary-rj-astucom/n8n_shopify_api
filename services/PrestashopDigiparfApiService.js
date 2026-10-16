@@ -60,7 +60,7 @@ const EMAIL_MISMATCH_MESSAGE = "L’adresse e-mail fournie ne correspond pas à 
 const TRACKING_URLS = {
   colissimo: (n) => `https://www.laposte.fr/outils/suivre-vos-envois?code=${encodeURIComponent(n)}`,
   chronopost: (n) => `https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT=${encodeURIComponent(n)}`,
-  mondialrelay: (n) => `https://www.mondialrelay.fr/suivi-de-colis?numeroExpedition=${encodeURIComponent(n)}`,
+  mondialrelay: (n) => `https://www.mondialrelay.com/en-gb/parcel-tracking?codeMarque=F3&nexp=${encodeURIComponent(n)}`,
 };
 
 function buildTrackingUrl(carrier, track_number) {
