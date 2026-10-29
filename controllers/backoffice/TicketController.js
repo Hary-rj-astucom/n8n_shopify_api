@@ -645,7 +645,7 @@ const updateTicketDetails = async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
-}
+} 
 
 const deleteTicket = async (req, res) => {
   try {
@@ -1025,6 +1025,55 @@ const getTicketSet = async (req, res) => {
   }
 }
 
+// cloture tout les tickets qui se refere a un email et numero de commande
+const closeAllTicketSet = async (req, res) => {
+  try {
+
+    const UNKNOWN_ORDER_VALUES = [
+      'inconnu', '-', 'numéro de commande', 'N/A',
+      'Numero de la commande introuvable', 'unknown',
+      '[Numero de la commande introuvable]'
+    ];
+
+    const { ticket_id } = req.body;
+    if (!ticket_id) {
+      return res.status(400).json({ error: 'ticket_id is required' });
+    }
+
+    const [ticket] = await sequelize.query(
+      `SELECT original_client_mail, num_commande FROM ticket WHERE id = ?`,
+      { 
+        replacements: [ticket_id], 
+        type: sequelize.QueryTypes.SELECT
+      }
+    );
+
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    const { num_commande, original_client_mail } = ticket;
+
+    const affectedRows = await sequelize.query(
+      `UPDATE ticket SET status = 'cloture' 
+        WHERE num_commande IN (?)
+        AND original_client_mail = ?
+        AND status <> 'cloture'
+        AND id != ?`,
+      {
+        replacements: [[num_commande, ...UNKNOWN_ORDER_VALUES], original_client_mail, ticket_id],
+        type: sequelize.QueryTypes.BULKUPDATE
+      }
+    );
+
+    return res.json({ closed: affectedRows });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // avoir un ticket ressemblant dans la base 
 const getSimilarTicket = async (req, res) => {
   try{
@@ -1169,6 +1218,7 @@ module.exports = {
   getTicketSet,
   getSimilarTicket,
   markAsUnread,
+  closeAllTicketSet,
 
   getNote,
   addNote,

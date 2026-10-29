@@ -23,6 +23,7 @@ router.post("/getOutlookDigiparfMessageDetailByMessageId", ticketController.getO
 router.post("/getConversationOutlookDigiparfThreads", ticketController.getConversationOutlookDigiparfThreads);
 
 router.post("/getTicketSet", ticketController.getTicketSet);
+router.post("/closeAllTicketSet", ticketController.closeAllTicketSet);
 
 router.get("/getNote/:id", ticketController.getNote);
 router.post("/addNote", ticketController.addNote);
