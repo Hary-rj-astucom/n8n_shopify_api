@@ -1004,7 +1004,7 @@ const getTicketSet = async (req, res) => {
     params2.push(num_commande, original_client_mail);
     const dataQuery = `
       SELECT 
-        id, num_ticket, num_commande, label_id
+        id, num_ticket, num_commande, label_id, status
       FROM ticket
       WHERE num_commande IN (?, 'inconnu', '-', 'numéro de commande', 'N/A', 'Numero de la commande introuvable', 'unknown', '[Numero de la commande introuvable]') 
       AND original_client_mail like ? 
