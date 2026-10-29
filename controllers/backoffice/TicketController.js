@@ -1066,6 +1066,9 @@ const closeAllTicketSet = async (req, res) => {
       }
     );
 
+    const user = await User.findByPk(req.user.id);
+    await TicketHistoricalComment.create({ ticket_id: ticket_id, user_id: req.user.id, comment: `[ACTION] ${affectedRows} Tickets associes mis à jour par ${user.name} [cloture]` });
+
     return res.json({ closed: affectedRows });
 
   } catch (err) {
