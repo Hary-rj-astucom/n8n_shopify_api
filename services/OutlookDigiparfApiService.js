@@ -476,6 +476,7 @@ async function getMessageDetailByMessageId(messageId) {
       console.log("email safe : ", res);
       return res.data; // ✅ Exists, safe to send
     } catch (e) {
+      console.log(e.message);
       await new Promise(res => res(200)); // Wait 200ms and retry
     }
   }

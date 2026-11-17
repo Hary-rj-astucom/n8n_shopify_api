@@ -318,48 +318,59 @@ const getRedudantRequest = async (req, res) => {
 
 async function getUserPivot(month, year) {
   try {
-    // Construire dynamiquement les colonnes
-    const [pivotColsResult] = await sequelize.query(`
-      SELECT GROUP_CONCAT(DISTINCT
-        CONCAT(
-          'SUM(CASE WHEN name = ''',
-          name,
-          ''' THEN nb_action ELSE 0 END) AS \`',
-          name, '\`'
-        )
-      ) AS pivot_columns
-      FROM (
-        SELECT user.name 
-        FROM user WHERE email NOT IN ('hrajaonah@astucom.com', 'mphrygien@astucom.com', 'adv@cosma-parfumeries.fr', 'gpa@techmode-group.com', 'jpanier@techmode-group.com') AND user.state = 1
-      ) AS base
-    `);
+    // 1. Récupérer la liste des utilisateurs
+    const users = await sequelize.query(
+      `SELECT DISTINCT name
+       FROM user
+       WHERE email NOT IN (:excluded) AND state = 1
+       ORDER BY name`,
+      {
+        replacements: {
+          excluded: [
+            'hrajaonah@astucom.com',
+            'mphrygien@astucom.com',
+            'adv@cosma-parfumeries.fr',
+            'gpa@techmode-group.com',
+            'jpanier@techmode-group.com',
+          ],
+        },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
 
-    const pivotColumns = pivotColsResult[0]?.pivot_columns;
-    if (!pivotColumns) {
-      throw new Error("Impossible de générer les colonnes dynamiques (aucune donnée trouvée).");
+    if (!users.length) {
+      throw new Error("Aucun utilisateur trouvé pour générer les colonnes.");
     }
 
-    // Construire la requête finale
+    // 2. Construire les colonnes avec échappement correct
+    const pivotColumns = users
+      .map(({ name }) => {
+        const strLiteral = sequelize.escape(name);                  // 'O\'Brien'
+        const alias = '`' + name.replace(/`/g, '``') + '`';         // `Nom`
+        return `SUM(CASE WHEN name = ${strLiteral} THEN nb_action ELSE 0 END) AS ${alias}`;
+      })
+      .join(',\n  ');
+
+    // 3. Requête finale
     const finalQuery = `
       SELECT date, ${pivotColumns}
       FROM (
         SELECT COUNT(*) AS nb_action, user_id, user.name, DATE(created_at) AS date
         FROM ticket_historical_comment
         JOIN user ON user_id = user.id
-        WHERE YEAR(created_at) = :year AND MONTH(created_at) = :month AND ticket_historical_comment.comment LIKE '%a repondu(e) au client%'
+        WHERE YEAR(created_at) = :year
+          AND MONTH(created_at) = :month
+          AND ticket_historical_comment.comment LIKE '%a repondu(e) au client%'
         GROUP BY DATE(created_at), user_id, user.name
       ) AS data
-      GROUP BY date ORDER BY date
+      GROUP BY date
+      ORDER BY date
     `;
 
-    // Exécuter la requête finale
-    const result = await sequelize.query(finalQuery, { 
+    return await sequelize.query(finalQuery, {
       replacements: { month, year },
-      type: sequelize.QueryTypes.SELECT 
+      type: sequelize.QueryTypes.SELECT,
     });
-
-    return result;
-
   } catch (error) {
     console.error("Erreur dans getUserPivot:", error);
     throw error;
