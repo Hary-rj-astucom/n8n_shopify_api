@@ -29,4 +29,6 @@ router.get("/getNote/:id", ticketController.getNote);
 router.post("/addNote", ticketController.addNote);
 router.put("/updateNote/:id", ticketController.updateNote);
 
+router.get("/getTicketDistributionSummary/list", ticketController.getTicketDistributionSummary);
+
 module.exports = router;

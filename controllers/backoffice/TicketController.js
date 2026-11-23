@@ -1200,6 +1200,52 @@ const updateNote = async (req, res) => {
   }
 }
 
+// get summary by day
+const getTicketDistributionSummary = async (req, res) => {
+  try{
+
+    let params = [];
+
+    // 📄 Paginated data
+    const dataQuery = `
+      SELECT 
+        u.id as user_id, u.name,
+        SUM(CASE WHEN ticket.status = 'en attente' THEN 1 ELSE 0 END) AS en_attente,
+        SUM(CASE WHEN ticket.status = 'en cours' THEN 1 ELSE 0 END) AS en_cours,
+        SUM(CASE WHEN ticket.status = 'cloture' AND DATE(updated_at) = CURDATE() THEN 1 ELSE 0 END) AS cloture
+      FROM user as u 
+      LEFT JOIN ticket ON u.id = ticket.user_id 
+      WHERE u.treating = 1
+      GROUP BY u.id, u.name
+    `;
+
+    const result = await sequelize.query(dataQuery, {
+      replacements: params,
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    const dataQuery1 = `
+      SELECT 
+        SUM(CASE WHEN ticket.status = 'en attente' THEN 1 ELSE 0 END) AS en_attente,
+        SUM(CASE WHEN ticket.status = 'en cours' THEN 1 ELSE 0 END) AS en_cours,
+        SUM(CASE WHEN ticket.status = 'cloture' AND DATE(updated_at) = CURDATE() THEN 1 ELSE 0 END) AS cloture
+      FROM ticket 
+      WHERE user_id IS NULL
+    `;
+
+    const result2 = await sequelize.query(dataQuery1, {
+      replacements: params,
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    res.json({ ticket_user : result, ticket_not_assigned : result2 });
+
+  }catch (error) {
+    console.error(error);
+    return res.status(400).json({ error: error.message });
+  }
+}
+
 module.exports = {
   getTickets,
   getTicketsDetails,
@@ -1226,4 +1272,6 @@ module.exports = {
   getNote,
   addNote,
   updateNote,
+
+  getTicketDistributionSummary,
 };
