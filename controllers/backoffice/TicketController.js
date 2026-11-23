@@ -311,7 +311,7 @@ const respondMail = async (req, res) => {
 
     // update need_attention to 0 
     if(result[0].need_attention == 1){
-      await Ticket.update({ need_attention: 0}, { where: { id: ticket_id } })
+      await Ticket.update({ need_attention: 0, user_id: req.user.id }, { where: { id: ticket_id } })
     }
 
     return res.json({message: "message envoye"});
