@@ -141,3 +141,5 @@ vite.config.ts.timestamp-*
 # json mock
 services/json_mock/
 services/json_mock/
+services/json_mock/gmail_token.json
+services/json_mock/shippingbo_token.json
