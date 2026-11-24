@@ -309,6 +309,9 @@ const respondMail = async (req, res) => {
     const user = await User.findByPk(req.user.id);
     await TicketHistoricalComment.create({ comment: "[ACTION] " + user.name + " a repondu(e) au client", ticket_id: ticket_id, user_id: req.user.id });
 
+    // Modifier lappartenance du ticket
+    await Ticket.update({ user_id: req.user.id }, { where: { id: ticket_id } });
+
     // update need_attention to 0 
     if(result[0].need_attention == 1){
       await Ticket.update({ need_attention: 0, user_id: req.user.id }, { where: { id: ticket_id } })
@@ -430,6 +433,9 @@ const respondMail2 = async (req, res) => {
 
     const user = await User.findByPk(req.user.id);
     await TicketHistoricalComment.create({ comment: "[ACTION] " + user.name + " a repondu(e) au client", ticket_id: ticket_id, user_id: req.user.id });
+
+    // Modifier lappartenance du ticket
+    await Ticket.update({ user_id: req.user.id }, { where: { id: ticket_id } });
 
     // update need_attention to 0 
     if(result[0].need_attention == 1){
