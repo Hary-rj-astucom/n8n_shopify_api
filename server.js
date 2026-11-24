@@ -81,6 +81,7 @@ app.use(prefix + '/ticket2', ticketRoutes2);
 
 // Serve everything inside "uploads" under /n8n_cosmia/public/uploads
 app.use(prefix + '/public/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use(prefix + '/public/assets', express.static(path.join(__dirname, 'public/assets')));
 
 // Start the server
 app.listen(port, () => {
