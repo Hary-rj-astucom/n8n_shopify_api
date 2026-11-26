@@ -10,7 +10,7 @@ const OpenAiApiService = require('../services/OpenAiApiService');
 const TRACKING_URLS = {
   colissimo: (n) => `https://www.laposte.fr/outils/suivre-vos-envois?code=${encodeURIComponent(n)}`,
   chronopost: (n) => `https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT=${encodeURIComponent(n)}`,
-  mondialrelay: (n) => `https://www.mondialrelay.fr/suivi-de-colis?numeroExpedition=${encodeURIComponent(n)}`,
+  mondialrelay: (n) => `https://www.mondialrelay.com/en-gb/parcel-tracking?codeMarque=F3&nexp=${encodeURIComponent(n)}`,
 };
 
 const magento = axios.create({
